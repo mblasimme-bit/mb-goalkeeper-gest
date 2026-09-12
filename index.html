@@ -1424,12 +1424,12 @@ function GestionalePortieri() {
   }, [settings.highContrast]);
 
   useEffect(() => {
-    if (view.page === "iscrizioni" && dbConfig) caricaIscrizioni();
-  }, [view.page, dbConfig]);
+    if (dbConfig && !loading) caricaIscrizioni();
+  }, [dbConfig, loading]);
 
   useEffect(() => {
-    if (view.page === "verifiche" && dbConfig) caricaVerifiche();
-  }, [view.page, dbConfig]);
+    if (dbConfig && !loading) caricaVerifiche();
+  }, [dbConfig, loading]);
 
   useEffect(() => {
     const id = "__reduce-motion-style";
@@ -4299,6 +4299,34 @@ create policy "solo autenticati" on gestionale_kv
               </p>
             </div>
             <span style={{ color: coral, fontSize: 20 }}>›</span>
+          </button>
+        )}
+
+        {(iscrizioniPending.length > 0 || verifichePending.length > 0) && (
+          <button
+            className="no-print"
+            onClick={() => setView({ page: iscrizioniPending.length > 0 ? "iscrizioni" : "verifiche" })}
+            style={{
+              ...cardStyle,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              textAlign: "left",
+              width: "100%",
+              border: `1px solid ${sky}`,
+              background: skyDim,
+            }}
+          >
+            <div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: sky }}>📬 Nuovi questionari</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: textMuted }}>
+                {iscrizioniPending.length > 0 && `${iscrizioniPending.length} iscrizione/i`}
+                {iscrizioniPending.length > 0 && verifichePending.length > 0 && " · "}
+                {verifichePending.length > 0 && `${verifichePending.length} verifica/e periodica/e`}
+              </p>
+            </div>
+            <span style={{ color: sky, fontSize: 20 }}>›</span>
           </button>
         )}
 
