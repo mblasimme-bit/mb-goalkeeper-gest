@@ -1367,6 +1367,8 @@ function GestionalePortieri() {
       setSponsorTech(d.sponsorTechData);
       setInventario(d.inventarioData);
       setSettings((prev) => ({ ...DEFAULT_SETTINGS, ...d.settingsData }));
+      caricaIscrizioni().catch(() => {});
+      caricaVerifiche().catch(() => {});
     } catch (e) {
       console.error("Aggiornamento dati fallito:", e);
       setSaveState("error");
