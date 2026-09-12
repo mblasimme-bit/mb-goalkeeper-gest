@@ -471,6 +471,87 @@ function Select({ value, onChange, options, placeholder }) {
   );
 }
 
+// Selettore portiere con casella di ricerca: a differenza del <select> nativo, su iPhone permette
+// di digitare per filtrare (il menu a tendina nativo su iOS non apre la tastiera). Sempre in
+// ordine alfabetico.
+function SelettorePortiere({ portieri, value, onChange, placeholder, consentiVuoto, style }) {
+  const [aperto, setAperto] = useState(false);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef(null);
+  const ordinati = React.useMemo(
+    () => (portieri || []).slice().sort((a, b) => (a.nome || "").localeCompare(b.nome || "")),
+    [portieri]
+  );
+  const filtrati = query.trim()
+    ? ordinati.filter((p) => (p.nome || "").toLowerCase().includes(query.trim().toLowerCase()))
+    : ordinati;
+  const selezionato = ordinati.find((p) => String(p.id) === String(value));
+
+  useEffect(() => {
+    if (aperto && inputRef.current) inputRef.current.focus();
+  }, [aperto]);
+
+  return (
+    <div style={{ position: "relative", width: (style && style.width) || "100%" }}>
+      <button
+        type="button"
+        onClick={() => { setAperto((a) => !a); setQuery(""); }}
+        style={{ ...inputStyle, ...style, textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+      >
+        <span style={{ color: selezionato ? textPrimary : textMuted }}>{selezionato ? selezionato.nome : (placeholder || "Seleziona...")}</span>
+        <span style={{ color: textMuted, fontSize: 11 }}>▾</span>
+      </button>
+      {aperto && (
+        <>
+          <div className="no-print" onClick={() => setAperto(false)} style={{ position: "fixed", inset: 0, zIndex: 60 }} />
+          <div
+            className="no-print"
+            style={{
+              position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 61,
+              background: surface, border: `1px solid ${border}`, borderRadius: 10,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.35)", maxHeight: 280, display: "flex", flexDirection: "column",
+            }}
+          >
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Cerca per nome..."
+              style={{ ...inputStyle, border: "none", borderBottom: `1px solid ${border}`, borderRadius: "10px 10px 0 0" }}
+            />
+            <div style={{ overflowY: "auto" }}>
+              {consentiVuoto && (
+                <div
+                  onClick={() => { onChange(""); setAperto(false); }}
+                  style={{ padding: "10px 12px", cursor: "pointer", color: textMuted, fontSize: 14 }}
+                >
+                  — nessuno —
+                </div>
+              )}
+              {filtrati.length === 0 && (
+                <p style={{ padding: "10px 12px", color: textMuted, fontSize: 13, margin: 0 }}>Nessun portiere trovato.</p>
+              )}
+              {filtrati.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => { onChange(String(p.id)); setAperto(false); setQuery(""); }}
+                  style={{
+                    padding: "10px 12px", cursor: "pointer", fontSize: 14,
+                    color: String(p.id) === String(value) ? gold : textPrimary,
+                    fontWeight: String(p.id) === String(value) ? 700 : 400,
+                  }}
+                >
+                  {p.nome}
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function FreqPills({ value, onChange }) {
   return (
     <div style={{ display: "flex", gap: 6 }}>
@@ -521,6 +602,7 @@ function ModuloIscrizione() {
     altezza: "", peso: "", taglia_guanti: "",
     telefono_genitore: "", email_genitore: "",
     allergie: "", note_mediche: "",
+    osservazioni_genitore: "", preparatore: "",
     consenso_privacy: false,
   };
   const [form, setForm] = useState(vuoto);
@@ -553,6 +635,8 @@ function ModuloIscrizione() {
           email_genitore: form.email_genitore || null,
           allergie: form.allergie || null,
           note_mediche: form.note_mediche || null,
+          osservazioni_genitore: form.osservazioni_genitore || null,
+          preparatore: form.preparatore || null,
           consenso_privacy: form.consenso_privacy,
         }]),
       });
@@ -632,6 +716,13 @@ function ModuloIscrizione() {
         <label style={labelStyleLocal}>Altre note mediche</label>
         <textarea style={{ ...inputStyleLocal, minHeight: 70, resize: "vertical" }} value={form.note_mediche} onChange={(e) => campo("note_mediche", { note_mediche: e.target.value })} />
 
+        <label style={labelStyleLocal}>Nome del preparatore della squadra (facoltativo)</label>
+        <input style={inputStyleLocal} value={form.preparatore} onChange={(e) => campo("preparatore", { preparatore: e.target.value })} />
+
+        <label style={labelStyleLocal}>"Mi fa piacere sapere il vostro punto di vista, pregi e difetti"</label>
+        <p style={{ fontSize: 12, color: "#888", margin: "0 0 6px" }}>Raccontaci come vedi tuo figlio/a dal punto di vista sportivo — qualità e aspetti su cui lavorare.</p>
+        <textarea style={{ ...inputStyleLocal, minHeight: 90, resize: "vertical" }} value={form.osservazioni_genitore} onChange={(e) => campo("osservazioni_genitore", { osservazioni_genitore: e.target.value })} />
+
         <label style={{ ...labelStyleLocal, display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
           <input type="checkbox" required checked={form.consenso_privacy} onChange={(e) => campo("consenso_privacy", { consenso_privacy: e.target.checked })} style={{ marginTop: 3 }} />
           <span>Do il consenso al trattamento dei dati inseriti e all'utilizzo di foto/video per finalità sportive interne all'academy. *</span>
@@ -650,6 +741,115 @@ function ModuloIscrizione() {
           }}
         >
           {stato === "inviando" ? "Invio in corso..." : "Invia modulo"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function ModuloVerificaPeriodica() {
+  const vuoto = { nome: "", cognome: "", altezza: "", peso: "", osservazioni_progressi: "" };
+  const [form, setForm] = useState(vuoto);
+  const [stato, setStato] = useState("idle");
+  const [errore, setErrore] = useState("");
+
+  const campo = (key, patch) => setForm((f) => ({ ...f, ...patch }));
+
+  const invia = async (e) => {
+    e.preventDefault();
+    if (!form.nome || !form.cognome) return;
+    setStato("inviando");
+    setErrore("");
+    try {
+      const res = await fetch(`${DEFAULT_SUPABASE_CONFIG.project_url}/rest/v1/verifiche_periodiche_pending`, {
+        method: "POST",
+        headers: {
+          apikey: DEFAULT_SUPABASE_CONFIG.anon_key,
+          Authorization: `Bearer ${DEFAULT_SUPABASE_CONFIG.anon_key}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify([{
+          nome: form.nome, cognome: form.cognome,
+          altezza: form.altezza ? Number(form.altezza) : null,
+          peso: form.peso ? Number(form.peso) : null,
+          osservazioni_progressi: form.osservazioni_progressi || null,
+        }]),
+      });
+      if (!res.ok) throw new Error("Invio non riuscito (" + res.status + ")");
+      setStato("inviato");
+    } catch (err) {
+      setStato("errore");
+      setErrore(err.message);
+    }
+  };
+
+  const inputStyleLocal = {
+    width: "100%", padding: "12px 14px", borderRadius: 10, border: "1px solid #ddd",
+    fontSize: 15, background: "#fff", color: "#1a1a1a", fontFamily: "system-ui, sans-serif",
+  };
+  const labelStyleLocal = { fontSize: 13, fontWeight: 600, color: "#444", display: "block", marginBottom: 6, marginTop: 14 };
+
+  if (stato === "inviato") {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f4f2ec", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ maxWidth: 420, textAlign: "center" }}>
+          <p style={{ fontSize: 48, margin: 0 }}>✅</p>
+          <h1 style={{ fontSize: 22, color: "#1a1a1a" }}>Inviato, grazie!</h1>
+          <p style={{ fontSize: 15, color: "#555" }}>
+            L'allenatore riceverà l'aggiornamento e lo aggiungerà alla scheda del ragazzo/a.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f4f2ec", padding: "30px 16px", fontFamily: "system-ui, sans-serif" }}>
+      <form onSubmit={invia} style={{ maxWidth: 480, margin: "0 auto", background: "#fff", borderRadius: 16, padding: "28px 24px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <img src={LOGO} alt="logo" style={{ width: 70, height: 70, borderRadius: 12, objectFit: "cover", marginBottom: 8 }} />
+          <p style={{ margin: 0, fontSize: 12, letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 700, color: "#555" }}>MB Goalkeeper Academy Gest</p>
+        </div>
+        <h1 style={{ fontSize: 20, textAlign: "center", margin: "0 0 4px", color: "#1a1a1a" }}>Aggiornamento periodico</h1>
+        <p style={{ fontSize: 13, textAlign: "center", color: "#777", marginBottom: 10 }}>
+          Altezza, peso e come vedi i progressi di tuo figlio/a in questo periodo, tra allenamenti e partite col club.
+        </p>
+
+        <label style={labelStyleLocal}>Nome del ragazzo/a *</label>
+        <input style={inputStyleLocal} required value={form.nome} onChange={(e) => campo("nome", { nome: e.target.value })} />
+
+        <label style={labelStyleLocal}>Cognome *</label>
+        <input style={inputStyleLocal} required value={form.cognome} onChange={(e) => campo("cognome", { cognome: e.target.value })} />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div>
+            <label style={labelStyleLocal}>Altezza attuale (cm)</label>
+            <input style={inputStyleLocal} type="number" value={form.altezza} onChange={(e) => campo("altezza", { altezza: e.target.value })} />
+          </div>
+          <div>
+            <label style={labelStyleLocal}>Peso attuale (kg)</label>
+            <input style={inputStyleLocal} type="number" value={form.peso} onChange={(e) => campo("peso", { peso: e.target.value })} />
+          </div>
+        </div>
+
+        <label style={labelStyleLocal}>Come vedi i suoi progressi in questo periodo?</label>
+        <p style={{ fontSize: 12, color: "#888", margin: "0 0 6px" }}>Quello che noti durante le partite e gli allenamenti con il club — miglioramenti, difficoltà, sensazioni generali.</p>
+        <textarea style={{ ...inputStyleLocal, minHeight: 100, resize: "vertical" }} value={form.osservazioni_progressi} onChange={(e) => campo("osservazioni_progressi", { osservazioni_progressi: e.target.value })} />
+
+        {errore && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10 }}>{errore}</p>}
+
+        <button
+          type="submit"
+          disabled={stato === "inviando" || !form.nome || !form.cognome}
+          style={{
+            width: "100%", marginTop: 20, padding: "14px 0", borderRadius: 10, border: "none",
+            background: !form.nome || !form.cognome ? "#ccc" : "#d4af6a",
+            color: "#1a1408", fontSize: 15, fontWeight: 700,
+            cursor: !form.nome || !form.cognome ? "not-allowed" : "pointer",
+          }}
+        >
+          {stato === "inviando" ? "Invio in corso..." : "Invia aggiornamento"}
         </button>
       </form>
     </div>
@@ -724,6 +924,9 @@ function GestionalePortieri() {
   const [iscrizioniPending, setIscrizioniPending] = useState([]);
   const [iscrizioniLoading, setIscrizioniLoading] = useState(false);
   const [iscrizioneAzione, setIscrizioneAzione] = useState({}); // { [id]: "collega" } per mostrare il selettore portiere
+  const [verifichePending, setVerifichePending] = useState([]);
+  const [verificheLoading, setVerificheLoading] = useState(false);
+  const [verificaPortiereScelto, setVerificaPortiereScelto] = useState({}); // { [id]: portiereId } selezione in corso
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [showQuickSeduta, setShowQuickSeduta] = useState(false);
   const [quickForm, setQuickForm] = useState({ portiereId: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true });
@@ -801,6 +1004,23 @@ function GestionalePortieri() {
       body: JSON.stringify({ stato }),
     });
     if (!res.ok) throw new Error("Aggiornamento iscrizione " + res.status);
+  };
+
+  const caricaVerifichePending = async (cfg, token) => {
+    const url = `${cfg.project_url}/rest/v1/verifiche_periodiche_pending?stato=eq.in_attesa&order=creato_il.desc`;
+    const res = await fetchConTimeout(url, { headers: authHeaders(cfg, token) });
+    if (!res.ok) throw new Error("Lettura verifiche " + res.status);
+    return res.json();
+  };
+
+  const aggiornaStatoVerifica = async (cfg, token, id, stato) => {
+    const url = `${cfg.project_url}/rest/v1/verifiche_periodiche_pending?id=eq.${id}`;
+    const res = await fetchConTimeout(url, {
+      method: "PATCH",
+      headers: { ...authHeaders(cfg, token), "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ stato }),
+    });
+    if (!res.ok) throw new Error("Aggiornamento verifica " + res.status);
   };
 
   // --- Autenticazione (Supabase Auth: email + password) ---
@@ -1208,6 +1428,10 @@ function GestionalePortieri() {
   }, [view.page, dbConfig]);
 
   useEffect(() => {
+    if (view.page === "verifiche" && dbConfig) caricaVerifiche();
+  }, [view.page, dbConfig]);
+
+  useEffect(() => {
     const id = "__reduce-motion-style";
     let tag = document.getElementById(id);
     if (settings.reduceMotion) {
@@ -1491,6 +1715,8 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     consensoData: isc.consenso_privacy ? isc.creato_il.slice(0, 10) : undefined,
     altezza: isc.altezza || undefined,
     squadra: isc.squadra || undefined,
+    preparatore: isc.preparatore || undefined,
+    osservazioniGenitore: isc.osservazioni_genitore || undefined,
   });
 
   const approvaComeNuovo = (isc) => {
@@ -1520,6 +1746,43 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     confirmAction("Scartare questa iscrizione? Non entrerà nella rosa.", () => {
       aggiornaStatoIscrizione(dbConfig, session && session.access_token, isc.id, "scartato").catch(() => {});
       setIscrizioniPending((list) => list.filter((x) => x.id !== isc.id));
+    });
+  };
+
+  const caricaVerifiche = async () => {
+    if (!dbConfig) return;
+    setVerificheLoading(true);
+    try {
+      const data = await caricaVerifichePending(dbConfig, session && session.access_token);
+      setVerifichePending(data);
+    } catch (e) {
+      console.error("Errore caricamento verifiche:", e);
+    } finally {
+      setVerificheLoading(false);
+    }
+  };
+
+  const approvaVerifica = (ver, portiereId) => {
+    const portiere = portieri.find((p) => p.id === portiereId);
+    if (!portiere) return;
+    const dataOggi = new Date().toISOString().slice(0, 10);
+    const misure = [];
+    if (ver.altezza) misure.push(`altezza ${ver.altezza} cm`);
+    if (ver.peso) misure.push(`peso ${ver.peso} kg`);
+    const riepilogo = misure.length > 0 ? ` (${misure.join(", ")})` : "";
+    const nuovaVoce = `📈 ${formatData(dataOggi)}${riepilogo}${ver.osservazioni_progressi ? `: ${ver.osservazioni_progressi}` : ""}`;
+    const patch = { storicoProgressi: (portiere.storicoProgressi ? portiere.storicoProgressi + "\n\n" : "") + nuovaVoce };
+    if (ver.altezza) patch.altezza = Number(ver.altezza);
+    if (ver.peso) patch.peso = Number(ver.peso);
+    updatePortiere(portiereId, patch);
+    aggiornaStatoVerifica(dbConfig, session && session.access_token, ver.id, "approvato").catch(() => {});
+    setVerifichePending((list) => list.filter((x) => x.id !== ver.id));
+  };
+
+  const scartaVerifica = (ver) => {
+    confirmAction("Scartare questo aggiornamento periodico?", () => {
+      aggiornaStatoVerifica(dbConfig, session && session.access_token, ver.id, "scartato").catch(() => {});
+      setVerifichePending((list) => list.filter((x) => x.id !== ver.id));
     });
   };
 
@@ -1858,6 +2121,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"],
               ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
               ["iscrizioni", "📋 Iscrizioni", sky, skyDim],
+              ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim],
               ["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"],
               ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"],
             ].map(([page, label, fg, bgc]) => (
@@ -2169,6 +2433,20 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 <input style={inputStyle} type="text" value={p.taglieGuanti || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { taglieGuanti: e.target.value })} />
               </div>
 
+              <p style={sectionLabelStyle}>🧑‍🏫 Squadra</p>
+              <div style={cardStyle}>
+                <label style={labelStyle}>Preparatore della squadra</label>
+                <input style={inputStyle} type="text" value={p.preparatore || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { preparatore: e.target.value })} />
+              </div>
+
+              <p style={sectionLabelStyle}>📈 Storico progressi</p>
+              <div style={cardStyle}>
+                <p style={{ fontSize: 11, color: textMuted, marginBottom: 8 }}>
+                  Si aggiorna da solo ogni volta che approvi un questionario periodico (menu ☰ → Verifiche periodiche). Puoi comunque modificarlo a mano qui.
+                </p>
+                <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 110, whiteSpace: "pre-wrap" }} value={p.storicoProgressi || ""} placeholder="Ancora nessun aggiornamento." onChange={(e) => updatePortiere(p.id, { storicoProgressi: e.target.value })} />
+              </div>
+
               <p style={sectionLabelStyle}>🧠 Profilo</p>
               <div style={cardStyle}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -2213,9 +2491,13 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                   <label style={labelStyle}>Note personali ragazzo</label>
                   <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={p.note_personali || ""} placeholder="Osservazioni tecniche, obiettivi..." onChange={(e) => updatePortiere(p.id, { note_personali: e.target.value })} />
                 </div>
-                <div>
+                <div style={{ marginBottom: 12 }}>
                   <label style={labelStyle}>Note mediche (visibili anche in 🩺 Dati medici)</label>
                   <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={p.noteMediche || ""} placeholder="Allergie, situazioni particolari..." onChange={(e) => updatePortiere(p.id, { noteMediche: e.target.value })} />
+                </div>
+                <div>
+                  <label style={labelStyle}>"Mi fa piacere sapere il vostro punto di vista, pregi e difetti" (dal genitore)</label>
+                  <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 90 }} value={p.osservazioniGenitore || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { osservazioniGenitore: e.target.value })} />
                 </div>
               </div>
             </>
@@ -2639,6 +2921,17 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 🩺 {isc.allergie ? `Allergie: ${isc.allergie}. ` : ""}{isc.note_mediche || ""}
               </p>
             )}
+            {isc.preparatore && (
+              <p style={{ margin: "8px 0 0", fontSize: 13, color: textSecondary }}>
+                🧑‍🏫 Preparatore squadra: {isc.preparatore}
+              </p>
+            )}
+            {isc.osservazioni_genitore && (
+              <div style={{ margin: "8px 0 0", padding: "8px 10px", borderRadius: 8, background: surface2, border: `1px solid ${border}` }}>
+                <p style={{ margin: 0, fontSize: 11, color: textMuted, fontStyle: "italic" }}>"Mi fa piacere sapere il vostro punto di vista, pregi e difetti":</p>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: textSecondary }}>{isc.osservazioni_genitore}</p>
+              </div>
+            )}
             <p style={{ margin: "8px 0 0", fontSize: 11, color: textMuted }}>
               {isc.consenso_privacy ? "✅ Consenso privacy/foto dato" : "⚠️ Consenso privacy non dato"} · inviato il {formatData(isc.creato_il.slice(0, 10))}
             </p>
@@ -2661,20 +2954,100 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             {iscrizioneAzione[isc.id] === "collega" && (
               <div className="no-print" style={{ marginTop: 12, borderTop: `1px solid ${border}`, paddingTop: 12 }}>
                 <label style={labelStyle}>Seleziona il portiere già registrato</label>
-                <select
-                  style={inputStyle}
-                  defaultValue=""
-                  onChange={(e) => {
-                    if (e.target.value) approvaSuEsistente(isc, Number(e.target.value));
-                  }}
-                >
-                  <option value="">Seleziona...</option>
-                  {portieri.slice().sort((a, b) => a.nome.localeCompare(b.nome)).map((p) => (
-                    <option key={p.id} value={p.id}>{p.nome}</option>
-                  ))}
-                </select>
+                <SelettorePortiere
+                  portieri={portieri}
+                  value=""
+                  onChange={(v) => { if (v) approvaSuEsistente(isc, Number(v)); }}
+                />
               </div>
             )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (view.page === "verifiche") {
+    return (
+      <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Verifiche periodiche" />
+        <div style={{ height: 18 }} />
+
+        <div className="no-print" style={{ ...cardStyle, marginBottom: 16 }}>
+          <p style={{ margin: 0, fontSize: 13, color: textSecondary }}>
+            Link da mandare ai genitori per l'aggiornamento periodico (funziona senza bisogno di login):
+          </p>
+          <p style={{ margin: "6px 0 0", fontSize: 13, fontWeight: 700, color: goldSoft, wordBreak: "break-all" }}>
+            {typeof window !== "undefined" ? window.location.origin + window.location.pathname + "?verifica=1" : ""}
+          </p>
+          <button
+            className="no-print"
+            onClick={() => {
+              const link = window.location.origin + window.location.pathname + "?verifica=1";
+              navigator.clipboard && navigator.clipboard.writeText(link).catch(() => {});
+            }}
+            style={{ ...ghostBtn, marginTop: 10, fontSize: 12, padding: "6px 12px" }}
+          >
+            📋 Copia link
+          </button>
+        </div>
+
+        <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <p style={{ fontSize: 14, color: textSecondary, margin: 0 }}>
+            {verifichePending.length} aggiornamento/i in attesa
+          </p>
+          <button onClick={caricaVerifiche} disabled={verificheLoading} style={{ ...ghostBtn, fontSize: 12, padding: "6px 12px" }}>
+            {verificheLoading ? "Aggiorno..." : "🔄 Aggiorna"}
+          </button>
+        </div>
+
+        {verifichePending.length === 0 && !verificheLoading && (
+          <p style={{ fontSize: 14, color: textMuted }}>Nessun aggiornamento periodico in attesa al momento.</p>
+        )}
+
+        {verifichePending.map((ver) => (
+          <div key={ver.id} style={cardStyle}>
+            <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: textPrimary, textTransform: "uppercase" }}>
+              {ver.cognome} {ver.nome}
+            </p>
+            {(ver.altezza || ver.peso) && (
+              <p style={{ margin: "6px 0 0", fontSize: 13, color: textSecondary }}>
+                {ver.altezza ? `${ver.altezza} cm` : ""}{ver.altezza && ver.peso ? " · " : ""}{ver.peso ? `${ver.peso} kg` : ""}
+              </p>
+            )}
+            {ver.osservazioni_progressi && (
+              <div style={{ margin: "8px 0 0", padding: "8px 10px", borderRadius: 8, background: surface2, border: `1px solid ${border}` }}>
+                <p style={{ margin: 0, fontSize: 11, color: textMuted, fontStyle: "italic" }}>Progressi visti dal genitore:</p>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: textSecondary }}>{ver.osservazioni_progressi}</p>
+              </div>
+            )}
+            <p style={{ margin: "8px 0 0", fontSize: 11, color: textMuted }}>
+              inviato il {formatData(ver.creato_il.slice(0, 10))}
+            </p>
+
+            <div className="no-print" style={{ marginTop: 12, borderTop: `1px solid ${border}`, paddingTop: 12 }}>
+              <label style={labelStyle}>A quale portiere si riferisce?</label>
+              <SelettorePortiere
+                portieri={portieri}
+                value={verificaPortiereScelto[ver.id] || ""}
+                onChange={(v) => setVerificaPortiereScelto((s) => ({ ...s, [ver.id]: v }))}
+              />
+            </div>
+
+            <div className="no-print" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+              <button
+                onClick={() => verificaPortiereScelto[ver.id] && approvaVerifica(ver, Number(verificaPortiereScelto[ver.id]))}
+                disabled={!verificaPortiereScelto[ver.id]}
+                style={{ ...primaryBtn, fontSize: 13, padding: "8px 14px", opacity: verificaPortiereScelto[ver.id] ? 1 : 0.5, cursor: verificaPortiereScelto[ver.id] ? "pointer" : "not-allowed" }}
+              >
+                ✅ Aggiungi alla scheda
+              </button>
+              <button onClick={() => scartaVerifica(ver)} style={{ background: "none", border: `1px solid ${coral}`, color: coral, borderRadius: 9, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}>
+                Scarta
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -4331,12 +4704,7 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
             <p style={{ ...sectionLabelStyle, marginBottom: 12 }}>Nuovo movimento guanti</p>
             <div style={{ marginBottom: 10 }}>
               <label style={labelStyle}>Portiere</label>
-              <select style={inputStyle} value={form.portiereId} onChange={(e) => setForm((f) => ({ ...f, portiereId: e.target.value }))}>
-                <option value="">Seleziona...</option>
-                {portieri.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nome}</option>
-                ))}
-              </select>
+              <SelettorePortiere portieri={portieri} value={form.portiereId} onChange={(v) => setForm((f) => ({ ...f, portiereId: v }))} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 10 }}>
               <div>
@@ -4765,12 +5133,7 @@ function CalendarioSedute({ entrate, portieri, pacchetti, modificaEntrata, rimuo
               return (
                 <div key={e.id} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", padding: "6px 0", borderTop: i > 0 ? `1px solid ${border}` : "none" }}>
                   <input style={{ ...inputStyle, width: 100 }} type="number" step="0.01" value={editForm.importo} onChange={(ev) => setEditForm((f) => ({ ...f, importo: ev.target.value }))} />
-                  <select style={{ ...inputStyle, width: 160 }} value={editForm.portiereId} onChange={(ev) => setEditForm((f) => ({ ...f, portiereId: ev.target.value }))}>
-                    <option value="">— nessun portiere —</option>
-                    {portieri.map((pp) => (
-                      <option key={pp.id} value={pp.id}>{pp.nome}</option>
-                    ))}
-                  </select>
+                  <SelettorePortiere portieri={portieri} value={editForm.portiereId} onChange={(v) => setEditForm((f) => ({ ...f, portiereId: v }))} consentiVuoto style={{ width: 160 }} />
                   <input style={{ ...inputStyle, flex: 1, minWidth: 120 }} type="text" value={editForm.note} placeholder="Note" onChange={(ev) => setEditForm((f) => ({ ...f, note: ev.target.value }))} />
                   <select style={{ ...inputStyle, width: 160 }} value={editForm.metodoPagamento} onChange={(ev) => setEditForm((f) => ({ ...f, metodoPagamento: ev.target.value }))}>
                     <option value="">— metodo non specificato —</option>
@@ -5207,12 +5570,7 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, portieri
                             </>
                           )}
                           {v.sourceType === "manuale" && (
-                            <select style={{ ...inputStyle, width: 160 }} value={editForm.portiereId} onChange={(e) => setEditForm((f) => ({ ...f, portiereId: e.target.value }))}>
-                              <option value="">— nessun portiere —</option>
-                              {portieri.map((p) => (
-                                <option key={p.id} value={p.id}>{p.nome}</option>
-                              ))}
-                            </select>
+                            <SelettorePortiere portieri={portieri} value={editForm.portiereId} onChange={(v) => setEditForm((f) => ({ ...f, portiereId: v }))} consentiVuoto style={{ width: 160 }} />
                           )}
                           {(v.sourceType === "manuale" || v.sourceType === "pacchetto") && (
                             <select style={{ ...inputStyle, width: 160 }} value={editForm.metodoPagamento} onChange={(e) => setEditForm((f) => ({ ...f, metodoPagamento: e.target.value }))}>
@@ -5769,12 +6127,7 @@ function PaginaSponsor({
                 </div>
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>Assegnato a (facoltativo)</label>
-                  <select style={inputStyle} value={formInv.assegnatoA} onChange={(e) => setFormInv((f) => ({ ...f, assegnatoA: e.target.value }))}>
-                    <option value="">— in magazzino —</option>
-                    {portieri.map((p) => (
-                      <option key={p.id} value={p.id}>{p.nome}</option>
-                    ))}
-                  </select>
+                  <SelettorePortiere portieri={portieri} value={formInv.assegnatoA} onChange={(v) => setFormInv((f) => ({ ...f, assegnatoA: v }))} consentiVuoto placeholder="— in magazzino —" />
                 </div>
                 <button onClick={submitInv} disabled={!formInv.articolo} style={{ ...primaryBtn, opacity: formInv.articolo ? 1 : 0.5 }}>Salva</button>
               </div>
@@ -5843,12 +6196,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
     <>
       <div style={{ marginBottom: 10 }}>
         <label style={labelStyle}>Portiere</label>
-        <select style={inputStyle} value={f.portiereId} onChange={(e) => setF((x) => ({ ...x, portiereId: e.target.value }))}>
-          <option value="">Seleziona...</option>
-          {portieri.map((p) => (
-            <option key={p.id} value={p.id}>{p.nome}</option>
-          ))}
-        </select>
+        <SelettorePortiere portieri={portieri} value={f.portiereId} onChange={(v) => setF((x) => ({ ...x, portiereId: v }))} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 10 }}>
         <div>
@@ -6068,12 +6416,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
             <p style={{ ...sectionLabelStyle, marginBottom: 12 }}>Nuovo pacchetto</p>
             <div style={{ marginBottom: 10 }}>
               <label style={labelStyle}>Portiere</label>
-              <select style={inputStyle} value={form.portiereId} onChange={(e) => setForm((f) => ({ ...f, portiereId: e.target.value }))}>
-                <option value="">Seleziona...</option>
-                {portieri.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nome}</option>
-                ))}
-              </select>
+              <SelettorePortiere portieri={portieri} value={form.portiereId} onChange={(v) => setForm((f) => ({ ...f, portiereId: v }))} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 10 }}>
               <div>
@@ -6086,8 +6429,12 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
               </div>
             </div>
             <div style={{ marginBottom: 10 }}>
-              <label style={labelStyle}>Numero sedute (3-10)</label>
-              <input style={inputStyle} type="number" min="3" max="10" value={form.numeroSedute} onChange={(e) => setNumeroSedute(e.target.value)} />
+              <label style={labelStyle}>Numero sedute</label>
+              <select style={inputStyle} value={form.numeroSedute} onChange={(e) => setNumeroSedute(e.target.value)}>
+                {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <option key={n} value={n}>{n} sedute</option>
+                ))}
+              </select>
             </div>
 
             {form.dataInizio && form.datePrestabilite.length > 0 && (
@@ -6323,18 +6670,14 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
 
           <div className="no-print" style={{ marginTop: 14, maxWidth: 260 }}>
             <label style={labelStyle}>Portiere</label>
-            <select
-              style={inputStyle}
+            <SelettorePortiere
+              portieri={portieri}
               value={pk.portiereId || ""}
-              onChange={(e) => {
-                const nuovoPortiere = portieri.find((p) => String(p.id) === e.target.value);
-                modificaPacchetto(pk.id, { portiereId: e.target.value, nome: nuovoPortiere ? nuovoPortiere.nome : pk.nome });
+              onChange={(v) => {
+                const nuovoPortiere = portieri.find((p) => String(p.id) === v);
+                modificaPacchetto(pk.id, { portiereId: v, nome: nuovoPortiere ? nuovoPortiere.nome : pk.nome });
               }}
-            >
-              {portieri.map((p) => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="no-print" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12, maxWidth: 260 }}>
@@ -6343,18 +6686,16 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
               <input style={inputStyle} type="date" value={pk.dataInizio || ""} onChange={(e) => modificaPacchetto(pk.id, { dataInizio: e.target.value })} />
             </div>
             <div>
-              <label style={labelStyle}>Numero sedute (3-10)</label>
-              <input
+              <label style={labelStyle}>Numero sedute</label>
+              <select
                 style={inputStyle}
-                type="number"
-                min="3"
-                max="10"
-                value={pk.numeroSedute || ""}
-                onChange={(e) => {
-                  const n = Math.min(10, Math.max(3, Number(e.target.value) || 4));
-                  modificaPacchetto(pk.id, { numeroSedute: n });
-                }}
-              />
+                value={pk.numeroSedute || 4}
+                onChange={(e) => modificaPacchetto(pk.id, { numeroSedute: Number(e.target.value) })}
+              >
+                {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <option key={n} value={n}>{n} sedute</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -6509,8 +6850,10 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
 
 
 const App = () => {
-  const isModuloIscrizione = typeof window !== "undefined" && window.location.search.includes("iscrizione=1");
-  return isModuloIscrizione ? <ModuloIscrizione /> : <GestionalePortieri />;
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  if (search.includes("iscrizione=1")) return <ModuloIscrizione />;
+  if (search.includes("verifica=1")) return <ModuloVerificaPeriodica />;
+  return <GestionalePortieri />;
 };
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);
 </script>
