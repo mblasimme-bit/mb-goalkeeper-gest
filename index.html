@@ -2815,6 +2815,8 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         pacchetti={pacchetti}
         aggiungiPacchetto={aggiungiPacchetto}
         rimuoviPacchetto={rimuoviPacchetto}
+        modificaPacchetto={modificaPacchetto}
+        rinnovoDa={view.rinnovoDa}
         confirmAction={confirmAction}
         setView={setView}
         Menu={Menu}
@@ -6661,9 +6663,34 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
   );
 }
 
-function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, confirmAction, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
-  const [form, setForm] = useState({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false });
-  const [showForm, setShowForm] = useState(false);
+function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, confirmAction, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
+  const rigeneraDateIniziale = (dataInizio, numeroSedute) => {
+    if (!dataInizio) return [];
+    const n = Math.min(10, Math.max(3, Number(numeroSedute) || 4));
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const base = new Date(dataInizio);
+      base.setDate(base.getDate() + i * 7);
+      out.push(base.toISOString().slice(0, 10));
+    }
+    return out;
+  };
+  const [form, setForm] = useState(() =>
+    rinnovoDa
+      ? {
+          portiereId: String(rinnovoDa.portiereId),
+          dataInizio: rinnovoDa.dataInizio,
+          orario: rinnovoDa.orario || "17:00",
+          numeroSedute: String(rinnovoDa.numeroSedute || 4),
+          datePrestabilite: rigeneraDateIniziale(rinnovoDa.dataInizio, rinnovoDa.numeroSedute),
+          dataScadenzaSaldo: rinnovoDa.dataInizio,
+          importoTotale: "",
+          metodoPagamento: "",
+          pagato: false,
+        }
+      : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false }
+  );
+  const [showForm, setShowForm] = useState(!!rinnovoDa);
 
   // Rigenera le date prestabilite (cadenza settimanale) quando cambia il numero di sedute o la data di inizio,
   // conservando le date già impostate manualmente dove possibile.
@@ -6714,6 +6741,9 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
       pagato: form.pagato,
       dataPagamento: form.pagato ? new Date().toISOString().slice(0, 10) : null,
     });
+    if (rinnovoDa && rinnovoDa.idVecchio) {
+      modificaPacchetto(rinnovoDa.idVecchio, { rinnovato: true });
+    }
     setForm({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false });
     setShowForm(false);
     setView({ page: "pacchetto-dettaglio", id });
@@ -6807,13 +6837,17 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
         {pacchetti.map((pk) => {
           const fatte = pk.sedute.length;
           const completo = fatte >= pk.numeroSedute;
+          const daRinnovare = completo && !pk.rinnovato;
           return (
             <div key={pk.id} style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
               <button
                 onClick={() => setView({ page: "pacchetto-dettaglio", id: pk.id })}
                 style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", padding: 0, flex: 1, minWidth: 0 }}
               >
-                <p style={{ margin: 0, fontSize: 15, color: textPrimary, fontWeight: 600 }}>{pk.nome}</p>
+                <p style={{ margin: 0, fontSize: 15, color: textPrimary, fontWeight: 600 }}>
+                  {pk.nome}
+                  {daRinnovare && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: pitch }}>🔄 da rinnovare</span>}
+                </p>
                 <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
                   dal {formatData(pk.dataInizio)}{pk.importoTotale ? ` · €${Number(pk.importoTotale).toFixed(2)}` : ""}
                 </p>
@@ -6971,6 +7005,39 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
               €{Number(pk.importoTotale).toFixed(2)} totale · €{(Number(pk.importoTotale) / pk.numeroSedute).toFixed(2)} a seduta
             </p>
           ) : null}
+
+          {completo && !pk.rinnovato && (
+            <div className="no-print" style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, background: pitchDim, border: `1px solid ${pitch}` }}>
+              <p style={{ margin: 0, fontSize: 13, color: pitch, fontWeight: 700 }}>Questo pacchetto è concluso — vuoi rinnovarlo?</p>
+              <p style={{ margin: "4px 0 10px", fontSize: 12, color: textMuted }}>
+                Il nuovo pacchetto riprenderà dallo stesso giorno della settimana ({pk.orario ? `ore ${pk.orario}` : "stesso orario"}), potrai comunque modificare le date prima di salvare.
+              </p>
+              <button
+                onClick={() => {
+                  const tutteLeDate = [...(datePrestabilite.length ? datePrestabilite : pk.sedute)].sort();
+                  const ultima = tutteLeDate[tutteLeDate.length - 1] || pk.dataInizio;
+                  const prossima = new Date(ultima);
+                  prossima.setDate(prossima.getDate() + 7);
+                  setView({
+                    page: "pacchetti",
+                    rinnovoDa: {
+                      portiereId: pk.portiereId,
+                      orario: pk.orario || "17:00",
+                      numeroSedute: pk.numeroSedute,
+                      dataInizio: prossima.toISOString().slice(0, 10),
+                      idVecchio: pk.id,
+                    },
+                  });
+                }}
+                style={{ background: pitch, color: "#fff", border: "none", borderRadius: 9, padding: "8px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+              >
+                🔄 Rinnova pacchetto
+              </button>
+            </div>
+          )}
+          {completo && pk.rinnovato && (
+            <p style={{ margin: "10px 0 0", fontSize: 12, color: textMuted }}>✅ Già rinnovato</p>
+          )}
 
           <div className="no-print" style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <button
