@@ -66,6 +66,7 @@ const CERTIFICATI_KEY = "certificati-v1";
 const SPONSOR_COMM_KEY = "sponsor-commerciali-v1";
 const SPONSOR_TECH_KEY = "sponsor-tecnici-v1";
 const INVENTARIO_KEY = "inventario-v1";
+const NOTE_VELOCI_KEY = "note-veloci-v1";
 const SEED_IMPORT_FLAG = "money-pro-seed-fatto-v1";
 const SUPABASE_CONFIG_KEY = "supabase-config-v1";
 
@@ -262,6 +263,8 @@ const skyDim = "rgba(29,111,165,0.12)";
 const coral = "#c9522f";
 const coralDim = "rgba(201,82,47,0.12)";
 const whatsapp = "#1f9d55";
+const lilla = "#8562b0";
+const lillaDim = "rgba(133,98,176,0.14)";
 const whatsappDim = "rgba(31,157,85,0.14)";
 
 const AVATAR_PALETTE = [
@@ -909,6 +912,7 @@ function GestionalePortieri() {
   const [sponsorComm, setSponsorComm] = useState(null);
   const [sponsorTech, setSponsorTech] = useState(null);
   const [inventario, setInventario] = useState(null);
+  const [noteVeloci, setNoteVeloci] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [tentativoCaricamento, setTentativoCaricamento] = useState(0);
@@ -1285,8 +1289,9 @@ function GestionalePortieri() {
     const sponsorCommData = await readKey(SPONSOR_COMM_KEY, [], cfg, token);
     const sponsorTechData = await readKey(SPONSOR_TECH_KEY, [], cfg, token);
     const inventarioData = await readKey(INVENTARIO_KEY, [], cfg, token);
+    const noteVelociData = await readKey(NOTE_VELOCI_KEY, [], cfg, token);
     const settingsData = await readKey(SETTINGS_KEY, DEFAULT_SETTINGS, cfg, token);
-    return { portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData, certificatiData, sponsorCommData, sponsorTechData, inventarioData, settingsData };
+    return { portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData, certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, settingsData };
   };
 
   useEffect(() => {
@@ -1379,6 +1384,7 @@ function GestionalePortieri() {
       setSponsorComm(d.sponsorCommData);
       setSponsorTech(d.sponsorTechData);
       setInventario(d.inventarioData);
+      setNoteVeloci(d.noteVelociData);
       const mergedSettings = { ...DEFAULT_SETTINGS, ...d.settingsData };
       setSettings(mergedSettings);
       if (mergedSettings.defaultPage && mergedSettings.defaultPage !== "lista") {
@@ -1408,6 +1414,7 @@ function GestionalePortieri() {
       setSponsorComm(d.sponsorCommData);
       setSponsorTech(d.sponsorTechData);
       setInventario(d.inventarioData);
+      setNoteVeloci(d.noteVelociData);
       setSettings((prev) => ({ ...DEFAULT_SETTINGS, ...d.settingsData }));
       caricaIscrizioni().catch(() => {});
       caricaVerifiche().catch(() => {});
@@ -1499,7 +1506,7 @@ function GestionalePortieri() {
       versione: 1,
       esportatoIl: new Date().toISOString(),
       portieri, guanti, pacchetti, spese, entrate, eventi, certificati,
-      sponsorComm, sponsorTech, inventario, settings,
+      sponsorComm, sponsorTech, inventario, noteVeloci, settings,
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -1989,6 +1996,14 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     persist(INVENTARIO_KEY, inventario.filter((i) => i.id !== id), setInventario, { saltaFusione: true });
   };
 
+  const aggiungiNota = (testo) => {
+    if (!testo.trim()) return;
+    persist(NOTE_VELOCI_KEY, [{ id: generaId(), testo: testo.trim(), creato_il: new Date().toISOString() }, ...noteVeloci], setNoteVeloci);
+  };
+  const rimuoviNota = (id) => {
+    persist(NOTE_VELOCI_KEY, noteVeloci.filter((n) => n.id !== id), setNoteVeloci, { saltaFusione: true });
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -2166,6 +2181,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
               ["iscrizioni", "📋 Iscrizioni", sky, skyDim],
               ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim],
+              ["note", "📝 Note veloci", lilla, lillaDim],
               ["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"],
               ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"],
             ].map(([page, label, fg, bgc]) => (
@@ -3098,6 +3114,64 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     );
   }
 
+  if (view.page === "note") {
+    return (
+      <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Note veloci" />
+        <div style={{ height: 18 }} />
+
+        <div className="no-print" style={{ ...cardStyle, marginBottom: 16 }}>
+          <label style={labelStyle}>Nuova nota</label>
+          <textarea
+            id="nuova-nota-campo"
+            style={{ ...inputStyle, minHeight: 80, resize: "vertical" }}
+            placeholder="Es. Chiamare il genitore di Rossi per il pacchetto, portare guanti taglia 7 domani, idea per l'allenamento di gruppo..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                aggiungiNota(e.target.value);
+                e.target.value = "";
+              }
+            }}
+          />
+          <button
+            onClick={() => {
+              const campo = document.getElementById("nuova-nota-campo");
+              aggiungiNota(campo.value);
+              campo.value = "";
+            }}
+            style={{ ...primaryBtn, marginTop: 10, width: "100%" }}
+          >
+            + Aggiungi nota
+          </button>
+        </div>
+
+        {noteVeloci.length === 0 && (
+          <p style={{ fontSize: 14, color: textMuted, textAlign: "center", marginTop: 30 }}>Nessuna nota ancora. Scrivine una qui sopra — resta sempre a portata di mano.</p>
+        )}
+
+        {noteVeloci.map((n) => (
+          <div key={n.id} style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 14, color: textPrimary, whiteSpace: "pre-wrap" }}>{n.testo}</p>
+              <p style={{ margin: "6px 0 0", fontSize: 11, color: textMuted }}>
+                {new Date(n.creato_il).toLocaleDateString("it-IT")} · {new Date(n.creato_il).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+            <button
+              className="no-print"
+              onClick={() => confirmAction("Eliminare questa nota?", () => rimuoviNota(n.id))}
+              style={{ background: "none", border: "none", color: coral, fontSize: 16, cursor: "pointer", flexShrink: 0 }}
+            >
+              🗑️
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   if (view.page === "insoluti") {
     return (
       <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
@@ -3924,6 +3998,7 @@ create policy "solo autenticati" on gestionale_kv
                         if (dati.sponsorComm) persist(SPONSOR_COMM_KEY, dati.sponsorComm, setSponsorComm, opz);
                         if (dati.sponsorTech) persist(SPONSOR_TECH_KEY, dati.sponsorTech, setSponsorTech, opz);
                         if (dati.inventario) persist(INVENTARIO_KEY, dati.inventario, setInventario, opz);
+                        if (dati.noteVeloci) persist(NOTE_VELOCI_KEY, dati.noteVeloci, setNoteVeloci, opz);
                         if (dati.settings) persist(SETTINGS_KEY, dati.settings, setSettings, opz);
                       }
                     );
@@ -3968,6 +4043,7 @@ create policy "solo autenticati" on gestionale_kv
               "Sponsor commerciali": { key: SPONSOR_COMM_KEY, data: sponsorComm, setter: setSponsorComm },
               "Sponsor tecnici": { key: SPONSOR_TECH_KEY, data: sponsorTech, setter: setSponsorTech },
               "Inventario": { key: INVENTARIO_KEY, data: inventario, setter: setInventario },
+              "Note veloci": { key: NOTE_VELOCI_KEY, data: noteVeloci, setter: setNoteVeloci },
             };
             const correggiDuplicati = (nome) => {
               const c = collezioniSicure[nome];
@@ -4149,26 +4225,20 @@ create policy "solo autenticati" on gestionale_kv
       <button
         onClick={() => (showMasked ? setRevealed(true) : onClick && onClick())}
         style={{
-          flex: "1 1 160px",
+          flex: "1 1 45%",
+          minWidth: 140,
           textAlign: "left",
-          background: surface,
-          border: `1px solid ${border}`,
-          borderRadius: 16,
-          padding: "16px 18px",
+          background: bgc,
+          border: `1px solid ${fg}`,
+          borderRadius: 12,
+          padding: "12px 16px",
           cursor: "pointer",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
-          position: "relative",
-          overflow: "hidden",
         }}
       >
-        <div style={{ position: "absolute", top: 0, left: 0, width: 5, height: "100%", background: fg }} />
-        <p style={{ margin: 0, fontSize: 20 }}>{icon}</p>
-        <p style={{ margin: "8px 0 0", fontSize: 24, fontWeight: 800, color: textPrimary, letterSpacing: "-0.01em" }}>
+        <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: fg }}>
           {showMasked ? "••••" : value}
         </p>
-        <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted, fontWeight: 600 }}>{label}</p>
+        <p style={{ margin: "2px 0 0", fontSize: 12, color: fg, fontWeight: 600 }}>{icon} {label}</p>
       </button>
     );
   };
@@ -4360,10 +4430,11 @@ create policy "solo autenticati" on gestionale_kv
           );
         })()}
 
-        <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} />
+        <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          <OverviewCard icon="💶" label="Contabilità" value={entrate.length} fg={pitch} bgc={pitchDim} onClick={() => setView({ page: "contabilita" })} />
           <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} />
-          <OverviewCard icon="💼" label="Spese Academy" value={`€${speseTotale.toFixed(0)}`} fg={coral} bgc={coralDim} onClick={() => setView({ page: "spese" })} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} />
+          <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} />
+          <OverviewCard icon="📝" label="Note veloci" value={noteVeloci.length} fg={lilla} bgc={lillaDim} onClick={() => setView({ page: "note" })} />
         </div>
 
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
