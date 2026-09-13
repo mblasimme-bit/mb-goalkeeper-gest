@@ -375,25 +375,29 @@ function calcolaIncassiMeseAnno(guanti, pacchetti, entrate, eventi) {
   return { mese, anno, etichettaMese: MESI[Number(meseKey.slice(5, 7)) - 1], annoKey };
 }
 
-function IncassiMonitor({ guanti, pacchetti, entrate, eventi, masked }) {
+function IncassiMonitor({ guanti, pacchetti, entrate, eventi, masked, onNavigate }) {
   const { mese, anno, etichettaMese, annoKey } = useMemo(
     () => calcolaIncassiMeseAnno(guanti, pacchetti, entrate, eventi),
     [guanti, pacchetti, entrate, eventi]
   );
   const [revealed, setRevealed] = useState(false);
   const showMasked = masked && !revealed;
+  const handleClick = () => {
+    if (showMasked) { setRevealed(true); return; }
+    if (onNavigate) onNavigate();
+  };
   return (
     <>
       <button
-        onClick={() => showMasked && setRevealed(true)}
-        style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: showMasked ? "pointer" : "default", background: "rgba(31,157,85,0.12)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
+        onClick={handleClick}
+        style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: "rgba(31,157,85,0.12)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
       >
         <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>{showMasked ? "••••" : `€${mese.toFixed(2)}`}</p>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi di {etichettaMese}</p>
       </button>
       <button
-        onClick={() => showMasked && setRevealed(true)}
-        style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: showMasked ? "pointer" : "default", background: "rgba(31,157,85,0.07)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
+        onClick={handleClick}
+        style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: "rgba(31,157,85,0.07)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
       >
         <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>{showMasked ? "••••" : `€${anno.toFixed(2)}`}</p>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi anno {annoKey}</p>
@@ -4416,7 +4420,7 @@ create policy "solo autenticati" on gestionale_kv
             </button>
           )}
 
-          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} />
+          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} onNavigate={() => setView({ page: "contabilita" })} />
         </div>
 
         <div className="no-print" style={{ display: "flex", gap: 10, marginBottom: 10 }}>
@@ -4946,7 +4950,7 @@ function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa,
         </p>
 
         <div className="no-print" style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} />
+          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} onNavigate={() => setView({ page: "contabilita" })} />
         </div>
 
         <div className="no-print" style={{ margin: "16px 0" }}>
