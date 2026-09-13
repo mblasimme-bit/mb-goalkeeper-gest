@@ -4430,11 +4430,30 @@ create policy "solo autenticati" on gestionale_kv
           );
         })()}
 
+        <button
+          className="no-print"
+          onClick={() => setView({ page: "note" })}
+          style={{
+            width: "100%", textAlign: "left", cursor: "pointer",
+            background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 16px",
+            marginBottom: 10,
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 12, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
+          {noteVeloci.length === 0 ? (
+            <p style={{ margin: "4px 0 0", fontSize: 14, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
+          ) : (
+            noteVeloci.slice(0, 3).map((n) => (
+              <p key={n.id} style={{ margin: "4px 0 0", fontSize: 13, color: textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                · {n.testo}
+              </p>
+            ))
+          )}
+        </button>
+
         <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <OverviewCard icon="💶" label="Contabilità" value={entrate.length} fg={pitch} bgc={pitchDim} onClick={() => setView({ page: "contabilita" })} />
           <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} />
           <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} />
-          <OverviewCard icon="📝" label="Note veloci" value={noteVeloci.length} fg={lilla} bgc={lillaDim} onClick={() => setView({ page: "note" })} />
         </div>
 
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
