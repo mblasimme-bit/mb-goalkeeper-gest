@@ -4251,17 +4251,35 @@ create policy "solo autenticati" on gestionale_kv
         <TopBar title="Portieri" />
 
         <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, margin: "10px 0 16px", flexWrap: "wrap" }}>
-          {(iscrizioniPending.length > 0 || verifichePending.length > 0) ? (
-            <button
-              onClick={() => setView({ page: iscrizioniPending.length > 0 ? "iscrizioni" : "verifiche" })}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12, fontWeight: 700,
-                borderRadius: 100, border: `1px solid ${sky}`, background: skyDim, color: sky, cursor: "pointer",
-              }}
-            >
-              📬 {iscrizioniPending.length + verifichePending.length} nuovo/i
-            </button>
-          ) : <span />}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {(iscrizioniPending.length > 0 || verifichePending.length > 0) && (
+              <button
+                onClick={() => setView({ page: iscrizioniPending.length > 0 ? "iscrizioni" : "verifiche" })}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12, fontWeight: 700,
+                  borderRadius: 100, border: `1px solid ${sky}`, background: skyDim, color: sky, cursor: "pointer",
+                }}
+              >
+                📬 {iscrizioniPending.length + verifichePending.length} nuovo/i
+              </button>
+            )}
+            {(() => {
+              const giorniDaBackup = settings.ultimoBackup
+                ? Math.floor((Date.now() - new Date(settings.ultimoBackup).getTime()) / (1000 * 60 * 60 * 24))
+                : null;
+              return (
+                <button
+                  onClick={scaricaBackup}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12, fontWeight: 700,
+                    borderRadius: 100, border: `1px solid ${border}`, background: surface2, color: textMuted, cursor: "pointer",
+                  }}
+                >
+                  💾 {giorniDaBackup === null ? "Backup mai fatto" : giorniDaBackup === 0 ? "Backup fatto oggi" : `${giorniDaBackup}g fa`}
+                </button>
+              );
+            })()}
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               onClick={() => updateSettings({ nascondiImportiHome: !settings.nascondiImportiHome })}
@@ -4401,59 +4419,30 @@ create policy "solo autenticati" on gestionale_kv
           <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} />
         </div>
 
-        {(() => {
-          const giorniDaBackup = settings.ultimoBackup
-            ? Math.floor((Date.now() - new Date(settings.ultimoBackup).getTime()) / (1000 * 60 * 60 * 24))
-            : null;
-          return (
-            <div
-              className="no-print"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
-                padding: "8px 12px",
-                marginTop: 10,
-                borderRadius: 10,
-                background: surface2,
-                border: `1px solid ${border}`,
-              }}
-            >
-              <p style={{ margin: 0, fontSize: 11, color: textMuted }}>
-                💾 {giorniDaBackup === null ? "Backup mai fatto" : giorniDaBackup === 0 ? "Backup fatto oggi" : `Ultimo backup: ${giorniDaBackup} giorno/i fa`}
-              </p>
-              <button onClick={scaricaBackup} style={{ background: "none", border: "none", color: goldSoft, fontSize: 11, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}>
-                Scarica ora
-              </button>
-            </div>
-          );
-        })()}
-
-        <button
-          className="no-print"
-          onClick={() => setView({ page: "note" })}
-          style={{
-            width: "100%", textAlign: "left", cursor: "pointer",
-            background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 16px",
-            marginBottom: 10,
-          }}
-        >
-          <p style={{ margin: 0, fontSize: 12, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
-          {noteVeloci.length === 0 ? (
-            <p style={{ margin: "4px 0 0", fontSize: 14, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
-          ) : (
-            noteVeloci.slice(0, 3).map((n) => (
-              <p key={n.id} style={{ margin: "4px 0 0", fontSize: 13, color: textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                · {n.testo}
-              </p>
-            ))
-          )}
-        </button>
-
-        <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} />
-          <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} />
+        <div className="no-print" style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+            <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} />
+            <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} />
+          </div>
+          <button
+            onClick={() => setView({ page: "note" })}
+            style={{
+              flex: 1, textAlign: "left", cursor: "pointer",
+              background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 16px",
+              display: "flex", flexDirection: "column",
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 12, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
+            {noteVeloci.length === 0 ? (
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
+            ) : (
+              noteVeloci.slice(0, 3).map((n) => (
+                <p key={n.id} style={{ margin: "4px 0 0", fontSize: 13, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                  · {n.testo}
+                </p>
+              ))
+            )}
+          </button>
         </div>
 
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
