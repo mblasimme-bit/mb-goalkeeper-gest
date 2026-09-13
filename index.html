@@ -1605,6 +1605,8 @@ function GestionalePortieri() {
     await writeKey(SPONSOR_COMM_KEY, sponsorComm, cfg, token);
     await writeKey(SPONSOR_TECH_KEY, sponsorTech, cfg, token);
     await writeKey(INVENTARIO_KEY, inventario, cfg, token);
+    await writeKey(NOTE_VELOCI_KEY, noteVeloci, cfg, token);
+    await writeKey(DOCUMENTI_KEY, documenti, cfg, token);
     await writeKey(SETTINGS_KEY, settings, cfg, token);
   };
 
@@ -2218,12 +2220,18 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
   const printStyle = (
     <style>{`
+      @page {
+        margin: 2cm 1.5cm;
+      }
       @media print {
         body * { visibility: hidden; }
         #print-area, #print-area * { visibility: visible; }
         #print-area { position: absolute; top: 0; left: 0; width: 100%; }
         .no-print { display: none !important; }
         .print-only-block { display: block !important; }
+        p, li { orphans: 3; widows: 3; }
+        h1, h2, h3 { break-after: avoid; break-inside: avoid; }
+        img { break-inside: avoid; }
       }
     `}</style>
   );
@@ -3043,6 +3051,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     return (
       <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
         {printStyle}
+        <Menu />
         <div className="no-print" style={{ maxWidth: 700, margin: "0 auto", padding: "14px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <button onClick={() => setView(view.tornaA || { page: "dettaglio", id: p.id })} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}>
             <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
@@ -3175,6 +3184,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     return (
       <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
         {printStyle}
+        <Menu />
         <div className="no-print" style={{ maxWidth: 700, margin: "0 auto", padding: "14px 40px", display: "flex", justifyContent: "space-between" }}>
           <button onClick={() => setView(view.tornaA || { page: "lista" })} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}>
             <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
@@ -3525,6 +3535,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     return (
       <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
         {printStyle}
+        <Menu />
         <div className="no-print" style={{ maxWidth: 700, margin: "0 auto", padding: "14px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
           <button onClick={() => setView({ page: "documenti" })} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}>
             <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Documenti
