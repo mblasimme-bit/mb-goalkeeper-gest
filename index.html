@@ -13,6 +13,9 @@
 <meta name="theme-color" content="#0d0c0a" />
 <link rel="manifest" href="manifest.json" />
 <meta name="robots" content="noindex, nofollow, noarchive" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <style>
   html {
     background-color: #0d0c0a;
@@ -1283,18 +1286,23 @@ function GestionalePortieri() {
   };
 
   const caricaDati = async (cfg, token) => {
-    const portieriData = await readKey(PORTIERI_KEY, SEED, cfg, token);
-    const guantiData = await readKey(GUANTI_KEY, [], cfg, token);
-    const pacchettiData = await readKey(PACCHETTI_KEY, [], cfg, token);
-    const speseData = await readKey(SPESE_KEY, [], cfg, token);
-    const entrateData = await readKey(ENTRATE_KEY, [], cfg, token);
-    const eventiData = await readKey(EVENTI_KEY, [], cfg, token);
-    const certificatiData = await readKey(CERTIFICATI_KEY, [], cfg, token);
-    const sponsorCommData = await readKey(SPONSOR_COMM_KEY, [], cfg, token);
-    const sponsorTechData = await readKey(SPONSOR_TECH_KEY, [], cfg, token);
-    const inventarioData = await readKey(INVENTARIO_KEY, [], cfg, token);
-    const noteVelociData = await readKey(NOTE_VELOCI_KEY, [], cfg, token);
-    const settingsData = await readKey(SETTINGS_KEY, DEFAULT_SETTINGS, cfg, token);
+    const [
+      portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData,
+      certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, settingsData,
+    ] = await Promise.all([
+      readKey(PORTIERI_KEY, SEED, cfg, token),
+      readKey(GUANTI_KEY, [], cfg, token),
+      readKey(PACCHETTI_KEY, [], cfg, token),
+      readKey(SPESE_KEY, [], cfg, token),
+      readKey(ENTRATE_KEY, [], cfg, token),
+      readKey(EVENTI_KEY, [], cfg, token),
+      readKey(CERTIFICATI_KEY, [], cfg, token),
+      readKey(SPONSOR_COMM_KEY, [], cfg, token),
+      readKey(SPONSOR_TECH_KEY, [], cfg, token),
+      readKey(INVENTARIO_KEY, [], cfg, token),
+      readKey(NOTE_VELOCI_KEY, [], cfg, token),
+      readKey(SETTINGS_KEY, DEFAULT_SETTINGS, cfg, token),
+    ]);
     return { portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData, certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, settingsData };
   };
 
