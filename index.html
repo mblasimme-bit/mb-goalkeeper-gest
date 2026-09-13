@@ -70,6 +70,7 @@ const SPONSOR_COMM_KEY = "sponsor-commerciali-v1";
 const SPONSOR_TECH_KEY = "sponsor-tecnici-v1";
 const INVENTARIO_KEY = "inventario-v1";
 const NOTE_VELOCI_KEY = "note-veloci-v1";
+const DOCUMENTI_KEY = "documenti-v1";
 const SEED_IMPORT_FLAG = "money-pro-seed-fatto-v1";
 const SUPABASE_CONFIG_KEY = "supabase-config-v1";
 
@@ -154,6 +155,8 @@ const SETTINGS_KEY = "impostazioni-v1";
 const DEFAULT_SETTINGS = {
   academyName: "MB Goalkeeper Training",
   coachName: "",
+  mittenteTelefono: "",
+  mittenteEmail: "",
   accentPreset: "oro",
   temaAspetto: "scuro",
   compactMode: false,
@@ -953,6 +956,7 @@ function GestionalePortieri() {
   const [sponsorTech, setSponsorTech] = useState(null);
   const [inventario, setInventario] = useState(null);
   const [noteVeloci, setNoteVeloci] = useState(null);
+  const [documenti, setDocumenti] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [tentativoCaricamento, setTentativoCaricamento] = useState(0);
@@ -988,6 +992,8 @@ function GestionalePortieri() {
   const [showFiltro, setShowFiltro] = useState(false);
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showRicerca, setShowRicerca] = useState(false);
+  const [queryRicerca, setQueryRicerca] = useState("");
   const [dbConfig, setDbConfig] = useState(null);
   const [dbSetupStatus, setDbSetupStatus] = useState("idle"); // idle | running | done | error
   const [dbSetupLog, setDbSetupLog] = useState("");
@@ -1321,7 +1327,7 @@ function GestionalePortieri() {
   const caricaDati = async (cfg, token) => {
     const [
       portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData,
-      certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, settingsData,
+      certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, documentiData, settingsData,
     ] = await Promise.all([
       readKey(PORTIERI_KEY, SEED, cfg, token),
       readKey(GUANTI_KEY, [], cfg, token),
@@ -1334,9 +1340,10 @@ function GestionalePortieri() {
       readKey(SPONSOR_TECH_KEY, [], cfg, token),
       readKey(INVENTARIO_KEY, [], cfg, token),
       readKey(NOTE_VELOCI_KEY, [], cfg, token),
+      readKey(DOCUMENTI_KEY, [], cfg, token),
       readKey(SETTINGS_KEY, DEFAULT_SETTINGS, cfg, token),
     ]);
-    return { portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData, certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, settingsData };
+    return { portieriData, guantiData, pacchettiData, speseData, entrateData, eventiData, certificatiData, sponsorCommData, sponsorTechData, inventarioData, noteVelociData, documentiData, settingsData };
   };
 
   useEffect(() => {
@@ -1430,6 +1437,7 @@ function GestionalePortieri() {
       setSponsorTech(d.sponsorTechData);
       setInventario(d.inventarioData);
       setNoteVeloci(d.noteVelociData);
+      setDocumenti(d.documentiData);
       const mergedSettings = { ...DEFAULT_SETTINGS, ...d.settingsData };
       setSettings(mergedSettings);
       if (mergedSettings.defaultPage && mergedSettings.defaultPage !== "lista") {
@@ -1460,6 +1468,7 @@ function GestionalePortieri() {
       setSponsorTech(d.sponsorTechData);
       setInventario(d.inventarioData);
       setNoteVeloci(d.noteVelociData);
+      setDocumenti(d.documentiData);
       setSettings((prev) => ({ ...DEFAULT_SETTINGS, ...d.settingsData }));
       caricaIscrizioni().catch(() => {});
       caricaVerifiche().catch(() => {});
@@ -1551,7 +1560,7 @@ function GestionalePortieri() {
       versione: 1,
       esportatoIl: new Date().toISOString(),
       portieri, guanti, pacchetti, spese, entrate, eventi, certificati,
-      sponsorComm, sponsorTech, inventario, noteVeloci, settings,
+      sponsorComm, sponsorTech, inventario, noteVeloci, documenti, settings,
     };
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -2049,6 +2058,18 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     persist(NOTE_VELOCI_KEY, noteVeloci.filter((n) => n.id !== id), setNoteVeloci, { saltaFusione: true });
   };
 
+  const aggiungiDocumento = (doc) => {
+    const id = generaId();
+    persist(DOCUMENTI_KEY, [{ id, tipo: doc.tipo || "Documento", titolo: doc.titolo || "Senza titolo", contenuto: doc.contenuto || "", creato_il: new Date().toISOString(), modificato_il: new Date().toISOString() }, ...documenti], setDocumenti);
+    return id;
+  };
+  const modificaDocumento = (id, patch) => {
+    persist(DOCUMENTI_KEY, documenti.map((d) => (d.id === id ? { ...d, ...patch, modificato_il: new Date().toISOString() } : d)), setDocumenti);
+  };
+  const rimuoviDocumento = (id) => {
+    persist(DOCUMENTI_KEY, documenti.filter((d) => d.id !== id), setDocumenti, { saltaFusione: true });
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -2227,6 +2248,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               ["iscrizioni", "📋 Iscrizioni", sky, skyDim],
               ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim],
               ["note", "📝 Note veloci", lilla, lillaDim],
+              ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"],
               ["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"],
               ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"],
             ].map(([page, label, fg, bgc]) => (
@@ -2253,6 +2275,54 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             ))}
           </div>
           <div onClick={() => setShowMenu(false)} style={{ flex: 1, background: "rgba(0,0,0,0.5)" }} />
+        </div>
+      )}
+      {showRicerca && (
+        <div className="no-print" style={{ position: "fixed", inset: 0, zIndex: 55, display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 20px", background: "rgba(0,0,0,0.6)" }}>
+          <div style={{ width: "100%", maxWidth: 480 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <input
+                autoFocus
+                value={queryRicerca}
+                onChange={(e) => setQueryRicerca(e.target.value)}
+                placeholder="Cerca un portiere per nome..."
+                style={{ ...inputStyle, flex: 1, fontSize: 16, padding: "12px 14px" }}
+              />
+              <button
+                onClick={() => { setShowRicerca(false); setQueryRicerca(""); }}
+                style={{ background: surface2, color: textPrimary, border: `1px solid ${border}`, borderRadius: 10, width: 44, fontSize: 16, cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ maxHeight: "60vh", overflowY: "auto", borderRadius: 12, background: surface, border: `1px solid ${border}` }}>
+              {queryRicerca.trim().length === 0 && (
+                <p style={{ padding: 16, fontSize: 13, color: textMuted, margin: 0 }}>Inizia a scrivere un nome per cercare.</p>
+              )}
+              {queryRicerca.trim().length > 0 &&
+                portieri
+                  .filter((p) => p.nome.toLowerCase().includes(queryRicerca.trim().toLowerCase()))
+                  .sort((a, b) => a.nome.localeCompare(b.nome))
+                  .slice(0, 30)
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => {
+                        setView({ page: "dettaglio", id: p.id });
+                        setShowRicerca(false);
+                        setQueryRicerca("");
+                      }}
+                      style={{ width: "100%", textAlign: "left", padding: "12px 16px", background: "none", border: "none", borderBottom: `1px solid ${border}`, color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      {p.nome}
+                      {p.squadra && <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 400, color: textMuted }}>{p.squadra}</span>}
+                    </button>
+                  ))}
+              {queryRicerca.trim().length > 0 && portieri.filter((p) => p.nome.toLowerCase().includes(queryRicerca.trim().toLowerCase())).length === 0 && (
+                <p style={{ padding: 16, fontSize: 13, color: textMuted, margin: 0 }}>Nessun portiere trovato.</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
       {confirmDialog && (
@@ -2292,6 +2362,13 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
           style={{ background: surface2, color: textPrimary, border: `1px solid ${border}`, borderRadius: 10, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}
         >
           ☰
+        </button>
+        <button
+          onClick={() => setShowRicerca(true)}
+          title="Cerca portiere"
+          style={{ background: surface2, color: textPrimary, border: `1px solid ${border}`, borderRadius: 10, width: 44, height: 44, fontSize: 18, cursor: "pointer" }}
+        >
+          🔍
         </button>
         {view.page !== "lista" && (
           <button
@@ -3394,6 +3471,126 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     );
   }
 
+  if (view.page === "documenti") {
+    const TIPI_DOC = ["Relazione", "Analisi gara", "Appunto", "Lettera", "Raccomandazione", "Altro"];
+    return (
+      <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Documenti" />
+        <div style={{ height: 18 }} />
+
+        <button
+          className="no-print"
+          onClick={() => {
+            const id = aggiungiDocumento({ tipo: "Relazione", titolo: "Nuovo documento", contenuto: "" });
+            setView({ page: "documento-dettaglio", id });
+          }}
+          style={{ ...primaryBtn, width: "100%", marginBottom: 16 }}
+        >
+          + Nuovo documento
+        </button>
+
+        {documenti.length === 0 && (
+          <p style={{ fontSize: 14, color: textMuted, textAlign: "center", marginTop: 30 }}>
+            Nessun documento ancora. Crea relazioni, analisi gara, lettere o appunti che poi puoi stampare o esportare in PDF con intestazione.
+          </p>
+        )}
+
+        {documenti.map((d) => (
+          <button
+            key={d.id}
+            onClick={() => setView({ page: "documento-dettaglio", id: d.id })}
+            style={{ ...cardStyle, display: "block", width: "100%", textAlign: "left", cursor: "pointer" }}
+          >
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: coral, textTransform: "uppercase", letterSpacing: "0.04em" }}>{d.tipo}</p>
+            <p style={{ margin: "3px 0 0", fontSize: 16, fontWeight: 700, color: textPrimary }}>{d.titolo}</p>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: textMuted }}>
+              {d.contenuto ? d.contenuto.slice(0, 90) + (d.contenuto.length > 90 ? "…" : "") : "Vuoto"}
+            </p>
+            <p style={{ margin: "6px 0 0", fontSize: 11, color: textMuted }}>Modificato il {formatData((d.modificato_il || d.creato_il).slice(0, 10))}</p>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (view.page === "documento-dettaglio") {
+    const d = documenti.find((x) => x.id === view.id);
+    if (!d) {
+      setView({ page: "documenti" });
+      return null;
+    }
+    const TIPI_DOC = ["Relazione", "Analisi gara", "Appunto", "Lettera", "Raccomandazione", "Altro"];
+    return (
+      <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
+        {printStyle}
+        <div className="no-print" style={{ maxWidth: 700, margin: "0 auto", padding: "14px 40px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+          <button onClick={() => setView({ page: "documenti" })} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Documenti
+          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={handlePrint} style={primaryBtn}>🖨️ Stampa / Esporta PDF</button>
+            <button onClick={() => handleShare(d.titolo, `${d.tipo} — ${d.titolo}`)} style={ghostBtn}>📤 Condividi</button>
+            <button
+              onClick={() => confirmAction("Eliminare questo documento?", () => { rimuoviDocumento(d.id); setView({ page: "documenti" }); })}
+              style={{ background: "none", border: `1px solid ${coral}`, color: coral, borderRadius: 9, padding: "8px 12px", fontSize: 13, cursor: "pointer" }}
+            >
+              Elimina
+            </button>
+          </div>
+        </div>
+
+        <div className="no-print" style={{ maxWidth: 700, margin: "0 auto 10px", padding: "0 40px" }}>
+          <div style={cardStyle}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={labelStyle}>Tipo</label>
+                <select style={inputStyle} value={d.tipo} onChange={(e) => modificaDocumento(d.id, { tipo: e.target.value })}>
+                  {TIPI_DOC.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Titolo</label>
+                <input style={inputStyle} type="text" value={d.titolo} onChange={(e) => modificaDocumento(d.id, { titolo: e.target.value })} />
+              </div>
+            </div>
+            <label style={labelStyle}>Contenuto</label>
+            <textarea
+              style={{ ...inputStyle, minHeight: 260, resize: "vertical", lineHeight: 1.5 }}
+              value={d.contenuto}
+              placeholder="Scrivi qui la relazione, l'analisi, la lettera, l'appunto..."
+              onChange={(e) => modificaDocumento(d.id, { contenuto: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div id="print-area" style={{ maxWidth: 700, margin: "0 auto", padding: "30px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
+          <div style={{ textAlign: "center", marginBottom: 10 }}>
+            <img src={LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
+            <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>{settings.academyName || "MB Goalkeeper Academy Gest"}</p>
+            {(settings.coachName || settings.mittenteTelefono || settings.mittenteEmail) && (
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#777" }}>
+                {settings.coachName}
+                {settings.coachName && (settings.mittenteTelefono || settings.mittenteEmail) ? " · " : ""}
+                {settings.mittenteTelefono}
+                {settings.mittenteTelefono && settings.mittenteEmail ? " · " : ""}
+                {settings.mittenteEmail}
+              </p>
+            )}
+          </div>
+          <div style={{ borderTop: "2px solid #333", margin: "18px 0 24px" }} />
+          <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "#999", margin: "0 0 4px", fontWeight: 700 }}>{d.tipo}</p>
+          <h1 style={{ fontSize: 22, margin: "0 0 6px" }}>{d.titolo}</h1>
+          <p style={{ fontSize: 12, color: "#999", margin: "0 0 24px" }}>{formatData(new Date().toISOString().slice(0, 10))}</p>
+          <p style={{ fontSize: 15, color: "#222", whiteSpace: "pre-wrap", lineHeight: 1.7, margin: 0 }}>{d.contenuto || "—"}</p>
+        </div>
+      </div>
+    );
+  }
+
   if (view.page === "insoluti") {
     return (
       <div style={{ padding: 20, maxWidth: 640, margin: "0 auto" }}>
@@ -3705,12 +3902,25 @@ create policy "solo autenticati" on gestionale_kv
           />
           <label style={labelStyle}>Nome allenatore (facoltativo)</label>
           <input
-            style={inputStyle}
+            style={{ ...inputStyle, marginBottom: 12 }}
             type="text"
             placeholder="es. Mister Bianchi"
             value={settings.coachName}
             onChange={(e) => updateSettings({ coachName: e.target.value })}
           />
+          <p style={{ fontSize: 11, color: textMuted, margin: "0 0 10px" }}>
+            Nome, telefono ed email qui sotto compaiono nell'intestazione dei documenti che generi in ☰ → 📄 Documenti.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div>
+              <label style={labelStyle}>Telefono di contatto</label>
+              <input style={inputStyle} type="tel" placeholder="—" value={settings.mittenteTelefono} onChange={(e) => updateSettings({ mittenteTelefono: e.target.value })} />
+            </div>
+            <div>
+              <label style={labelStyle}>Email di contatto</label>
+              <input style={inputStyle} type="email" placeholder="—" value={settings.mittenteEmail} onChange={(e) => updateSettings({ mittenteEmail: e.target.value })} />
+            </div>
+          </div>
         </div>
 
         <div style={cardStyle}>
@@ -4221,6 +4431,7 @@ create policy "solo autenticati" on gestionale_kv
                         if (dati.sponsorTech) persist(SPONSOR_TECH_KEY, dati.sponsorTech, setSponsorTech, opz);
                         if (dati.inventario) persist(INVENTARIO_KEY, dati.inventario, setInventario, opz);
                         if (dati.noteVeloci) persist(NOTE_VELOCI_KEY, dati.noteVeloci, setNoteVeloci, opz);
+                        if (dati.documenti) persist(DOCUMENTI_KEY, dati.documenti, setDocumenti, opz);
                         if (dati.settings) persist(SETTINGS_KEY, dati.settings, setSettings, opz);
                       }
                     );
@@ -4266,6 +4477,7 @@ create policy "solo autenticati" on gestionale_kv
               "Sponsor tecnici": { key: SPONSOR_TECH_KEY, data: sponsorTech, setter: setSponsorTech },
               "Inventario": { key: INVENTARIO_KEY, data: inventario, setter: setInventario },
               "Note veloci": { key: NOTE_VELOCI_KEY, data: noteVeloci, setter: setNoteVeloci },
+              "Documenti": { key: DOCUMENTI_KEY, data: documenti, setter: setDocumenti },
             };
             const correggiDuplicati = (nome) => {
               const c = collezioniSicure[nome];
@@ -6793,7 +7005,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
               </select>
             </div>
 
-            {form.dataInizio && form.datePrestabilite.length > 0 && (
+            {form.dataInizio && (form.datePrestabilite || []).length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <label style={labelStyle}>Date prestabilite delle sedute (modificabili)</label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
