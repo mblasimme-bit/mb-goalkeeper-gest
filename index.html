@@ -380,22 +380,22 @@ function IncassiMonitor({ guanti, pacchetti, entrate, eventi, masked }) {
   const [revealed, setRevealed] = useState(false);
   const showMasked = masked && !revealed;
   return (
-    <div className="no-print" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+    <>
       <button
         onClick={() => showMasked && setRevealed(true)}
-        style={{ flex: "1 1 180px", textAlign: "left", cursor: showMasked ? "pointer" : "default", background: "rgba(31,157,85,0.12)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
+        style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: showMasked ? "pointer" : "default", background: "rgba(31,157,85,0.12)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
       >
         <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>{showMasked ? "••••" : `€${mese.toFixed(2)}`}</p>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi di {etichettaMese}</p>
       </button>
       <button
         onClick={() => showMasked && setRevealed(true)}
-        style={{ flex: "1 1 180px", textAlign: "left", cursor: showMasked ? "pointer" : "default", background: "rgba(31,157,85,0.07)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
+        style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: showMasked ? "pointer" : "default", background: "rgba(31,157,85,0.07)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
       >
         <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>{showMasked ? "••••" : `€${anno.toFixed(2)}`}</p>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi anno {annoKey}</p>
       </button>
-    </div>
+    </>
   );
 }
 
@@ -592,6 +592,48 @@ function ExportBar({ onPrint, onShare }) {
       <button onClick={onShare} style={{ ...ghostBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
         📤 Condividi
       </button>
+    </div>
+  );
+}
+
+// Versione compatta di ExportBar: un solo piccolo pulsante che apre un menu con le due opzioni.
+// Usata in home per alleggerire la schermata (al posto delle due barre intere).
+function ExportMenuCompatto({ onPrint, onShare }) {
+  const [aperto, setAperto] = useState(false);
+  return (
+    <div className="no-print" style={{ position: "relative" }}>
+      <button
+        onClick={() => setAperto((a) => !a)}
+        aria-label="Stampa o condividi"
+        style={{ ...ghostBtn, padding: "6px 10px", fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center" }}
+      >
+        ⋯
+      </button>
+      {aperto && (
+        <>
+          <div onClick={() => setAperto(false)} style={{ position: "fixed", inset: 0, zIndex: 60 }} />
+          <div
+            style={{
+              position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 61, minWidth: 180,
+              background: surface, border: `1px solid ${border}`, borderRadius: 10,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.35)", overflow: "hidden",
+            }}
+          >
+            <button
+              onClick={() => { setAperto(false); onPrint(); }}
+              style={{ width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", color: textPrimary, fontSize: 13, cursor: "pointer", display: "block" }}
+            >
+              🖨️ Esporta PDF
+            </button>
+            <button
+              onClick={() => { setAperto(false); onShare(); }}
+              style={{ width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", color: textPrimary, fontSize: 13, cursor: "pointer", display: "block", borderTop: `1px solid ${border}` }}
+            >
+              📤 Condividi
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -4138,17 +4180,27 @@ create policy "solo autenticati" on gestionale_kv
       <div id="print-area" style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 40px 48px" }}>
         <TopBar title="Portieri" />
 
-        <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", margin: "10px 0 -4px" }}>
-          <button
-            onClick={() => updateSettings({ nascondiImportiHome: !settings.nascondiImportiHome })}
-            style={{ ...ghostBtn, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12 }}
-          >
-            {settings.nascondiImportiHome ? "👁️ Mostra importi" : "🙈 Nascondi importi"}
-          </button>
-        </div>
-
-        <div className="no-print" style={{ margin: "16px 0" }}>
-          <ExportBar onPrint={handlePrint} onShare={() => handleShare("Portieri", `${portieri.length} portieri in rosa`)} />
+        <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, margin: "10px 0 16px", flexWrap: "wrap" }}>
+          {(iscrizioniPending.length > 0 || verifichePending.length > 0) ? (
+            <button
+              onClick={() => setView({ page: iscrizioniPending.length > 0 ? "iscrizioni" : "verifiche" })}
+              style={{
+                display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12, fontWeight: 700,
+                borderRadius: 100, border: `1px solid ${sky}`, background: skyDim, color: sky, cursor: "pointer",
+              }}
+            >
+              📬 {iscrizioniPending.length + verifichePending.length} nuovo/i
+            </button>
+          ) : <span />}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => updateSettings({ nascondiImportiHome: !settings.nascondiImportiHome })}
+              style={{ ...ghostBtn, display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", fontSize: 12 }}
+            >
+              {settings.nascondiImportiHome ? "👁️ Mostra importi" : "🙈 Nascondi importi"}
+            </button>
+            <ExportMenuCompatto onPrint={handlePrint} onShare={() => handleShare("Portieri", `${portieri.length} portieri in rosa`)} />
+          </div>
         </div>
 
         <AvvisiBanner />
@@ -4240,99 +4292,44 @@ create policy "solo autenticati" on gestionale_kv
           )}
         </div>
 
-        {(() => {
-          const oggiStr = new Date().toISOString().slice(0, 10);
-          const d = new Date();
-          const wd = (d.getDay() + 6) % 7; // lunedì = 0
-          const lunedi = new Date(d);
-          lunedi.setDate(d.getDate() - wd);
-          const domenica = new Date(lunedi);
-          domenica.setDate(lunedi.getDate() + 6);
-          const lunediStr = lunedi.toISOString().slice(0, 10);
-          const domenicaStr = domenica.toISOString().slice(0, 10);
-          const seduteOggi = entrate.filter((e) => e.data === oggiStr).length;
-          const seduteSettimana = entrate.filter((e) => e.data >= lunediStr && e.data <= domenicaStr).length;
-          return (
+        <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+          {(() => {
+            const oggiStr = new Date().toISOString().slice(0, 10);
+            const d = new Date();
+            const wd = (d.getDay() + 6) % 7; // lunedì = 0
+            const lunedi = new Date(d);
+            lunedi.setDate(d.getDate() - wd);
+            const domenica = new Date(lunedi);
+            domenica.setDate(lunedi.getDate() + 6);
+            const lunediStr = lunedi.toISOString().slice(0, 10);
+            const domenicaStr = domenica.toISOString().slice(0, 10);
+            const seduteOggi = entrate.filter((e) => e.data === oggiStr).length;
+            const seduteSettimana = entrate.filter((e) => e.data >= lunediStr && e.data <= domenicaStr).length;
+            return (
+              <button
+                className="no-print"
+                onClick={() => setView({ page: "calendario" })}
+                style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: surface2, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 16px" }}
+              >
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: textPrimary }}>{seduteSettimana}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted, fontWeight: 600 }}>📅 Sedute settimana · {seduteOggi} oggi</p>
+              </button>
+            );
+          })()}
+
+          {insolutiList.length > 0 && (
             <button
               className="no-print"
-              onClick={() => setView({ page: "calendario" })}
-              style={{
-                ...cardStyle,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                textAlign: "left",
-                width: "100%",
-                border: `1px solid ${border}`,
-              }}
+              onClick={() => setView({ page: "insoluti" })}
+              style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: coralDim, border: `1px solid ${coral}`, borderRadius: 12, padding: "12px 16px" }}
             >
-              <div>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: textPrimary }}>📅 Calendario sedute</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: textMuted }}>
-                  {seduteOggi} oggi · {seduteSettimana} questa settimana
-                </p>
-              </div>
-              <span style={{ color: textMuted, fontSize: 20 }}>›</span>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: coral }}>€{insolutiTotale.toFixed(2)}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 12, color: coral, fontWeight: 600 }}>⚠️ Insoluti · {insolutiList.length} da incassare</p>
             </button>
-          );
-        })()}
+          )}
 
-        {insolutiList.length > 0 && (
-          <button
-            className="no-print"
-            onClick={() => setView({ page: "insoluti" })}
-            style={{
-              ...cardStyle,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              textAlign: "left",
-              width: "100%",
-              border: `1px solid ${coral}`,
-              background: coralDim,
-            }}
-          >
-            <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: coral }}>⚠️ Insoluti</p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: textMuted }}>
-                {insolutiList.length} da incassare · €{insolutiTotale.toFixed(2)}
-              </p>
-            </div>
-            <span style={{ color: coral, fontSize: 20 }}>›</span>
-          </button>
-        )}
-
-        {(iscrizioniPending.length > 0 || verifichePending.length > 0) && (
-          <button
-            className="no-print"
-            onClick={() => setView({ page: iscrizioniPending.length > 0 ? "iscrizioni" : "verifiche" })}
-            style={{
-              ...cardStyle,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              textAlign: "left",
-              width: "100%",
-              border: `1px solid ${sky}`,
-              background: skyDim,
-            }}
-          >
-            <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: sky }}>📬 Nuovi questionari</p>
-              <p style={{ margin: "4px 0 0", fontSize: 12, color: textMuted }}>
-                {iscrizioniPending.length > 0 && `${iscrizioniPending.length} iscrizione/i`}
-                {iscrizioniPending.length > 0 && verifichePending.length > 0 && " · "}
-                {verifichePending.length > 0 && `${verifichePending.length} verifica/e periodica/e`}
-              </p>
-            </div>
-            <span style={{ color: sky, fontSize: 20 }}>›</span>
-          </button>
-        )}
-
-        <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} />
+          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} />
+        </div>
 
         {(() => {
           const giorniDaBackup = settings.ultimoBackup
@@ -4869,7 +4866,7 @@ function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa,
           {spese.length} spese registrate · totale €{totale.toFixed(2)}
         </p>
 
-        <div style={{ marginTop: 16 }}>
+        <div className="no-print" style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 10 }}>
           <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} />
         </div>
 
