@@ -484,6 +484,39 @@ function Select({ value, onChange, options, placeholder }) {
 // Selettore portiere con casella di ricerca: a differenza del <select> nativo, su iPhone permette
 // di digitare per filtrare (il menu a tendina nativo su iOS non apre la tastiera). Sempre in
 // ordine alfabetico.
+// Campo di testo lungo (note, osservazioni): per default mostra il testo INTERO come paragrafo
+// normale (leggibile tutto, e si stampa/esporta correttamente in PDF — a differenza di una
+// <textarea> con scroll, il cui contenuto nascosto viene tagliato fuori dalla stampa).
+// Diventa modificabile solo cliccando "Modifica".
+function CampoNota({ value, onChange, placeholder, minHeight }) {
+  const [modifica, setModifica] = useState(false);
+  if (modifica) {
+    return (
+      <div>
+        <textarea
+          autoFocus
+          style={{ ...inputStyle, resize: "vertical", minHeight: minHeight || 90 }}
+          value={value || ""}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button className="no-print" onClick={() => setModifica(false)} style={{ ...ghostBtn, marginTop: 6, fontSize: 12, padding: "4px 10px" }}>
+          ✓ Fatto
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div style={{ padding: "10px 12px", borderRadius: 9, border: `1px solid ${border}`, background: surface2, minHeight: minHeight || 60 }}>
+      <p style={{ margin: 0, fontSize: 14, color: value ? textPrimary : textMuted, whiteSpace: "pre-wrap" }}>{value || placeholder || "—"}</p>
+      <button className="no-print" onClick={() => setModifica(true)} style={{ ...ghostBtn, marginTop: 8, fontSize: 11, padding: "3px 9px" }}>
+        ✏️ Modifica
+      </button>
+    </div>
+  );
+}
+
+
 function SelettorePortiere({ portieri, value, onChange, placeholder, consentiVuoto, style }) {
   const [aperto, setAperto] = useState(false);
   const [query, setQuery] = useState("");
@@ -2364,17 +2397,25 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             >
               <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
             </button>
-            <button
-              onClick={() => {
-                confirmAction(`Eliminare ${p.nome} dalla rosa? L'azione non è reversibile.`, () => {
-                  rimuoviPortiere(p.id);
-                  setView({ page: "lista" });
-                });
-              }}
-              style={{ background: "none", border: `1px solid ${coral}`, color: coral, borderRadius: 9, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-            >
-              Elimina portiere
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={() => setView({ page: "stampa-portiere", id: p.id, tornaA: { page: "dettaglio", id: p.id, tab } })}
+                style={{ ...ghostBtn, fontSize: 13, padding: "6px 12px" }}
+              >
+                🖨️ Stampa scheda
+              </button>
+              <button
+                onClick={() => {
+                  confirmAction(`Eliminare ${p.nome} dalla rosa? L'azione non è reversibile.`, () => {
+                    rimuoviPortiere(p.id);
+                    setView({ page: "lista" });
+                  });
+                }}
+                style={{ background: "none", border: `1px solid ${coral}`, color: coral, borderRadius: 9, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+              >
+                Elimina portiere
+              </button>
+            </div>
           </div>
         </div>
         <div id="print-area" style={{ maxWidth: 1400, margin: "0 auto", padding: "18px 40px 48px" }}>
@@ -2516,7 +2557,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 <p style={{ fontSize: 11, color: textMuted, marginBottom: 8 }}>
                   Si aggiorna da solo ogni volta che approvi un questionario periodico (menu ☰ → Verifiche periodiche). Puoi comunque modificarlo a mano qui.
                 </p>
-                <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 110, whiteSpace: "pre-wrap" }} value={p.storicoProgressi || ""} placeholder="Ancora nessun aggiornamento." onChange={(e) => updatePortiere(p.id, { storicoProgressi: e.target.value })} />
+                <CampoNota value={p.storicoProgressi} onChange={(v) => updatePortiere(p.id, { storicoProgressi: v })} placeholder="Ancora nessun aggiornamento." minHeight={110} />
               </div>
 
               <p style={sectionLabelStyle}>🧠 Profilo</p>
@@ -2557,19 +2598,19 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               <div style={cardStyle}>
                 <div style={{ marginBottom: 12 }}>
                   <label style={labelStyle}>Note genitore</label>
-                  <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={p.note_genitore || ""} placeholder="Comunicazioni, richieste, accordi..." onChange={(e) => updatePortiere(p.id, { note_genitore: e.target.value })} />
+                  <CampoNota value={p.note_genitore} onChange={(v) => updatePortiere(p.id, { note_genitore: v })} placeholder="Comunicazioni, richieste, accordi..." />
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <label style={labelStyle}>Note personali ragazzo</label>
-                  <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={p.note_personali || ""} placeholder="Osservazioni tecniche, obiettivi..." onChange={(e) => updatePortiere(p.id, { note_personali: e.target.value })} />
+                  <CampoNota value={p.note_personali} onChange={(v) => updatePortiere(p.id, { note_personali: v })} placeholder="Osservazioni tecniche, obiettivi..." />
                 </div>
                 <div style={{ marginBottom: 12 }}>
                   <label style={labelStyle}>Note mediche (visibili anche in 🩺 Dati medici)</label>
-                  <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={p.noteMediche || ""} placeholder="Allergie, situazioni particolari..." onChange={(e) => updatePortiere(p.id, { noteMediche: e.target.value })} />
+                  <CampoNota value={p.noteMediche} onChange={(v) => updatePortiere(p.id, { noteMediche: v })} placeholder="Allergie, situazioni particolari..." />
                 </div>
                 <div>
                   <label style={labelStyle}>"Mi fa piacere sapere il vostro punto di vista, pregi e difetti" (dal genitore)</label>
-                  <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 90 }} value={p.osservazioniGenitore || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { osservazioniGenitore: e.target.value })} />
+                  <CampoNota value={p.osservazioniGenitore} onChange={(v) => updatePortiere(p.id, { osservazioniGenitore: v })} minHeight={90} />
                 </div>
               </div>
             </>
@@ -2607,7 +2648,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 </div>
                 <div>
                   <label style={labelStyle}>Altre note mediche</label>
-                  <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 60 }} value={p.noteMediche || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { noteMediche: e.target.value })} />
+                  <CampoNota value={p.noteMediche} onChange={(v) => updatePortiere(p.id, { noteMediche: v })} />
                 </div>
               </div>
               <div style={{ marginBottom: 12 }}>
@@ -2880,6 +2921,173 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         handlePrint={handlePrint}
         handleShare={handleShare}
       />
+    );
+  }
+
+  if (view.page === "stampa-portiere") {
+    const p = portieri.find((x) => x.id === view.id);
+    if (!p) {
+      setView({ page: "lista" });
+      return null;
+    }
+    const progresso = p.progresso || {};
+    const pacchettiPortiere = pacchetti.filter((pk) => String(pk.portiereId) === String(p.id));
+    const venditePortiere = guanti.filter((g) => String(g.portiereId) === String(p.id) && g.tipo === "vendita");
+    const entratePortiere = entrate.filter((e) => String(e.portiereId) === String(p.id));
+    const storicoPagamenti = [
+      ...pacchettiPortiere.filter((pk) => pk.importoTotale).map((pk) => ({ data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale), fonte: "Pacchetto", pagato: eDavveroPagato(pk.pagato) })),
+      ...venditePortiere.map((g) => ({ data: g.data, importo: Number(g.importo) || 0, fonte: "Materiale", pagato: true })),
+      ...entratePortiere.map((e) => ({ data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Seduta singola", pagato: eDavveroPagato(e.pagato) })),
+    ].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+    const totalePagato = storicoPagamenti.filter((v) => v.pagato).reduce((s, v) => s + v.importo, 0);
+
+    const SEZIONI = [
+      ["anagrafica", "🪪 Dati anagrafici"],
+      ["contatti", "📞 Contatti"],
+      ["tecnico", "🧠 Profilo tecnico"],
+      ["progressi", "📈 Storico progressi"],
+      ["note", "📝 Note"],
+      ["medici", "🩺 Dati medici"],
+      ["pagamenti", "💶 Pagamenti"],
+    ];
+    const selezione = view.sezioniStampa || Object.fromEntries(SEZIONI.map(([k]) => [k, true]));
+    const setSelezione = (chiave, val) => setView((v) => ({ ...v, sezioniStampa: { ...selezione, [chiave]: val } }));
+
+    const RigaCampo = ({ label, value }) => (
+      !value ? null : (
+        <p style={{ fontSize: 14, margin: "0 0 8px", color: "#555" }}>
+          {label}: <strong style={{ color: "#111" }}>{value}</strong>
+        </p>
+      )
+    );
+
+    return (
+      <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
+        {printStyle}
+        <div className="no-print" style={{ maxWidth: 700, margin: "0 auto", padding: "14px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button onClick={() => setView(view.tornaA || { page: "dettaglio", id: p.id })} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
+          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={handlePrint} style={primaryBtn}>🖨️ Stampa / Esporta PDF</button>
+            <button onClick={() => handleShare(`Scheda ${p.nome}`, `Scheda di ${p.nome} — MB Goalkeeper Academy`)} style={ghostBtn}>📤 Condividi</button>
+          </div>
+        </div>
+
+        <div className="no-print" style={{ maxWidth: 700, margin: "0 auto 10px", padding: "0 40px" }}>
+          <div style={cardStyle}>
+            <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: textPrimary }}>Cosa includere nella stampa:</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {SEZIONI.map(([chiave, label]) => (
+                <label key={chiave} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: textSecondary, cursor: "pointer" }}>
+                  <input type="checkbox" checked={selezione[chiave] !== false} onChange={(e) => setSelezione(chiave, e.target.checked)} />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div id="print-area" style={{ maxWidth: 700, margin: "0 auto", padding: "30px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
+            <img src={LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
+            <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>MB Goalkeeper Academy Gest</p>
+          </div>
+          <h1 style={{ fontSize: 22, textAlign: "center", margin: "0 0 4px" }}>Scheda portiere</h1>
+          <p style={{ fontSize: 13, textAlign: "center", color: "#888", margin: "0 0 24px" }}>{p.nome} · generata il {formatData(new Date().toISOString().slice(0, 10))}</p>
+
+          {selezione.anagrafica !== false && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>🪪 Dati anagrafici</p>
+              <RigaCampo label="Nome" value={p.nome} />
+              <RigaCampo label="Squadra" value={p.squadra} />
+              <RigaCampo label="Data di nascita" value={p.dataNascita ? formatData(p.dataNascita) : null} />
+              <RigaCampo label="Altezza" value={p.altezza ? `${p.altezza} cm` : null} />
+              <RigaCampo label="Peso" value={p.peso ? `${p.peso} kg` : null} />
+              <RigaCampo label="Taglia guanti" value={p.taglieGuanti} />
+            </div>
+          )}
+
+          {selezione.contatti !== false && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>📞 Contatti</p>
+              <RigaCampo label="Telefono" value={p.telefono} />
+              <RigaCampo label="Email" value={p.email} />
+              <RigaCampo label="Consenso privacy/foto" value={p.consensoPrivacy ? `Dato il ${formatData(p.consensoData)}` : null} />
+            </div>
+          )}
+
+          {selezione.tecnico !== false && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>🧠 Profilo tecnico</p>
+              <RigaCampo label="Preparatore squadra" value={p.preparatore} />
+              <RigaCampo label="Carattere" value={p.carattere ? cap(p.carattere) : null} />
+              <RigaCampo label="Prospettiva" value={p.prospettiva ? cap(p.prospettiva) : null} />
+              <RigaCampo label="Atteggiamento" value={p.atteggiamento ? cap(p.atteggiamento) : null} />
+              {SETTORI.map(([chiave, label]) => (
+                <RigaCampo key={chiave} label={label} value={progresso[chiave] ? cap(progresso[chiave]) : null} />
+              ))}
+            </div>
+          )}
+
+          {selezione.progressi !== false && p.storicoProgressi && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>📈 Storico progressi</p>
+              <p style={{ fontSize: 14, margin: 0, color: "#333", whiteSpace: "pre-wrap" }}>{p.storicoProgressi}</p>
+            </div>
+          )}
+
+          {selezione.note !== false && (p.note_genitore || p.note_personali || p.osservazioniGenitore) && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>📝 Note</p>
+              {p.osservazioniGenitore && (
+                <div style={{ marginBottom: 10 }}>
+                  <p style={{ fontSize: 11, color: "#999", fontStyle: "italic", margin: "0 0 4px" }}>Punto di vista del genitore:</p>
+                  <p style={{ fontSize: 14, margin: 0, color: "#333", whiteSpace: "pre-wrap" }}>{p.osservazioniGenitore}</p>
+                </div>
+              )}
+              {p.note_genitore && (
+                <div style={{ marginBottom: 10 }}>
+                  <p style={{ fontSize: 11, color: "#999", fontStyle: "italic", margin: "0 0 4px" }}>Comunicazioni con il genitore:</p>
+                  <p style={{ fontSize: 14, margin: 0, color: "#333", whiteSpace: "pre-wrap" }}>{p.note_genitore}</p>
+                </div>
+              )}
+              {p.note_personali && (
+                <div>
+                  <p style={{ fontSize: 11, color: "#999", fontStyle: "italic", margin: "0 0 4px" }}>Note tecniche personali:</p>
+                  <p style={{ fontSize: 14, margin: 0, color: "#333", whiteSpace: "pre-wrap" }}>{p.note_personali}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selezione.medici !== false && (p.allergie || p.noteMediche) && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>🩺 Dati medici</p>
+              <RigaCampo label="Allergie" value={p.allergie} />
+              {p.noteMediche && <p style={{ fontSize: 14, margin: "8px 0 0", color: "#333", whiteSpace: "pre-wrap" }}>{p.noteMediche}</p>}
+            </div>
+          )}
+
+          {selezione.pagamenti !== false && (
+            <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>💶 Pagamenti</p>
+              {storicoPagamenti.length === 0 && <p style={{ fontSize: 14, color: "#888", margin: 0 }}>Nessun pagamento registrato.</p>}
+              {storicoPagamenti.map((v, i) => (
+                <p key={i} style={{ fontSize: 13, margin: "0 0 6px", color: "#555", display: "flex", justifyContent: "space-between" }}>
+                  <span>{formatData(v.data)} · {v.fonte}{!v.pagato ? " (insoluto)" : ""}</span>
+                  <strong style={{ color: v.pagato ? "#1f9d55" : "#c9522f" }}>€{v.importo.toFixed(2)}</strong>
+                </p>
+              ))}
+              <p style={{ fontSize: 15, fontWeight: 800, margin: "12px 0 0", color: "#1f9d55", textAlign: "right" }}>Totale incassato: €{totalePagato.toFixed(2)}</p>
+            </div>
+          )}
+
+          <p style={{ fontSize: 11, color: "#999", marginTop: 24 }}>
+            Documento riepilogativo generato da MB Goalkeeper Academy Gest.
+          </p>
+        </div>
+      </div>
     );
   }
 
