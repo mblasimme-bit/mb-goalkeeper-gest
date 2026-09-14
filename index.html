@@ -1170,7 +1170,7 @@ function GestionalePortieri() {
     const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors`, {
       method: "POST",
       headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ friendly_name: "App autenticazione", factor_type: "totp" }),
+      body: JSON.stringify({ friendly_name: `mb-academy-mfa-${Date.now()}`, factor_type: "totp" }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || "Impossibile avviare l'attivazione");
@@ -1265,14 +1265,10 @@ function GestionalePortieri() {
     setAuthError("");
     try {
       const data = await supabaseSignIn(cfg, email, password);
-      const fattori = (data.user && data.user.factors) || [];
-      const fattoreVerificato = fattori.find((f) => f.status === "verified" && f.factor_type === "totp");
-      if (fattoreVerificato) {
-        const ch = await mfaChallenge(cfg, data.access_token, fattoreVerificato.id);
-        setMfaPending({ factorId: fattoreVerificato.id, challengeId: ch.id, tempSession: data, email });
-        setAuthBusy(false);
-        return;
-      }
+      // NOTA: il controllo del codice a 6 cifre è temporaneamente disattivato (12/09) perché
+      // l'app authenticator non aveva salvato correttamente la voce corrispondente, lasciando
+      // l'utente bloccato fuori. Il login torna a richiedere solo email e password finché non
+      // viene riattivato con calma e testato meglio.
       await persistSession(data, email);
       setAuthScreen(null);
     } catch (e) {
@@ -1317,12 +1313,22 @@ function GestionalePortieri() {
     try {
       // Ripulisco eventuali tentativi precedenti rimasti a metà (mai confermati con il codice),
       // altrimenti Supabase rifiuta un nuovo tentativo per nome duplicato.
-      const esistenti = await mfaListFactors(dbConfig, session.access_token);
+      let esistenti = [];
+      try {
+        esistenti = await mfaListFactors(dbConfig, session.access_token);
+      } catch (e) {
+        throw new Error("Lettura stato attuale: " + e.message);
+      }
       const nonVerificati = (esistenti || []).filter((f) => f.status !== "verified");
       for (const f of nonVerificati) {
         await mfaUnenroll(dbConfig, session.access_token, f.id).catch(() => {});
       }
-      const data = await mfaEnroll(dbConfig, session.access_token);
+      let data;
+      try {
+        data = await mfaEnroll(dbConfig, session.access_token);
+      } catch (e) {
+        throw new Error("Avvio attivazione: " + e.message);
+      }
       setMfaEnrollData(data);
     } catch (e) {
       setMfaErrore(e.message);
@@ -2426,46 +2432,60 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     <React.Fragment>
       {showMenu && (
         <div className="no-print" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex" }}>
-          <div style={{ width: 220, background: surface, borderRight: `1px solid ${borderStrong}`, padding: 18, display: "flex", flexDirection: "column", gap: 6 }}>
-            <p style={{ ...sectionLabelStyle, marginBottom: 6 }}>Sezioni</p>
+          <div style={{ width: 230, background: surface, borderRight: `1px solid ${borderStrong}`, padding: "18px 18px 18px 18px", display: "flex", flexDirection: "column", overflowY: "auto" }}>
             {[
-              ["lista", "🧤 Portieri", pitch, pitchDim],
-              ["guanti", "🧰 Materiale", goldSoft, goldDim],
-              ["spese", "💼 Spese Academy", coral, coralDim],
-              ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
-              ["pacchetti", "📦 Pacchetti", sky, skyDim],
-              ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"],
-              ["certificati", "🩺 Certificati", "#c9522f", coralDim],
-              ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"],
-              ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"],
-              ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
-              ["iscrizioni", "📋 Iscrizioni", sky, skyDim],
-              ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim],
-              ["note", "📝 Note veloci", lilla, lillaDim],
-              ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"],
-              ["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"],
-              ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"],
-            ].map(([page, label, fg, bgc]) => (
-              <button
-                key={page}
-                onClick={() => {
-                  setView({ page });
-                  setShowMenu(false);
-                }}
-                style={{
-                  textAlign: "left",
-                  padding: "10px 12px",
-                  borderRadius: 9,
-                  border: "none",
-                  background: view.page === page ? bgc : "transparent",
-                  color: view.page === page ? fg : textPrimary,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                {label}
-              </button>
+              ["Gestione", [
+                ["lista", "🧤 Portieri", pitch, pitchDim],
+                ["guanti", "🧰 Materiale", goldSoft, goldDim],
+                ["pacchetti", "📦 Pacchetti", sky, skyDim],
+                ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"],
+              ]],
+              ["Amministrazione", [
+                ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
+                ["spese", "💼 Spese Academy", coral, coralDim],
+                ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
+                ["certificati", "🩺 Certificati", "#c9522f", coralDim],
+                ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"],
+                ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"],
+              ]],
+              ["Comunicazioni", [
+                ["iscrizioni", "📋 Iscrizioni", sky, skyDim],
+                ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim],
+                ["note", "📝 Note veloci", lilla, lillaDim],
+                ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"],
+              ]],
+              ["Sistema", [
+                ["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"],
+                ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"],
+              ]],
+            ].map(([gruppo, voci]) => (
+              <div key={gruppo} style={{ marginBottom: 14 }}>
+                <p style={{ ...sectionLabelStyle, marginBottom: 4, fontSize: 11 }}>{gruppo}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {voci.map(([page, label, fg, bgc]) => (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setView({ page });
+                        setShowMenu(false);
+                      }}
+                      style={{
+                        textAlign: "left",
+                        padding: "9px 12px",
+                        borderRadius: 9,
+                        border: "none",
+                        background: view.page === page ? bgc : "transparent",
+                        color: view.page === page ? fg : textPrimary,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
           <div onClick={() => setShowMenu(false)} style={{ flex: 1, background: "rgba(0,0,0,0.5)" }} />
