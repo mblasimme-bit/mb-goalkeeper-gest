@@ -1009,6 +1009,13 @@ function GestionalePortieri() {
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
+  const [mfaPending, setMfaPending] = useState(null); // { factorId, challengeId, tempSession, email }
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaFactors, setMfaFactors] = useState(null);
+  const [mfaEnrollData, setMfaEnrollData] = useState(null);
+  const [mfaEnrollCode, setMfaEnrollCode] = useState("");
+  const [mfaBusy, setMfaBusy] = useState(false);
+  const [mfaErrore, setMfaErrore] = useState("");
   const [authSetupStatus, setAuthSetupStatus] = useState("idle");
   const [authSetupLog, setAuthSetupLog] = useState("");
   const [showEnableAuthForm, setShowEnableAuthForm] = useState(false);
@@ -1150,6 +1157,55 @@ function GestionalePortieri() {
     return data;
   };
 
+  // --- Verifica in due passaggi (MFA/TOTP) ---
+  const mfaListFactors = async (cfg, token) => {
+    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors`, {
+      headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || "Errore lettura fattori");
+    return data.factors || data || [];
+  };
+  const mfaEnroll = async (cfg, token) => {
+    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors`, {
+      method: "POST",
+      headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ friendly_name: "App autenticazione", factor_type: "totp" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || "Impossibile avviare l'attivazione");
+    return data; // { id, totp: { qr_code, secret, uri } }
+  };
+  const mfaChallenge = async (cfg, token, factorId) => {
+    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors/${factorId}/challenge`, {
+      method: "POST",
+      headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || "Errore richiesta codice");
+    return data; // { id: challengeId }
+  };
+  const mfaVerify = async (cfg, token, factorId, challengeId, code) => {
+    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors/${factorId}/verify`, {
+      method: "POST",
+      headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ challenge_id: challengeId, code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || "Codice non valido");
+    return data;
+  };
+  const mfaUnenroll = async (cfg, token, factorId) => {
+    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors/${factorId}`, {
+      method: "DELETE",
+      headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error_description || data.msg || "Errore disattivazione");
+    }
+  };
+
   // Salvataggio della sessione di login: usa lo storage di Claude quando disponibile (dentro
   // l'artifact), altrimenti localStorage (quando l'app gira da sola, es. su Netlify) — così il
   // login resta affidabile e prevedibile ovunque venga aperta l'app.
@@ -1209,12 +1265,90 @@ function GestionalePortieri() {
     setAuthError("");
     try {
       const data = await supabaseSignIn(cfg, email, password);
+      const fattori = (data.user && data.user.factors) || [];
+      const fattoreVerificato = fattori.find((f) => f.status === "verified" && f.factor_type === "totp");
+      if (fattoreVerificato) {
+        const ch = await mfaChallenge(cfg, data.access_token, fattoreVerificato.id);
+        setMfaPending({ factorId: fattoreVerificato.id, challengeId: ch.id, tempSession: data, email });
+        setAuthBusy(false);
+        return;
+      }
       await persistSession(data, email);
       setAuthScreen(null);
     } catch (e) {
       setAuthError(e.message);
     } finally {
       setAuthBusy(false);
+    }
+  };
+
+  const doVerificaMfaLogin = async () => {
+    if (!mfaPending || mfaCode.trim().length < 6) return;
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      const verificato = await mfaVerify(dbConfig, mfaPending.tempSession.access_token, mfaPending.factorId, mfaPending.challengeId, mfaCode.trim());
+      await persistSession(verificato, mfaPending.email);
+      setMfaPending(null);
+      setMfaCode("");
+      setAuthScreen(null);
+    } catch (e) {
+      setAuthError(e.message);
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const caricaMfaFactors = async () => {
+    if (!session) return;
+    try {
+      const factors = await mfaListFactors(dbConfig, session.access_token);
+      setMfaFactors(factors);
+    } catch (e) {
+      setMfaFactors([]);
+    }
+  };
+
+  const iniziaAttivazioneMfa = async () => {
+    setMfaBusy(true);
+    setMfaErrore("");
+    try {
+      const data = await mfaEnroll(dbConfig, session.access_token);
+      setMfaEnrollData(data);
+    } catch (e) {
+      setMfaErrore(e.message);
+    } finally {
+      setMfaBusy(false);
+    }
+  };
+
+  const confermaAttivazioneMfa = async () => {
+    if (!mfaEnrollData || mfaEnrollCode.trim().length < 6) return;
+    setMfaBusy(true);
+    setMfaErrore("");
+    try {
+      const ch = await mfaChallenge(dbConfig, session.access_token, mfaEnrollData.id);
+      await mfaVerify(dbConfig, session.access_token, mfaEnrollData.id, ch.id, mfaEnrollCode.trim());
+      setMfaEnrollData(null);
+      setMfaEnrollCode("");
+      await caricaMfaFactors();
+    } catch (e) {
+      setMfaErrore(e.message);
+    } finally {
+      setMfaBusy(false);
+    }
+  };
+
+  const disattivaMfa = async (factorId) => {
+    setMfaBusy(true);
+    setMfaErrore("");
+    try {
+      await mfaUnenroll(dbConfig, session.access_token, factorId);
+      await caricaMfaFactors();
+    } catch (e) {
+      setMfaErrore(e.message);
+    } finally {
+      setMfaBusy(false);
     }
   };
 
@@ -1535,6 +1669,10 @@ function GestionalePortieri() {
   useEffect(() => {
     if (dbConfig && !loading) caricaVerifiche();
   }, [dbConfig, loading]);
+
+  useEffect(() => {
+    if (view.page === "impostazioni" && session) caricaMfaFactors();
+  }, [view.page, session]);
 
   useEffect(() => {
     const id = "__reduce-motion-style";
@@ -2149,6 +2287,45 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     return (
       <div style={{ background: bg, minHeight: "100%", padding: 24, textAlign: "center", color: textSecondary, fontFamily: "system-ui, sans-serif" }}>
         Caricamento...
+      </div>
+    );
+  }
+
+  if (mfaPending && !session) {
+    const submitMfa = (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      doVerificaMfaLogin();
+    };
+    return (
+      <div style={{ background: bg, minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif" }}>
+        <form onSubmit={submitMfa} style={{ ...cardStyle, maxWidth: 360, width: "100%" }}>
+          <p style={{ fontSize: 18, fontWeight: 800, color: textPrimary, marginBottom: 4 }}>🔐 Verifica in due passaggi</p>
+          <p style={{ fontSize: 13, color: textMuted, marginBottom: 18 }}>
+            Apri la tua app di autenticazione e inserisci il codice a 6 cifre.
+          </p>
+          <label style={labelStyle}>Codice</label>
+          <input
+            autoFocus
+            style={{ ...inputStyle, marginBottom: 14, fontSize: 20, letterSpacing: "0.2em", textAlign: "center" }}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          />
+          {authError && <p style={{ color: coral, fontSize: 13, marginBottom: 10 }}>{authError}</p>}
+          <button type="submit" disabled={authBusy || mfaCode.length < 6} style={{ ...primaryBtn, width: "100%", opacity: authBusy || mfaCode.length < 6 ? 0.5 : 1 }}>
+            {authBusy ? "Verifica..." : "Conferma"}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMfaPending(null); setMfaCode(""); setAuthError(""); }}
+            style={{ ...ghostBtn, width: "100%", marginTop: 10 }}
+          >
+            ← Torna al login
+          </button>
+        </form>
       </div>
     );
   }
@@ -3901,6 +4078,78 @@ create policy "solo autenticati" on gestionale_kv
         <Menu />
         <TopBar title="Impostazioni" />
         <div style={{ height: 18 }} />
+
+        <div style={cardStyle}>
+          <p style={sectionLabelStyle}>🔐 Verifica in due passaggi</p>
+          {mfaFactors === null && <p style={{ fontSize: 13, color: textMuted }}>Verifico lo stato...</p>}
+
+          {mfaFactors !== null && mfaFactors.filter((f) => f.status === "verified").length > 0 && !mfaEnrollData && (
+            <>
+              <p style={{ fontSize: 13, color: "#1f9d55", fontWeight: 700, margin: "0 0 10px" }}>✅ Attiva</p>
+              <p style={{ fontSize: 12, color: textMuted, margin: "0 0 10px" }}>
+                Ogni accesso al gestionale richiede anche il codice dalla tua app di autenticazione.
+              </p>
+              {mfaFactors.filter((f) => f.status === "verified").map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => confirmAction("Disattivare la verifica in due passaggi? Il login tornerà a richiedere solo email e password.", () => disattivaMfa(f.id))}
+                  disabled={mfaBusy}
+                  style={{ background: "none", border: `1px solid ${coral}`, color: coral, borderRadius: 9, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}
+                >
+                  Disattiva
+                </button>
+              ))}
+            </>
+          )}
+
+          {mfaFactors !== null && mfaFactors.filter((f) => f.status === "verified").length === 0 && !mfaEnrollData && (
+            <>
+              <p style={{ fontSize: 13, color: textMuted, margin: "0 0 10px" }}>
+                Non attiva. Aggiunge un codice a 6 cifre (dalla tua app di autenticazione, es. Google Authenticator) da inserire ad ogni accesso, oltre a email e password.
+              </p>
+              <button onClick={iniziaAttivazioneMfa} disabled={mfaBusy} style={{ ...primaryBtn, opacity: mfaBusy ? 0.6 : 1 }}>
+                {mfaBusy ? "Attendere..." : "Attiva verifica in due passaggi"}
+              </button>
+            </>
+          )}
+
+          {mfaEnrollData && (
+            <div>
+              <p style={{ fontSize: 13, color: textSecondary, margin: "0 0 10px" }}>
+                Scansiona questo codice QR con la tua app di autenticazione (Google Authenticator, Authy, ecc.):
+              </p>
+              {mfaEnrollData.totp && mfaEnrollData.totp.qr_code && (
+                <div
+                  style={{ background: "#fff", padding: 12, borderRadius: 10, marginBottom: 10, maxWidth: 220 }}
+                  dangerouslySetInnerHTML={{ __html: mfaEnrollData.totp.qr_code }}
+                />
+              )}
+              {mfaEnrollData.totp && mfaEnrollData.totp.secret && (
+                <p style={{ fontSize: 11, color: textMuted, marginBottom: 12, wordBreak: "break-all" }}>
+                  Oppure inserisci manualmente questo codice: <strong style={{ color: textPrimary }}>{mfaEnrollData.totp.secret}</strong>
+                </p>
+              )}
+              <label style={labelStyle}>Codice a 6 cifre dall'app</label>
+              <input
+                style={{ ...inputStyle, marginBottom: 10, fontSize: 18, letterSpacing: "0.2em", textAlign: "center" }}
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={mfaEnrollCode}
+                onChange={(e) => setMfaEnrollCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={confermaAttivazioneMfa} disabled={mfaBusy || mfaEnrollCode.length < 6} style={{ ...primaryBtn, flex: 1, opacity: mfaBusy || mfaEnrollCode.length < 6 ? 0.5 : 1 }}>
+                  {mfaBusy ? "Verifica..." : "Conferma e attiva"}
+                </button>
+                <button onClick={() => { setMfaEnrollData(null); setMfaEnrollCode(""); setMfaErrore(""); }} style={ghostBtn}>
+                  Annulla
+                </button>
+              </div>
+            </div>
+          )}
+          {mfaErrore && <p style={{ color: coral, fontSize: 12, marginTop: 10 }}>{mfaErrore}</p>}
+        </div>
 
         <div style={cardStyle}>
           <p style={sectionLabelStyle}>Academy e profilo</p>
