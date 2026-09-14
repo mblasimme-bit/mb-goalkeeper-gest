@@ -1313,6 +1313,13 @@ function GestionalePortieri() {
     setMfaBusy(true);
     setMfaErrore("");
     try {
+      // Ripulisco eventuali tentativi precedenti rimasti a metà (mai confermati con il codice),
+      // altrimenti Supabase rifiuta un nuovo tentativo per nome duplicato.
+      const esistenti = await mfaListFactors(dbConfig, session.access_token);
+      const nonVerificati = (esistenti || []).filter((f) => f.status !== "verified");
+      for (const f of nonVerificati) {
+        await mfaUnenroll(dbConfig, session.access_token, f.id).catch(() => {});
+      }
       const data = await mfaEnroll(dbConfig, session.access_token);
       setMfaEnrollData(data);
     } catch (e) {
