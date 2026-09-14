@@ -157,6 +157,8 @@ const DEFAULT_SETTINGS = {
   coachName: "",
   mittenteTelefono: "",
   mittenteEmail: "",
+  logoCustom: "",
+  logoSizeHome: 110,
   accentPreset: "oro",
   temaAspetto: "scuro",
   compactMode: false,
@@ -336,6 +338,32 @@ function ricavaIncassi(guanti, pacchetti, entrate, eventi) {
 function eNonPagato(v) {
   return v === false || v === "false";
 }
+// Ridimensiona e comprime un'immagine caricata dall'utente (es. il logo), così resta leggera
+// da salvare e caricare, indipendentemente da quanto è grande la foto originale.
+function ridimensionaImmagine(file, maxLato) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Impossibile leggere il file"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Impossibile leggere l'immagine"));
+      img.onload = () => {
+        const scala = Math.min(1, maxLato / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scala);
+        const h = Math.round(img.height * scala);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function eDavveroPagato(v) {
   return !eNonPagato(v);
 }
@@ -1016,6 +1044,8 @@ function GestionalePortieri() {
   const [mfaEnrollCode, setMfaEnrollCode] = useState("");
   const [mfaBusy, setMfaBusy] = useState(false);
   const [mfaErrore, setMfaErrore] = useState("");
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoErrore, setLogoErrore] = useState("");
   const [authSetupStatus, setAuthSetupStatus] = useState("idle");
   const [authSetupLog, setAuthSetupLog] = useState("");
   const [showEnableAuthForm, setShowEnableAuthForm] = useState(false);
@@ -2648,7 +2678,11 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         onClick={() => setView({ page: "lista" })}
         style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", padding: 0, cursor: "pointer" }}
       >
-        <img src={LOGO} alt="MB Goalkeeper Academy Gest" style={{ width: 110, height: 110, borderRadius: 18, objectFit: "cover", border: `1px solid ${borderStrong}`, marginBottom: 10 }} />
+        <img
+          src={settings.logoCustom || LOGO}
+          alt="MB Goalkeeper Academy Gest"
+          style={{ width: settings.logoSizeHome || 110, height: settings.logoSizeHome || 110, borderRadius: 18, objectFit: "cover", border: `1px solid ${borderStrong}`, marginBottom: 10 }}
+        />
         <div style={{ fontSize: 15, color: "var(--accent-soft, " + goldSoft + ")", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>MB Goalkeeper Academy Gest</div>
       </button>
     </div>
@@ -3309,7 +3343,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
         <div id="print-area" style={{ maxWidth: 700, margin: "0 auto", padding: "30px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <img src={LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
+            <img src={settings.logoCustom || LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
             <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>MB Goalkeeper Academy Gest</p>
           </div>
           <h1 style={{ fontSize: 22, textAlign: "center", margin: "0 0 4px" }}>Scheda portiere</h1>
@@ -3427,7 +3461,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         </div>
         <div id="print-area" style={{ maxWidth: 700, margin: "0 auto", padding: "30px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <img src={LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
+            <img src={settings.logoCustom || LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
             <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>MB Goalkeeper Academy Gest</p>
           </div>
           <h1 style={{ fontSize: 22, textAlign: "center", margin: "0 0 24px" }}>Ricevuta di pagamento</h1>
@@ -3817,7 +3851,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
         <div id="print-area" style={{ maxWidth: 700, margin: "0 auto", padding: "30px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
           <div style={{ textAlign: "center", marginBottom: 10 }}>
-            <img src={LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
+            <img src={settings.logoCustom || LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
             <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>{settings.academyName || "MB Goalkeeper Academy Gest"}</p>
             {(settings.coachName || settings.mittenteTelefono || settings.mittenteEmail) && (
               <p style={{ margin: "4px 0 0", fontSize: 12, color: "#777" }}>
@@ -4241,6 +4275,64 @@ create policy "solo autenticati" on gestionale_kv
               <input style={inputStyle} type="email" placeholder="—" value={settings.mittenteEmail} onChange={(e) => updateSettings({ mittenteEmail: e.target.value })} />
             </div>
           </div>
+        </div>
+
+        <div style={cardStyle}>
+          <p style={sectionLabelStyle}>🖼️ Logo</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            <img
+              src={settings.logoCustom || LOGO}
+              alt="logo attuale"
+              style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", border: `1px solid ${border}` }}
+            />
+            <div style={{ flex: 1 }}>
+              <label
+                style={{ ...ghostBtn, display: "inline-block", cursor: logoBusy ? "not-allowed" : "pointer", opacity: logoBusy ? 0.6 : 1 }}
+              >
+                {logoBusy ? "Carico..." : "📤 Carica un logo diverso"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={logoBusy}
+                  style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files && e.target.files[0];
+                    e.target.value = "";
+                    if (!file) return;
+                    setLogoBusy(true);
+                    setLogoErrore("");
+                    try {
+                      const dataUrl = await ridimensionaImmagine(file, 500);
+                      updateSettings({ logoCustom: dataUrl });
+                    } catch (err) {
+                      setLogoErrore(err.message);
+                    } finally {
+                      setLogoBusy(false);
+                    }
+                  }}
+                />
+              </label>
+              {settings.logoCustom && (
+                <button
+                  onClick={() => updateSettings({ logoCustom: "" })}
+                  style={{ ...ghostBtn, marginLeft: 8, color: coral, borderColor: coral }}
+                >
+                  Torna al logo originale
+                </button>
+              )}
+              {logoErrore && <p style={{ color: coral, fontSize: 12, margin: "8px 0 0" }}>{logoErrore}</p>}
+            </div>
+          </div>
+          <label style={labelStyle}>Dimensione del logo in home ({settings.logoSizeHome || 110}px)</label>
+          <input
+            type="range"
+            min="60"
+            max="180"
+            step="5"
+            value={settings.logoSizeHome || 110}
+            onChange={(e) => updateSettings({ logoSizeHome: Number(e.target.value) })}
+            style={{ width: "100%" }}
+          />
         </div>
 
         <div style={cardStyle}>
@@ -5174,15 +5266,15 @@ create policy "solo autenticati" on gestionale_kv
           <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} onNavigate={() => setView({ page: "contabilita" })} />
         </div>
 
-        <div className="no-print" style={{ display: "flex", gap: 10, marginBottom: 10, alignItems: "stretch" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, minWidth: 0 }}>
-            <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} style={{ flex: 1, minWidth: 0, width: "100%" }} />
-            <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} style={{ flex: 1, minWidth: 0, width: "100%" }} />
+        <div className="no-print" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10, alignItems: "stretch" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+            <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} style={{ flex: 1, minWidth: 0, width: "auto" }} />
+            <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} style={{ flex: 1, minWidth: 0, width: "auto" }} />
           </div>
           <button
             onClick={() => setView({ page: "note" })}
             style={{
-              flex: 1, minWidth: 0, textAlign: "left", cursor: "pointer",
+              minWidth: 0, textAlign: "left", cursor: "pointer",
               background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 16px",
               display: "flex", flexDirection: "column",
             }}
@@ -7519,7 +7611,7 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
         </div>
         <div id="print-area" style={{ maxWidth: 700, margin: "0 auto", padding: "30px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <img src={LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
+            <img src={settings.logoCustom || LOGO} alt="logo" style={{ width: 90, height: 90, borderRadius: 14, objectFit: "cover", marginBottom: 10 }} />
             <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>MB Goalkeeper Academy Gest</p>
           </div>
           <h1 style={{ fontSize: 22, textAlign: "center", margin: "0 0 4px", color: "#111" }}>Programma allenamenti</h1>
