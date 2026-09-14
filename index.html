@@ -1159,12 +1159,12 @@ function GestionalePortieri() {
 
   // --- Verifica in due passaggi (MFA/TOTP) ---
   const mfaListFactors = async (cfg, token) => {
-    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors`, {
+    const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/user`, {
       headers: { apikey: cfg.anon_key, Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error_description || data.msg || "Errore lettura fattori");
-    return data.factors || data || [];
+    return data.factors || [];
   };
   const mfaEnroll = async (cfg, token) => {
     const res = await fetchConTimeout(`${cfg.project_url}/auth/v1/factors`, {
@@ -1304,8 +1304,10 @@ function GestionalePortieri() {
     try {
       const factors = await mfaListFactors(dbConfig, session.access_token);
       setMfaFactors(factors);
+      setMfaErrore("");
     } catch (e) {
       setMfaFactors([]);
+      setMfaErrore("Non riesco a leggere lo stato attuale: " + e.message);
     }
   };
 
