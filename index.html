@@ -114,7 +114,9 @@ const SETTORI = [
 ];
 
 function initials(nome) {
-  const parts = nome.trim().split(" ");
+  const pulito = (nome || "").trim();
+  if (!pulito) return "?";
+  const parts = pulito.split(" ").filter(Boolean);
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
@@ -1017,6 +1019,7 @@ function GestionalePortieri() {
   const [nuovoForm, setNuovoForm] = useState({ nome: "", anno: "", squadra: "" });
   const [annoFilter, setAnnoFilter] = useState(new Set());
   const [freqFilter, setFreqFilter] = useState(new Set());
+  const [waFilter, setWaFilter] = useState(null); // null | "si" | "no"
   const [showFiltro, setShowFiltro] = useState(false);
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -2014,7 +2017,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     const anno = isc.data_nascita ? Number(isc.data_nascita.slice(0, 4)) : null;
     const newP = {
       id: generaId(),
-      nome: `${isc.cognome} ${isc.nome}`.trim().toUpperCase(),
+      nome: `${isc.cognome || ""} ${isc.nome || ""}`.trim().toUpperCase() || "SENZA NOME",
       anno,
       squadra: isc.squadra || null,
       wa: false,
@@ -2287,6 +2290,11 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     if (freqFilter.size > 0) {
       filtered = filtered.filter((p) => p.frequenza && freqFilter.has(p.frequenza));
     }
+    if (waFilter === "si") {
+      filtered = filtered.filter((p) => p.wa);
+    } else if (waFilter === "no") {
+      filtered = filtered.filter((p) => !p.wa);
+    }
     const byYear = {};
     for (const p of filtered) {
       const key = p.anno || "n.d.";
@@ -2304,7 +2312,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
       return (a.nome || "").localeCompare(b.nome || "");
     };
     return keys.map((k) => ({ anno: k, items: byYear[k].sort(sortPortieriFn) }));
-  }, [portieri, query, annoFilter, freqFilter, settings.ordinamentoPortieri]);
+  }, [portieri, query, annoFilter, freqFilter, waFilter, settings.ordinamentoPortieri]);
 
   if (loadError && loading === false && portieri == null) {
     return (
@@ -5300,9 +5308,40 @@ create policy "solo autenticati" on gestionale_kv
             + Nuovo portiere
           </button>
         </div>
-        <p style={{ fontSize: 14, color: textSecondary, margin: "10px 0 0" }}>
-          {portieri.length} in rosa · {totalWA} nel gruppo WA
-        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 10 }}>
+          <p style={{ fontSize: 14, color: textSecondary, margin: 0 }}>
+            {portieri.length} in rosa
+          </p>
+          <button
+            className="no-print"
+            onClick={() => setWaFilter(waFilter === "si" ? null : "si")}
+            style={{
+              fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 100, cursor: "pointer",
+              border: `1px solid ${whatsapp}`,
+              background: waFilter === "si" ? whatsapp : whatsappDim,
+              color: waFilter === "si" ? "#fff" : whatsapp,
+            }}
+          >
+            {totalWA} nel gruppo WA
+          </button>
+          <button
+            className="no-print"
+            onClick={() => setWaFilter(waFilter === "no" ? null : "no")}
+            style={{
+              fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 100, cursor: "pointer",
+              border: `1px solid ${coral}`,
+              background: waFilter === "no" ? coral : coralDim,
+              color: waFilter === "no" ? "#fff" : coral,
+            }}
+          >
+            {portieri.length - totalWA} da aggiungere
+          </button>
+          {waFilter && (
+            <button className="no-print" onClick={() => setWaFilter(null)} style={{ fontSize: 12, color: textMuted, background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>
+              Togli filtro
+            </button>
+          )}
+        </div>
 
         {showNuovo && (
           <div style={{ ...cardStyle, marginTop: 18, marginBottom: 0 }}>
