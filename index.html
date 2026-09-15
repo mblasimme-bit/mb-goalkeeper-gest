@@ -96,19 +96,18 @@ const MIGRATION_DATA = (function () {
 
 const OPTS = {
   frequenza: ["bassa", "media", "alta", "inattivo"],
-  carattere: ["introverso", "normale", "estroverso"],
-  atteggiamento: ["passivo", "normale", "ansioso", "insicuro", "predisposto al lavoro", "determinato"],
-  prospettiva: ["bassa", "media", "alta", "di prospettiva", "tardivo talento"],
+  prospettiva: ["bassa", "media", "alta"],
   livello: ["basso", "medio", "alto", "molto alto"],
   categoriaSpesa: ["affitto", "attrezzatura", "materiale tecnico", "rimborsi", "compensi collaboratori", "bar", "extra"],
   metodoPagamento: ["Contanti", "Bonifico", "PayPal", "Carta di credito", "Bancomat"],
 };
 
 const SETTORI = [
-  ["tecnica", "Tecnica"],
-  ["atletica", "Atletica"],
+  ["parata", "Tecnica di parata e presa"],
+  ["uscite", "Uscite, gestione dell'area e dominio dello spazio"],
   ["coordinativa", "Coordinativa"],
-  ["podalica", "Podalica"],
+  ["atletica", "Atletica"],
+  ["piedi", "Gioco con i piedi"],
   ["situazionale", "Situazionale"],
   ["caratteriale", "Caratteriale"],
 ];
@@ -521,6 +520,33 @@ function Select({ value, onChange, options, placeholder }) {
 // normale (leggibile tutto, e si stampa/esporta correttamente in PDF — a differenza di una
 // <textarea> con scroll, il cui contenuto nascosto viene tagliato fuori dalla stampa).
 // Diventa modificabile solo cliccando "Modifica".
+// Valutazione a stelle (1-5) con una nota libera accanto, usata per i 7 settori tecnici.
+function ValutazioneStelle({ stelle, nota, onChangeStelle, onChangeNota }) {
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 3 }}>
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onChangeStelle(n === stelle ? 0 : n)}
+            style={{ background: "none", border: "none", cursor: "pointer", fontSize: 24, padding: 0, lineHeight: 1, color: n <= (stelle || 0) ? gold : border }}
+          >
+            {n <= (stelle || 0) ? "★" : "☆"}
+          </button>
+        ))}
+      </div>
+      <input
+        style={{ ...inputStyle, marginTop: 6, fontSize: 12 }}
+        type="text"
+        placeholder="Nota (facoltativa)"
+        value={nota || ""}
+        onChange={(e) => onChangeNota(e.target.value)}
+      />
+    </div>
+  );
+}
+
 function CampoNota({ value, onChange, placeholder, minHeight }) {
   const [modifica, setModifica] = useState(false);
   if (modifica) {
@@ -1979,6 +2005,12 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     updatePortiere(id, { progresso: { ...(p.progresso || {}), [chiave]: valore } });
   };
 
+  const updateValutazioneSettore = (id, chiave, patch) => {
+    const p = portieri.find((x) => x.id === id);
+    const attuale = (p.progresso && p.progresso[chiave]) || {};
+    updateProgresso(id, chiave, { ...attuale, ...patch });
+  };
+
   const rimuoviPortiere = (id) => {
     persist(PORTIERI_KEY, portieri.filter((p) => p.id !== id), setPortieri, { saltaFusione: true });
   };
@@ -2720,7 +2752,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
     const TABS = [
       ["ragazzo", "🪪 Dati ragazzo"],
-      ["tecnici", "📈 Dati tecnici"],
+      ["tecnici", "⭐ Valutazione"],
       ["note", "📝 Note"],
       ["materiale", "🧰 Materiale"],
       ["medici", "🩺 Dati medici"],
@@ -2915,35 +2947,27 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 <CampoNota value={p.storicoProgressi} onChange={(v) => updatePortiere(p.id, { storicoProgressi: v })} placeholder="Ancora nessun aggiornamento." minHeight={110} />
               </div>
 
-              <p style={sectionLabelStyle}>🧠 Profilo</p>
+              <p style={sectionLabelStyle}>🔮 Prospettiva</p>
               <div style={cardStyle}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div>
-                    <label style={labelStyle}>Tipo di carattere</label>
-                    <Select value={p.carattere} onChange={(v) => updatePortiere(p.id, { carattere: v })} options={OPTS.carattere} />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Prospettiva</label>
-                    <Select value={p.prospettiva} onChange={(v) => updatePortiere(p.id, { prospettiva: v })} options={OPTS.prospettiva} />
-                  </div>
-                  <div style={{ gridColumn: "1 / -1" }}>
-                    <label style={labelStyle}>Atteggiamento in allenamento</label>
-                    <Select value={p.atteggiamento} onChange={(v) => updatePortiere(p.id, { atteggiamento: v })} options={OPTS.atteggiamento} />
-                  </div>
-                </div>
+                <label style={labelStyle}>Prospettiva di crescita</label>
+                <Select value={p.prospettiva} onChange={(v) => updatePortiere(p.id, { prospettiva: v })} options={OPTS.prospettiva} />
               </div>
 
-              <p style={sectionLabelStyle}>📈 Settori di progresso</p>
-              <div style={cardStyle}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  {SETTORI.map(([chiave, label]) => (
-                    <div key={chiave}>
-                      <label style={labelStyle}>{label}</label>
-                      <Select value={progresso[chiave]} onChange={(v) => updateProgresso(p.id, chiave, v)} options={OPTS.livello} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <p style={sectionLabelStyle}>⭐ Valutazione per settore</p>
+              {SETTORI.map(([chiave, label]) => {
+                const v = progresso[chiave] || {};
+                return (
+                  <div key={chiave} style={cardStyle}>
+                    <label style={labelStyle}>{label}</label>
+                    <ValutazioneStelle
+                      stelle={v.stelle}
+                      nota={v.nota}
+                      onChangeStelle={(n) => updateValutazioneSettore(p.id, chiave, { stelle: n })}
+                      onChangeNota={(n) => updateValutazioneSettore(p.id, chiave, { nota: n })}
+                    />
+                  </div>
+                );
+              })}
             </>
           )}
 
@@ -3380,14 +3404,21 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
           {selezione.tecnico !== false && (
             <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>🧠 Profilo tecnico</p>
+              <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>⭐ Valutazione tecnica</p>
               <RigaCampo label="Preparatore squadra" value={p.preparatore} />
-              <RigaCampo label="Carattere" value={p.carattere ? cap(p.carattere) : null} />
               <RigaCampo label="Prospettiva" value={p.prospettiva ? cap(p.prospettiva) : null} />
-              <RigaCampo label="Atteggiamento" value={p.atteggiamento ? cap(p.atteggiamento) : null} />
-              {SETTORI.map(([chiave, label]) => (
-                <RigaCampo key={chiave} label={label} value={progresso[chiave] ? cap(progresso[chiave]) : null} />
-              ))}
+              {SETTORI.map(([chiave, label]) => {
+                const v = progresso[chiave] || {};
+                if (!v.stelle && !v.nota) return null;
+                return (
+                  <div key={chiave} style={{ marginBottom: 8 }}>
+                    <p style={{ fontSize: 14, margin: 0, color: "#555" }}>
+                      {label}: <strong style={{ color: "#111" }}>{v.stelle ? "★".repeat(v.stelle) + "☆".repeat(5 - v.stelle) : "—"}</strong>
+                    </p>
+                    {v.nota && <p style={{ fontSize: 12, margin: "2px 0 0", color: "#888", fontStyle: "italic" }}>{v.nota}</p>}
+                  </div>
+                );
+              })}
             </div>
           )}
 
