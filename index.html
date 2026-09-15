@@ -3261,7 +3261,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
   }
 
   if (view.page === "spese") {
-    return <PaginaSpese spese={spese} guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} aggiungiSpesa={aggiungiSpesa} rimuoviSpesa={rimuoviSpesa} modificaSpesa={modificaSpesa} Menu={Menu} TopBar={TopBar} saveState={saveState} printStyle={printStyle} handlePrint={handlePrint} handleShare={handleShare} />;
+    return <PaginaSpese spese={spese} guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} aggiungiSpesa={aggiungiSpesa} rimuoviSpesa={rimuoviSpesa} modificaSpesa={modificaSpesa} setView={setView} Menu={Menu} TopBar={TopBar} saveState={saveState} printStyle={printStyle} handlePrint={handlePrint} handleShare={handleShare} />;
   }
 
   if (view.page === "estratto-conto") {
@@ -6023,7 +6023,7 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
   );
 }
 
-function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa, rimuoviSpesa, modificaSpesa, Menu, TopBar, saveState, printStyle, handlePrint, handleShare }) {
+function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa, rimuoviSpesa, modificaSpesa, setView, Menu, TopBar, saveState, printStyle, handlePrint, handleShare }) {
   const [form, setForm] = useState({ categoria: "", data: "", importo: "", note: "", metodoPagamento: "" });
   const [showForm, setShowForm] = useState(false);
   const [collapsed, setCollapsed] = useState({});
