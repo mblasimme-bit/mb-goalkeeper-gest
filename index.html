@@ -1079,6 +1079,10 @@ function GestionalePortieri() {
   const [annoFilter, setAnnoFilter] = useState(new Set());
   const [freqFilter, setFreqFilter] = useState(new Set());
   const [waFilter, setWaFilter] = useState(null); // null | "si" | "no"
+  const [estrattoDataDa, setEstrattoDataDa] = useState("");
+  const [estrattoDataA, setEstrattoDataA] = useState("");
+  const [estrattoMetodi, setEstrattoMetodi] = useState(new Set());
+  const [estrattoTipo, setEstrattoTipo] = useState("tutti"); // tutti | incassi | spese
   const [showFiltro, setShowFiltro] = useState(false);
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -2545,6 +2549,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               ]],
               ["Amministrazione", [
                 ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
+                ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"],
                 ["spese", "💼 Spese Academy", coral, coralDim],
                 ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
                 ["certificati", "🩺 Certificati", "#c9522f", coralDim],
@@ -3190,7 +3195,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               {storicoPagamenti.map((v) => (
                 <div key={v.id} style={{ ...cardStyle, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center", border: v.pagato ? undefined : `1px solid ${coral}` }}>
                   <p style={{ margin: 0, fontSize: 13, color: textSecondary }}>
-                    {v.fonte} · {formatData(v.data)}{v.note ? ` · ${v.note}` : ""}{v.metodoPagamento ? ` · 💳 ${v.metodoPagamento}` : ""}
+                    {v.fonte} · {formatData(v.data)}{v.note ? ` · ${v.note}` : ""}{v.metodoPagamento ? ` · ${v.metodoPagamento}` : ""}
                   </p>
                   <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     {v.pagato ? (
@@ -3256,6 +3261,171 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
   if (view.page === "spese") {
     return <PaginaSpese spese={spese} guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} aggiungiSpesa={aggiungiSpesa} rimuoviSpesa={rimuoviSpesa} modificaSpesa={modificaSpesa} Menu={Menu} TopBar={TopBar} saveState={saveState} printStyle={printStyle} handlePrint={handlePrint} handleShare={handleShare} />;
+  }
+
+  if (view.page === "estratto-conto") {
+    const tuttiIMetodi = OPTS.metodoPagamento;
+
+    const venditePortieri = guanti
+      .filter((g) => g.tipo === "vendita")
+      .map((g) => {
+        const pp = portieri.find((x) => String(x.id) === String(g.portiereId));
+        return { data: g.data, importo: Number(g.importo) || 0, causale: `Materiale${pp ? " — " + pp.nome : ""}`, metodoPagamento: g.metodoPagamento || null, movimento: "incasso" };
+      });
+    const entrateManuali = entrate.map((e) => {
+      const pp = e.portiereId != null ? portieri.find((x) => String(x.id) === String(e.portiereId)) : null;
+      return { data: e.data, importo: Number(e.importo) || 0, causale: `${e.fonte || "Seduta"}${pp ? " — " + pp.nome : ""}${e.note ? " · " + e.note : ""}`, metodoPagamento: e.metodoPagamento || null, movimento: "incasso" };
+    });
+    const incassiPacchetti = pacchetti
+      .filter((pk) => pk.importoTotale && eDavveroPagato(pk.pagato) && pk.dataPagamento)
+      .map((pk) => ({ data: pk.dataPagamento, importo: Number(pk.importoTotale) || 0, causale: `Pacchetto — ${pk.nome}`, metodoPagamento: pk.metodoPagamento || null, movimento: "incasso" }));
+    const uscite = spese.map((s) => ({ data: s.data, importo: Number(s.importo) || 0, causale: `${cap(s.categoria || "Spesa")}${s.note ? " · " + s.note : ""}`, metodoPagamento: s.metodoPagamento || null, movimento: "spesa" }));
+
+    let movimenti = [...venditePortieri, ...entrateManuali, ...incassiPacchetti, ...uscite];
+
+    if (estrattoDataDa) movimenti = movimenti.filter((m) => m.data >= estrattoDataDa);
+    if (estrattoDataA) movimenti = movimenti.filter((m) => m.data <= estrattoDataA);
+    if (estrattoMetodi.size > 0) movimenti = movimenti.filter((m) => m.metodoPagamento && estrattoMetodi.has(m.metodoPagamento));
+    if (estrattoTipo !== "tutti") movimenti = movimenti.filter((m) => m.movimento === (estrattoTipo === "incassi" ? "incasso" : "spesa"));
+
+    movimenti.sort((a, b) => a.data.localeCompare(b.data));
+
+    const totaleIncassi = movimenti.filter((m) => m.movimento === "incasso").reduce((s, m) => s + m.importo, 0);
+    const totaleSpese = movimenti.filter((m) => m.movimento === "spesa").reduce((s, m) => s + m.importo, 0);
+
+    return (
+      <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
+        {printStyle}
+        <Menu />
+        <div className="no-print" style={{ maxWidth: 800, margin: "0 auto", padding: "18px 40px 0" }}>
+          <TopBar title="Estratto conto" />
+        </div>
+
+        <div className="no-print" style={{ maxWidth: 800, margin: "16px auto 10px", padding: "0 40px" }}>
+          <div style={cardStyle}>
+            <p style={{ ...sectionLabelStyle, marginBottom: 10 }}>Filtri</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+              <div>
+                <label style={labelStyle}>Dal</label>
+                <input style={inputStyle} type="date" value={estrattoDataDa} onChange={(e) => setEstrattoDataDa(e.target.value)} />
+              </div>
+              <div>
+                <label style={labelStyle}>Al</label>
+                <input style={inputStyle} type="date" value={estrattoDataA} onChange={(e) => setEstrattoDataA(e.target.value)} />
+              </div>
+            </div>
+
+            <label style={labelStyle}>Tipo movimento</label>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              {[["tutti", "Tutti"], ["incassi", "Solo incassi"], ["spese", "Solo spese"]].map(([val, lab]) => (
+                <button
+                  key={val}
+                  onClick={() => setEstrattoTipo(val)}
+                  style={{
+                    flex: 1, padding: "8px 10px", borderRadius: 9, fontSize: 13, cursor: "pointer",
+                    border: `1px solid ${estrattoTipo === val ? gold : border}`,
+                    background: estrattoTipo === val ? goldDim : surface2,
+                    color: estrattoTipo === val ? goldSoft : textPrimary,
+                  }}
+                >
+                  {lab}
+                </button>
+              ))}
+            </div>
+
+            <label style={labelStyle}>Metodo di pagamento (nessuno selezionato = tutti)</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 4 }}>
+              {tuttiIMetodi.map((m) => {
+                const attivo = estrattoMetodi.has(m);
+                return (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      const next = new Set(estrattoMetodi);
+                      if (attivo) next.delete(m);
+                      else next.add(m);
+                      setEstrattoMetodi(next);
+                    }}
+                    style={{
+                      padding: "6px 12px", borderRadius: 100, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                      border: `1px solid ${attivo ? gold : border}`,
+                      background: attivo ? goldDim : surface2,
+                      color: attivo ? goldSoft : textPrimary,
+                    }}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="no-print" style={{ maxWidth: 800, margin: "0 auto 16px", padding: "0 40px", display: "flex", gap: 8 }}>
+          <button onClick={handlePrint} style={primaryBtn}>🖨️ Stampa / Esporta PDF</button>
+          <button onClick={() => handleShare("Estratto conto", `Estratto conto: €${totaleIncassi.toFixed(2)} incassi, €${totaleSpese.toFixed(2)} spese`)} style={ghostBtn}>📤 Condividi</button>
+        </div>
+
+        <div id="print-area" style={{ maxWidth: 800, margin: "0 auto", padding: "20px 40px 60px", background: "#fff", color: "#1a1a1a" }}>
+          <div style={{ textAlign: "center", marginBottom: 10 }}>
+            <img src={settings.logoCustom || LOGO} alt="logo" style={{ width: 80, height: 80, borderRadius: 12, objectFit: "cover", marginBottom: 8 }} />
+            <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>{settings.academyName || "MB Goalkeeper Academy Gest"}</p>
+            {(settings.coachName || settings.mittenteTelefono || settings.mittenteEmail) && (
+              <p style={{ margin: "4px 0 0", fontSize: 12, color: "#777" }}>
+                {settings.coachName}
+                {settings.coachName && (settings.mittenteTelefono || settings.mittenteEmail) ? " · " : ""}
+                {settings.mittenteTelefono}
+                {settings.mittenteTelefono && settings.mittenteEmail ? " · " : ""}
+                {settings.mittenteEmail}
+              </p>
+            )}
+          </div>
+          <div style={{ borderTop: "2px solid #333", margin: "14px 0 20px" }} />
+          <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Estratto conto</h1>
+          <p style={{ fontSize: 12, color: "#999", margin: "0 0 4px" }}>
+            {estrattoDataDa || estrattoDataA
+              ? `Dal ${estrattoDataDa ? formatData(estrattoDataDa) : "inizio"} al ${estrattoDataA ? formatData(estrattoDataA) : "oggi"}`
+              : "Tutto il periodo"}
+            {estrattoMetodi.size > 0 ? ` · ${[...estrattoMetodi].join(", ")}` : ""}
+          </p>
+          <p style={{ fontSize: 11, color: "#bbb", margin: "0 0 20px" }}>Generato il {formatData(new Date().toISOString().slice(0, 10))}</p>
+
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid #333" }}>
+                <th style={{ textAlign: "left", padding: "6px 4px" }}>Data</th>
+                <th style={{ textAlign: "left", padding: "6px 4px" }}>Causale</th>
+                <th style={{ textAlign: "left", padding: "6px 4px" }}>Metodo</th>
+                <th style={{ textAlign: "right", padding: "6px 4px" }}>Importo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movimenti.map((m, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid #eee" }}>
+                  <td style={{ padding: "6px 4px", whiteSpace: "nowrap" }}>{formatData(m.data)}</td>
+                  <td style={{ padding: "6px 4px" }}>{m.causale}</td>
+                  <td style={{ padding: "6px 4px" }}>{m.metodoPagamento || "—"}</td>
+                  <td style={{ padding: "6px 4px", textAlign: "right", color: m.movimento === "spesa" ? "#c9522f" : "#1f9d55", fontWeight: 600, whiteSpace: "nowrap" }}>
+                    {m.movimento === "spesa" ? "-" : ""}€{m.importo.toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+              {movimenti.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ padding: "20px 4px", textAlign: "center", color: "#999" }}>Nessun movimento trovato con questi filtri.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div style={{ marginTop: 20, paddingTop: 14, borderTop: "2px solid #333" }}>
+            {estrattoTipo !== "spese" && <p style={{ fontSize: 14, margin: "0 0 4px", display: "flex", justifyContent: "space-between" }}><span>Totale incassi</span><strong style={{ color: "#1f9d55" }}>€{totaleIncassi.toFixed(2)}</strong></p>}
+            {estrattoTipo !== "incassi" && <p style={{ fontSize: 14, margin: "0 0 4px", display: "flex", justifyContent: "space-between" }}><span>Totale spese</span><strong style={{ color: "#c9522f" }}>€{totaleSpese.toFixed(2)}</strong></p>}
+            {estrattoTipo === "tutti" && <p style={{ fontSize: 16, margin: "8px 0 0", display: "flex", justifyContent: "space-between", fontWeight: 800 }}><span>Saldo netto</span><span>€{(totaleIncassi - totaleSpese).toFixed(2)}</span></p>}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (view.page === "contabilita") {
@@ -6265,7 +6435,7 @@ function CalendarioSedute({ entrate, portieri, pacchetti, modificaEntrata, rimuo
             return (
               <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i > 0 ? `1px solid ${border}` : "none", fontSize: 13 }}>
                 <span style={{ color: textSecondary }}>
-                  {p ? p.nome : "— nessun portiere —"}{e.note ? ` · ${e.note}` : ""}{e.fonte ? ` (${e.fonte})` : ""}{e.metodoPagamento ? ` · 💳 ${e.metodoPagamento}` : ""}
+                  {p ? p.nome : "— nessun portiere —"}{e.note ? ` · ${e.note}` : ""}{e.fonte ? ` (${e.fonte})` : ""}{e.metodoPagamento ? ` · ${e.metodoPagamento}` : ""}
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ color: "#1f9d55", fontWeight: 600 }}>€{Number(e.importo || 0).toFixed(2)}</span>
@@ -6705,7 +6875,7 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, portieri
                     return (
                       <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderTop: i > 0 ? `1px solid ${border}` : "none", fontSize: 13 }}>
                         <span style={{ color: textSecondary }}>
-                          {formatData(v.data)} · {v.fonte}{portiereCollegato ? ` · ${portiereCollegato.nome}` : ""}: {v.dettaglio}{v.note ? ` · ${v.note}` : ""}{v.metodoPagamento ? ` · 💳 ${v.metodoPagamento}` : ""}
+                          {formatData(v.data)} · {v.fonte}{portiereCollegato ? ` · ${portiereCollegato.nome}` : ""}: {v.dettaglio}{v.note ? ` · ${v.note}` : ""}{v.metodoPagamento ? ` · ${v.metodoPagamento}` : ""}
                         </span>
                         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           <span style={{ color: verde, fontWeight: 600 }}>{nascosti ? "••••" : `+€${v.importo.toFixed(2)}`}</span>
