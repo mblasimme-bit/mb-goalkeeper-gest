@@ -103,13 +103,44 @@ const OPTS = {
 };
 
 const SETTORI = [
-  ["parata", "Tecnica di parata e presa"],
-  ["uscite", "Uscite, gestione dell'area e dominio dello spazio"],
-  ["coordinativa", "Coordinativa"],
-  ["atletica", "Atletica"],
-  ["piedi", "Gioco con i piedi"],
-  ["situazionale", "Situazionale"],
-  ["caratteriale", "Caratteriale"],
+  ["parata", "Tecnica di parata e presa", [
+    ["parata_parata", "Parata"],
+    ["parata_blocco", "Blocco del pallone"],
+    ["parata_presa", "Presa"],
+  ]],
+  ["uscite", "Uscite, gestione dell'area e dominio dello spazio", [
+    ["uscite_alte", "Uscite alte"],
+    ["uscite_basse", "Uscite basse"],
+    ["uscite_area", "Gestione dell'area"],
+    ["uscite_spazio", "Dominio dello spazio"],
+    ["uscite_posizionamento", "Posizionamento"],
+  ]],
+  ["coordinativa", "Coordinativa", [
+    ["coord_podalica", "Podalica (coordinazione dei movimenti)"],
+    ["coord_frequenza", "Frequenza dei passi"],
+    ["coord_coordinazione", "Coordinazione"],
+  ]],
+  ["atletica", "Atletica", [
+    ["atl_forza", "Forza esplosiva"],
+    ["atl_rapidita", "Rapidità"],
+    ["atl_reattivita", "Reattività"],
+  ]],
+  ["piedi", "Gioco con i piedi", [
+    ["piedi_dif", "Transizione difensiva"],
+    ["piedi_off", "Transizione offensiva"],
+  ]],
+  ["situazionale", "Situazionale", [
+    ["sit_lettura_fasi", "Lettura delle fasi di gioco"],
+    ["sit_lettura_situazioni", "Lettura delle situazioni"],
+    ["sit_criticita", "Gestione delle criticità e delle difficoltà"],
+  ]],
+  ["caratteriale", "Caratteriale", [
+    ["car_concentrazione", "Concentrazione"],
+    ["car_leadership", "Leadership"],
+    ["car_coraggio", "Coraggio"],
+    ["car_att_allenamento", "Atteggiamento in allenamento"],
+    ["car_att_gara", "Atteggiamento in gara"],
+  ]],
 ];
 
 function initials(nome) {
@@ -2765,12 +2796,21 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         <Menu />
         <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 10, background: bg, borderBottom: `1px solid ${border}` }}>
           <div style={{ maxWidth: 1400, margin: "0 auto", padding: "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <button
-              onClick={goBack}
-              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}
-            >
-              <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={() => setView({ page: "lista" })}
+                title="Torna alla home"
+                style={{ background: surface2, color: textPrimary, border: `1px solid ${border}`, borderRadius: 10, width: 36, height: 36, fontSize: 16, cursor: "pointer" }}
+              >
+                🏠
+              </button>
+              <button
+                onClick={goBack}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}
+              >
+                <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
+              </button>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button
                 onClick={() => setView({ page: "stampa-portiere", id: p.id, tornaA: { page: "dettaglio", id: p.id, tab } })}
@@ -2882,6 +2922,10 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                     <label style={labelStyle}>Peso (kg)</label>
                     <input style={inputStyle} type="number" value={p.peso || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { peso: e.target.value ? Number(e.target.value) : null })} />
                   </div>
+                  <div>
+                    <label style={labelStyle}>Taglia guanti</label>
+                    <input style={inputStyle} type="text" value={p.taglieGuanti || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { taglieGuanti: e.target.value })} />
+                  </div>
                 </div>
               </div>
 
@@ -2927,12 +2971,6 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
           {tab === "tecnici" && (
             <>
-              <p style={sectionLabelStyle}>🧤 Equipaggiamento</p>
-              <div style={cardStyle}>
-                <label style={labelStyle}>Taglia guanti</label>
-                <input style={inputStyle} type="text" value={p.taglieGuanti || ""} placeholder="—" onChange={(e) => updatePortiere(p.id, { taglieGuanti: e.target.value })} />
-              </div>
-
               <p style={sectionLabelStyle}>🧑‍🏫 Squadra</p>
               <div style={cardStyle}>
                 <label style={labelStyle}>Preparatore della squadra</label>
@@ -2954,20 +2992,27 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               </div>
 
               <p style={sectionLabelStyle}>⭐ Valutazione per settore</p>
-              {SETTORI.map(([chiave, label]) => {
-                const v = progresso[chiave] || {};
-                return (
-                  <div key={chiave} style={cardStyle}>
-                    <label style={labelStyle}>{label}</label>
-                    <ValutazioneStelle
-                      stelle={v.stelle}
-                      nota={v.nota}
-                      onChangeStelle={(n) => updateValutazioneSettore(p.id, chiave, { stelle: n })}
-                      onChangeNota={(n) => updateValutazioneSettore(p.id, chiave, { nota: n })}
-                    />
+              {SETTORI.map(([chiave, label, sottovoci]) => (
+                <div key={chiave} style={cardStyle}>
+                  <p style={{ ...labelStyle, fontSize: 14, fontWeight: 700, color: textPrimary, marginBottom: 10 }}>{label}</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {sottovoci.map(([sottochiave, sottolabel]) => {
+                      const v = progresso[sottochiave] || {};
+                      return (
+                        <div key={sottochiave}>
+                          <label style={{ ...labelStyle, marginBottom: 4 }}>{sottolabel}</label>
+                          <ValutazioneStelle
+                            stelle={v.stelle}
+                            nota={v.nota}
+                            onChangeStelle={(n) => updateValutazioneSettore(p.id, sottochiave, { stelle: n })}
+                            onChangeNota={(n) => updateValutazioneSettore(p.id, sottochiave, { nota: n })}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </>
           )}
 
@@ -3407,15 +3452,23 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "#888", margin: "0 0 12px" }}>⭐ Valutazione tecnica</p>
               <RigaCampo label="Preparatore squadra" value={p.preparatore} />
               <RigaCampo label="Prospettiva" value={p.prospettiva ? cap(p.prospettiva) : null} />
-              {SETTORI.map(([chiave, label]) => {
-                const v = progresso[chiave] || {};
-                if (!v.stelle && !v.nota) return null;
+              {SETTORI.map(([chiave, label, sottovoci]) => {
+                const righe = sottovoci.filter(([sc]) => progresso[sc] && (progresso[sc].stelle || progresso[sc].nota));
+                if (righe.length === 0) return null;
                 return (
-                  <div key={chiave} style={{ marginBottom: 8 }}>
-                    <p style={{ fontSize: 14, margin: 0, color: "#555" }}>
-                      {label}: <strong style={{ color: "#111" }}>{v.stelle ? "★".repeat(v.stelle) + "☆".repeat(5 - v.stelle) : "—"}</strong>
-                    </p>
-                    {v.nota && <p style={{ fontSize: 12, margin: "2px 0 0", color: "#888", fontStyle: "italic" }}>{v.nota}</p>}
+                  <div key={chiave} style={{ marginBottom: 12 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 4px", color: "#333" }}>{label}</p>
+                    {righe.map(([sc, sl]) => {
+                      const v = progresso[sc] || {};
+                      return (
+                        <div key={sc} style={{ marginBottom: 4, paddingLeft: 10 }}>
+                          <p style={{ fontSize: 13, margin: 0, color: "#555" }}>
+                            {sl}: <strong style={{ color: "#111" }}>{v.stelle ? "★".repeat(v.stelle) + "☆".repeat(5 - v.stelle) : "—"}</strong>
+                          </p>
+                          {v.nota && <p style={{ fontSize: 11, margin: "1px 0 0", color: "#888", fontStyle: "italic" }}>{v.nota}</p>}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -7720,12 +7773,21 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
       <Menu />
       <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 10, background: bg, borderBottom: `1px solid ${border}` }}>
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "14px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button
-            onClick={goBack}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}
-          >
-            <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => setView({ page: "lista" })}
+              title="Torna alla home"
+              style={{ background: surface2, color: textPrimary, border: `1px solid ${border}`, borderRadius: 10, width: 36, height: 36, fontSize: 16, cursor: "pointer" }}
+            >
+              🏠
+            </button>
+            <button
+              onClick={goBack}
+              style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: textPrimary, fontSize: 15, fontWeight: 600, cursor: "pointer", padding: 0 }}
+            >
+              <span style={{ fontSize: 18, lineHeight: 1 }}>←</span> Indietro
+            </button>
+          </div>
           <button onClick={elimina} style={{ background: "none", border: `1px solid ${coral}`, color: coral, borderRadius: 9, padding: "6px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
             Elimina pacchetto
           </button>
