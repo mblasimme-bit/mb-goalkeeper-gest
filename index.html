@@ -3248,6 +3248,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         rimuoviPacchetto={rimuoviPacchetto}
         modificaPacchetto={modificaPacchetto}
         rinnovoDa={view.rinnovoDa}
+        apriForm={view.apriForm}
         confirmAction={confirmAction}
         setView={setView}
         Menu={Menu}
@@ -5407,12 +5408,20 @@ create policy "solo autenticati" on gestionale_kv
 
         <div className="no-print" style={{ ...cardStyle, border: `1px solid ${goldSoft}` }}>
           {!showQuickSeduta ? (
-            <button
-              onClick={() => { setShowQuickSeduta(true); setQuickForm((f) => ({ ...f, importo: f.importo || settings.prezzoDefaultSeduta || "" })); }}
-              style={{ ...primaryBtn, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              ⚡ Registra seduta veloce
-            </button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => { setShowQuickSeduta(true); setQuickForm((f) => ({ ...f, importo: f.importo || settings.prezzoDefaultSeduta || "" })); }}
+                style={{ ...primaryBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, whiteSpace: "nowrap" }}
+              >
+                ⚡ Seduta veloce
+              </button>
+              <button
+                onClick={() => setView({ page: "pacchetti", apriForm: true })}
+                style={{ ...primaryBtn, flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, whiteSpace: "nowrap" }}
+              >
+                📦 Pacchetto veloce
+              </button>
+            </div>
           ) : (
             <div>
               <p style={{ ...sectionLabelStyle, marginBottom: 12 }}>⚡ Registra seduta veloce</p>
@@ -7627,7 +7636,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
   );
 }
 
-function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, confirmAction, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
+function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, apriForm, confirmAction, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
   const rigeneraDateIniziale = (dataInizio, numeroSedute) => {
     if (!dataInizio) return [];
     const n = Math.min(10, Math.max(3, Number(numeroSedute) || 4));
@@ -7654,7 +7663,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
         }
       : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false }
   );
-  const [showForm, setShowForm] = useState(!!rinnovoDa);
+  const [showForm, setShowForm] = useState(!!rinnovoDa || !!apriForm);
 
   // Rigenera le date prestabilite (cadenza settimanale) quando cambia il numero di sedute o la data di inizio,
   // conservando le date già impostate manualmente dove possibile.
