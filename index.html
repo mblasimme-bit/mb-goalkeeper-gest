@@ -1083,6 +1083,7 @@ function GestionalePortieri() {
   const [estrattoDataA, setEstrattoDataA] = useState("");
   const [estrattoMetodi, setEstrattoMetodi] = useState(new Set());
   const [estrattoTipo, setEstrattoTipo] = useState("tutti"); // tutti | incassi | spese
+  const [classificaOrdine, setClassificaOrdine] = useState("decrescente"); // decrescente | crescente
   const [showFiltro, setShowFiltro] = useState(false);
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -2549,6 +2550,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               ]],
               ["Amministrazione", [
                 ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
+                ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"],
                 ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"],
                 ["spese", "💼 Spese Academy", coral, coralDim],
                 ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
@@ -3425,6 +3427,85 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             {estrattoTipo === "tutti" && <p style={{ fontSize: 16, margin: "8px 0 0", display: "flex", justifyContent: "space-between", fontWeight: 800 }}><span>Saldo netto</span><span>€{(totaleIncassi - totaleSpese).toFixed(2)}</span></p>}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (view.page === "classifica-presenze") {
+    const oggi = new Date().toISOString().slice(0, 10);
+    const classifica = portieri.map((p) => {
+      const dateEntrate = entrate.filter((e) => String(e.portiereId) === String(p.id)).map((e) => e.data);
+      const dateSedutePacchetti = pacchetti
+        .filter((pk) => String(pk.portiereId) === String(p.id))
+        .flatMap((pk) => pk.sedute || []);
+      const tutteLeDate = [...dateEntrate, ...dateSedutePacchetti].filter(Boolean).sort();
+      const presenze = tutteLeDate.length;
+      const ultima = tutteLeDate.length > 0 ? tutteLeDate[tutteLeDate.length - 1] : null;
+      const giorniDaUltima = ultima ? Math.floor((new Date(oggi) - new Date(ultima)) / (1000 * 60 * 60 * 24)) : null;
+      return { portiere: p, presenze, ultima, giorniDaUltima };
+    });
+    classifica.sort((a, b) => (classificaOrdine === "decrescente" ? b.presenze - a.presenze : a.presenze - b.presenze));
+
+    const inattivi = classifica.filter((c) => c.giorniDaUltima === null || c.giorniDaUltima > 30);
+
+    return (
+      <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Classifica presenze" />
+        <div style={{ height: 18 }} />
+
+        {inattivi.length > 0 && (
+          <div className="no-print" style={{ ...cardStyle, marginBottom: 16, border: `1px solid ${coral}`, background: coralDim }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: coral }}>
+              ⚠️ {inattivi.length} portiere/i senza sedute da oltre 30 giorni (o mai registrate) — buoni candidati per un contatto commerciale.
+            </p>
+          </div>
+        )}
+
+        <div className="no-print" style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <button
+            onClick={() => setClassificaOrdine("decrescente")}
+            style={{
+              flex: 1, padding: "8px 10px", borderRadius: 9, fontSize: 13, cursor: "pointer",
+              border: `1px solid ${classificaOrdine === "decrescente" ? gold : border}`,
+              background: classificaOrdine === "decrescente" ? goldDim : surface2,
+              color: classificaOrdine === "decrescente" ? goldSoft : textPrimary,
+            }}
+          >
+            Più presenze prima
+          </button>
+          <button
+            onClick={() => setClassificaOrdine("crescente")}
+            style={{
+              flex: 1, padding: "8px 10px", borderRadius: 9, fontSize: 13, cursor: "pointer",
+              border: `1px solid ${classificaOrdine === "crescente" ? gold : border}`,
+              background: classificaOrdine === "crescente" ? goldDim : surface2,
+              color: classificaOrdine === "crescente" ? goldSoft : textPrimary,
+            }}
+          >
+            Meno presenze prima
+          </button>
+        </div>
+
+        {classifica.map((c, i) => (
+          <button
+            key={c.portiere.id}
+            onClick={() => setView({ page: "dettaglio", id: c.portiere.id })}
+            style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left", cursor: "pointer" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+              <span style={{ fontSize: 13, color: textMuted, fontWeight: 700, width: 22, flexShrink: 0 }}>{i + 1}.</span>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.portiere.nome}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: c.giorniDaUltima === null || c.giorniDaUltima > 30 ? coral : textMuted }}>
+                  {c.ultima ? `Ultima seduta: ${formatData(c.ultima)} (${c.giorniDaUltima}g fa)` : "Nessuna seduta registrata"}
+                </p>
+              </div>
+            </div>
+            <span style={{ fontSize: 20, fontWeight: 800, color: textPrimary, flexShrink: 0, marginLeft: 10 }}>{c.presenze}</span>
+          </button>
+        ))}
       </div>
     );
   }
