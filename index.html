@@ -208,6 +208,8 @@ const DEFAULT_SETTINGS = {
   notifPacchettiSoglia: 2,
   notifEventiImminenti: false,
   notifEventiGiorni: 2,
+  notifCompleanni: true,
+  notifCompleanniGiorni: 7,
   autoBackupReminder: false,
   autoBackupReminderGiorni: 30,
   printFooterText: "",
@@ -4963,6 +4965,27 @@ create policy "solo autenticati" on gestionale_kv
               />
             </div>
           )}
+          <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 12, marginBottom: 8 }}>
+            <input
+              type="checkbox"
+              checked={settings.notifCompleanni !== false}
+              onChange={(e) => updateSettings({ notifCompleanni: e.target.checked })}
+              style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }}
+            />
+            🎂 Avvisami dei compleanni in arrivo
+          </label>
+          {settings.notifCompleanni !== false && (
+            <div style={{ marginLeft: 24 }}>
+              <label style={labelStyle}>Con quanti giorni di anticipo</label>
+              <input
+                style={{ ...inputStyle, maxWidth: 100 }}
+                type="number"
+                min="0"
+                value={settings.notifCompleanniGiorni ?? 7}
+                onChange={(e) => updateSettings({ notifCompleanniGiorni: Number(e.target.value) || 0 })}
+              />
+            </div>
+          )}
         </div>
 
         <div style={cardStyle}>
@@ -5423,6 +5446,16 @@ create policy "solo autenticati" on gestionale_kv
     if (!dataStr) return null;
     return Math.round((new Date(dataStr).getTime() - oggiTs) / 86400000);
   };
+  const giorniAlProssimoCompleanno = (dataNascita) => {
+    if (!dataNascita) return null;
+    const nascita = new Date(dataNascita);
+    const oggiData = new Date(oggiTs);
+    let prossimo = new Date(oggiData.getFullYear(), nascita.getMonth(), nascita.getDate());
+    prossimo.setHours(0, 0, 0, 0);
+    const oggiSenzaOra = new Date(oggiData.getFullYear(), oggiData.getMonth(), oggiData.getDate());
+    if (prossimo < oggiSenzaOra) prossimo = new Date(oggiData.getFullYear() + 1, nascita.getMonth(), nascita.getDate());
+    return Math.round((prossimo.getTime() - oggiSenzaOra.getTime()) / 86400000);
+  };
   const certificatiInScadenza = settings.notifCertificatiScadenza
     ? certificati.filter((c) => {
         const g = giorniDa(c.dataScadenza);
@@ -5442,7 +5475,13 @@ create policy "solo autenticati" on gestionale_kv
       })
     : [];
   const insolutiSegnalati = settings.notifInsoluti ? insolutiList : [];
-  const hasAvvisi = insolutiList.length > 0 || certificatiInScadenza.length > 0 || pacchettiInEsaurimento.length > 0 || eventiImminenti.length > 0;
+  const compleanniImminenti = settings.notifCompleanni !== false
+    ? portieri
+        .map((p) => ({ portiere: p, giorni: giorniAlProssimoCompleanno(p.dataNascita) }))
+        .filter((c) => c.giorni !== null && c.giorni <= (settings.notifCompleanniGiorni ?? 7))
+        .sort((a, b) => a.giorni - b.giorni)
+    : [];
+  const hasAvvisi = insolutiList.length > 0 || certificatiInScadenza.length > 0 || pacchettiInEsaurimento.length > 0 || eventiImminenti.length > 0 || compleanniImminenti.length > 0;
 
   const OverviewCard = ({ icon, label, value, fg, bgc, onClick, masked, style }) => {
     const [revealed, setRevealed] = useState(false);
@@ -5662,6 +5701,13 @@ create policy "solo autenticati" on gestionale_kv
               {eventiImminenti.length > 0 && (
                 <button onClick={() => setView({ page: "eventi" })} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
                   <p style={{ margin: 0, fontSize: 12, color: coral }}>{eventiImminenti.length} evento/i imminente/i</p>
+                </button>
+              )}
+              {compleanniImminenti.length > 0 && (
+                <button onClick={() => setView({ page: "lista" })} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
+                  <p style={{ margin: 0, fontSize: 12, color: coral }}>
+                    🎂 {compleanniImminenti.map((c) => `${c.portiere.nome}${c.giorni === 0 ? " (oggi!)" : c.giorni === 1 ? " (domani)" : ` (tra ${c.giorni}g)`}`).join(", ")}
+                  </p>
                 </button>
               )}
             </div>
@@ -6414,7 +6460,8 @@ function CalendarioSedute({ entrate, portieri, pacchetti, modificaEntrata, rimuo
   const pacchettiPerGiorno = useMemo(() => {
     const map = {};
     (pacchetti || []).forEach((pk) => {
-      (pk.datePrestabilite || []).forEach((d) => {
+      const date = pk.tipo === "speciale" ? (pk.pianificazione || []).map((s) => s.data) : (pk.datePrestabilite || []);
+      date.forEach((d) => {
         if (!d) return;
         if (!map[d]) map[d] = [];
         map[d].push(pk);
@@ -6835,6 +6882,24 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, portieri
       <Menu />
       <div id="print-area" style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 40px 48px" }}>
         <TopBar title="Contabilità" />
+
+        {entrate.filter((e) => e.portiereId === null || e.portiereId === undefined || e.portiereId === "").length > 0 && (
+          <button
+            className="no-print"
+            onClick={() => setView({ page: "collega-entrate" })}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", textAlign: "left",
+              marginTop: 12, padding: "10px 14px", borderRadius: 10, cursor: "pointer",
+              background: "rgba(245,158,11,0.12)", border: "1px solid #f59e0b",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "#f59e0b", fontWeight: 600 }}>
+              🔗 {entrate.filter((e) => e.portiereId === null || e.portiereId === undefined || e.portiereId === "").length} entrate senza portiere collegato — sistemale per statistiche corrette
+            </span>
+            <span style={{ fontSize: 13, color: "#f59e0b", fontWeight: 700 }}>Sistema →</span>
+          </button>
+        )}
+
         <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10, flexWrap: "wrap", gap: 10 }}>
           <p style={{ fontSize: 14, color: textSecondary, margin: 0 }}>
             Panoramica di incassi (vendite materiale + pacchetti) e spese, mese per mese
