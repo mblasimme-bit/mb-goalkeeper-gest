@@ -7640,6 +7640,69 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
       : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false }
   );
   const [showForm, setShowForm] = useState(!!rinnovoDa || !!apriForm);
+  const [tipoForm, setTipoForm] = useState("normale"); // "normale" | "speciale"
+
+  const DURATE_DISPONIBILI = [0.5, 1, 1.5, 2, 2.5, 3];
+
+  const rigeneraPianificazione = (dataInizio, numeroSedute, pianificazioneEsistente) => {
+    if (!dataInizio) return [];
+    const n = Math.max(1, Math.floor(Number(numeroSedute)) || 1);
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      if (pianificazioneEsistente[i]) {
+        out.push(pianificazioneEsistente[i]);
+      } else {
+        const base = new Date(dataInizio);
+        base.setDate(base.getDate() + i * 7);
+        out.push({ data: base.toISOString().slice(0, 10), durata: 1 });
+      }
+    }
+    return out;
+  };
+
+  const [formSpeciale, setFormSpeciale] = useState({
+    portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "1",
+    pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false,
+  });
+
+  const setDataInizioSpeciale = (val) => {
+    setFormSpeciale((f) => ({ ...f, dataInizio: val, pianificazione: rigeneraPianificazione(val, f.numeroSedute, f.pianificazione), dataScadenzaSaldo: f.dataScadenzaSaldo || val }));
+  };
+  const setNumeroSeduteSpeciale = (val) => {
+    const n = Math.max(1, Math.floor(Number(val)) || 1);
+    setFormSpeciale((f) => ({ ...f, numeroSedute: String(n), pianificazione: rigeneraPianificazione(f.dataInizio, n, f.pianificazione) }));
+  };
+  const setPianificazioneCampo = (i, campo, val) => {
+    setFormSpeciale((f) => {
+      const next = [...f.pianificazione];
+      next[i] = { ...next[i], [campo]: val };
+      return { ...f, pianificazione: next };
+    });
+  };
+
+  const submitSpeciale = () => {
+    if (!formSpeciale.portiereId || !formSpeciale.dataInizio || !formSpeciale.numeroSedute) return;
+    const portiere = portieri.find((p) => String(p.id) === String(formSpeciale.portiereId));
+    const oreTotali = formSpeciale.pianificazione.reduce((s, x) => s + (Number(x.durata) || 0), 0);
+    const id = aggiungiPacchetto({
+      tipo: "speciale",
+      portiereId: formSpeciale.portiereId,
+      nome: portiere ? portiere.nome : "—",
+      dataInizio: formSpeciale.dataInizio,
+      orario: formSpeciale.orario || null,
+      numeroSedute: Number(formSpeciale.numeroSedute),
+      pianificazione: formSpeciale.pianificazione,
+      oreTotali,
+      dataScadenzaSaldo: formSpeciale.dataScadenzaSaldo || formSpeciale.dataInizio,
+      importoTotale: formSpeciale.importoTotale ? Number(formSpeciale.importoTotale) : null,
+      metodoPagamento: formSpeciale.metodoPagamento || null,
+      pagato: formSpeciale.pagato,
+      dataPagamento: formSpeciale.pagato ? new Date().toISOString().slice(0, 10) : null,
+    });
+    setFormSpeciale({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "1", pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false });
+    setShowForm(false);
+    setView({ page: "pacchetto-dettaglio", id });
+  };
 
   // Rigenera le date prestabilite (cadenza settimanale) quando cambia il numero di sedute o la data di inizio,
   // conservando le date già impostate manualmente dove possibile.
@@ -7710,13 +7773,111 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
           <ExportBar onPrint={handlePrint} onShare={() => handleShare("Pacchetti", `${pacchetti.length} pacchetti registrati`)} />
         </div>
 
-        <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-          <button onClick={() => setShowForm((v) => !v)} style={{ background: skyDim, color: sky, border: `1px solid ${sky}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+        <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
+          <button
+            onClick={() => { setTipoForm("normale"); setShowForm((v) => (tipoForm === "normale" ? !v : true)); }}
+            style={{ background: skyDim, color: sky, border: `1px solid ${sky}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+          >
             + Nuovo pacchetto
+          </button>
+          <button
+            onClick={() => { setTipoForm("speciale"); setShowForm((v) => (tipoForm === "speciale" ? !v : true)); }}
+            style={{ background: lillaDim, color: lilla, border: `1px solid ${lilla}`, borderRadius: 10, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+          >
+            ⭐ Pacchetto speciale
           </button>
         </div>
 
-        {showForm && (
+        {showForm && tipoForm === "speciale" && (
+          <div style={{ ...cardStyle, marginBottom: 18, border: `1px solid ${lilla}` }}>
+            <p style={{ ...sectionLabelStyle, marginBottom: 12 }}>⭐ Nuovo pacchetto speciale</p>
+            <p style={{ fontSize: 12, color: textMuted, margin: "-6px 0 14px" }}>
+              Numero di sedute libero e durata scelta seduta per seduta — pensato per richieste particolari.
+            </p>
+
+            <label style={labelStyle}>Portiere</label>
+            <SelettorePortiere portieri={portieri} value={formSpeciale.portiereId} onChange={(v) => setFormSpeciale((f) => ({ ...f, portiereId: v }))} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
+              <div>
+                <label style={labelStyle}>Data 1ª seduta</label>
+                <input style={inputStyle} type="date" value={formSpeciale.dataInizio} onChange={(e) => setDataInizioSpeciale(e.target.value)} />
+              </div>
+              <div>
+                <label style={labelStyle}>Orario delle sedute</label>
+                <input style={inputStyle} type="time" value={formSpeciale.orario} onChange={(e) => setFormSpeciale((f) => ({ ...f, orario: e.target.value }))} />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 10, marginBottom: 10 }}>
+              <label style={labelStyle}>Numero sedute (qualsiasi numero)</label>
+              <input
+                style={inputStyle}
+                type="number"
+                min="1"
+                value={formSpeciale.numeroSedute}
+                onChange={(e) => setNumeroSeduteSpeciale(e.target.value)}
+              />
+            </div>
+
+            {formSpeciale.dataInizio && formSpeciale.pianificazione.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <label style={labelStyle}>Date e durata di ogni seduta (modificabili)</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {formSpeciale.pianificazione.map((s, i) => (
+                    <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ fontSize: 12, color: textMuted, width: 18 }}>{i + 1}.</span>
+                      <input style={{ ...inputStyle, flex: 2 }} type="date" value={s.data} onChange={(e) => setPianificazioneCampo(i, "data", e.target.value)} />
+                      <select style={{ ...inputStyle, flex: 1 }} value={s.durata} onChange={(e) => setPianificazioneCampo(i, "durata", Number(e.target.value))}>
+                        {DURATE_DISPONIBILI.map((d) => (
+                          <option key={d} value={d}>{d} {d === 1 ? "ora" : "ore"}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: 12, color: textMuted, margin: "8px 0 0" }}>
+                  Totale ore: {formSpeciale.pianificazione.reduce((s, x) => s + (Number(x.durata) || 0), 0)}
+                </p>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 10 }}>
+              <label style={labelStyle}>Giorno del saldo</label>
+              <input style={inputStyle} type="date" value={formSpeciale.dataScadenzaSaldo} onChange={(e) => setFormSpeciale((f) => ({ ...f, dataScadenzaSaldo: e.target.value }))} />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={labelStyle}>Importo totale pacchetto (€)</label>
+              <input style={inputStyle} type="number" step="0.01" value={formSpeciale.importoTotale} onChange={(e) => setFormSpeciale((f) => ({ ...f, importoTotale: e.target.value }))} />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={labelStyle}>Metodo di pagamento</label>
+              <select style={inputStyle} value={formSpeciale.metodoPagamento} onChange={(e) => setFormSpeciale((f) => ({ ...f, metodoPagamento: e.target.value }))}>
+                <option value="">—</option>
+                {OPTS.metodoPagamento.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: textPrimary, cursor: "pointer", marginBottom: 14 }}>
+              <input type="checkbox" checked={formSpeciale.pagato} onChange={(e) => setFormSpeciale((f) => ({ ...f, pagato: e.target.checked }))} />
+              Saldo già incassato (altrimenti resta tra gli insoluti finché non lo segni pagato)
+            </label>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={submitSpeciale}
+                disabled={!formSpeciale.portiereId || !formSpeciale.dataInizio}
+                style={{ ...primaryBtn, flex: 1, opacity: !formSpeciale.portiereId || !formSpeciale.dataInizio ? 0.5 : 1, cursor: !formSpeciale.portiereId || !formSpeciale.dataInizio ? "not-allowed" : "pointer" }}
+              >
+                Crea e apri
+              </button>
+              <button onClick={() => setShowForm(false)} style={ghostBtn}>Annulla</button>
+            </div>
+          </div>
+        )}
+
+        {showForm && tipoForm === "normale" && (
           <div style={{ ...cardStyle, marginBottom: 18 }}>
             <p style={{ ...sectionLabelStyle, marginBottom: 12 }}>Nuovo pacchetto</p>
             <div style={{ marginBottom: 10 }}>
@@ -7795,6 +7956,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
               >
                 <p style={{ margin: 0, fontSize: 15, color: textPrimary, fontWeight: 600 }}>
                   {pk.nome}
+                  {pk.tipo === "speciale" && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: lilla }}>⭐ Speciale</span>}
                   {daRinnovare && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: pitch }}>🔄 da rinnovare</span>}
                 </p>
                 <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
@@ -7900,13 +8062,25 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
           <p style={{ textAlign: "center", fontSize: 16, color: "#444", margin: "0 0 24px" }}>{pk.nome}</p>
 
           <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 16, marginBottom: 20 }}>
-            <p style={{ margin: 0, fontSize: 13, color: "#777", fontWeight: 700, textTransform: "uppercase" }}>Sedute previste</p>
-            {datePrestabilite.length === 0 && <p style={{ fontSize: 14, color: "#555" }}>Nessuna data ancora programmata.</p>}
-            {datePrestabilite.map((d, i) => (
-              <p key={i} style={{ fontSize: 15, margin: "6px 0", color: "#222" }}>
-                {pk.sedute.includes(d) ? "✅" : "⬜"} Seduta {i + 1}: <strong>{formatData(d)}{pk.orario ? ` – ${pk.orario}` : ""}</strong>
-              </p>
-            ))}
+            <p style={{ margin: 0, fontSize: 13, color: "#777", fontWeight: 700, textTransform: "uppercase" }}>
+              Sedute previste{pk.tipo === "speciale" ? ` · ${pk.oreTotali || (pk.pianificazione || []).reduce((s, x) => s + (Number(x.durata) || 0), 0)} ore totali` : ""}
+            </p>
+            {pk.tipo === "speciale" ? (
+              (pk.pianificazione || []).map((s, i) => (
+                <p key={i} style={{ fontSize: 15, margin: "6px 0", color: "#222" }}>
+                  {pk.sedute.includes(s.data) ? "✅" : "⬜"} Seduta {i + 1}: <strong>{formatData(s.data)} – {s.durata} {s.durata === 1 ? "ora" : "ore"}</strong>
+                </p>
+              ))
+            ) : (
+              <>
+                {datePrestabilite.length === 0 && <p style={{ fontSize: 14, color: "#555" }}>Nessuna data ancora programmata.</p>}
+                {datePrestabilite.map((d, i) => (
+                  <p key={i} style={{ fontSize: 15, margin: "6px 0", color: "#222" }}>
+                    {pk.sedute.includes(d) ? "✅" : "⬜"} Seduta {i + 1}: <strong>{formatData(d)}{pk.orario ? ` – ${pk.orario}` : ""}</strong>
+                  </p>
+                ))}
+              </>
+            )}
           </div>
 
           <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 16 }}>
@@ -7996,6 +8170,19 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
           )}
           {completo && pk.rinnovato && (
             <p style={{ margin: "10px 0 0", fontSize: 12, color: textMuted }}>✅ Già rinnovato</p>
+          )}
+
+          {pk.tipo === "speciale" && pk.pianificazione && (
+            <div style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, background: lillaDim, border: `1px solid ${lilla}` }}>
+              <p style={{ margin: "0 0 8px", fontSize: 13, color: lilla, fontWeight: 700 }}>
+                ⭐ Pacchetto speciale · {pk.oreTotali || pk.pianificazione.reduce((s, x) => s + (Number(x.durata) || 0), 0)} ore totali
+              </p>
+              {pk.pianificazione.map((s, i) => (
+                <p key={i} style={{ margin: "3px 0", fontSize: 13, color: textPrimary }}>
+                  {i + 1}. {formatData(s.data)} — {s.durata} {s.durata === 1 ? "ora" : "ore"}
+                </p>
+              ))}
+            </div>
           )}
 
           <div className="no-print" style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
