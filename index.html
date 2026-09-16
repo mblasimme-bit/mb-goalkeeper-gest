@@ -398,6 +398,19 @@ function ridimensionaImmagine(file, maxLato) {
   });
 }
 
+// Prova a indovinare a quale portiere si riferisce un testo libero (es. la nota di una vecchia
+// entrata), cercando se una parola del suo nome compare nel testo. Se trova più di un candidato
+// possibile, non si sbilancia e non suggerisce nulla (meglio niente che un suggerimento sbagliato).
+function suggerisciPortiere(testo, portieri) {
+  if (!testo) return null;
+  const testoLower = testo.toLowerCase();
+  const candidati = portieri.filter((p) => {
+    const parole = (p.nome || "").toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+    return parole.some((w) => testoLower.includes(w));
+  });
+  return candidati.length === 1 ? candidati[0] : null;
+}
+
 function eDavveroPagato(v) {
   return !eNonPagato(v);
 }
@@ -2551,6 +2564,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               ["Amministrazione", [
                 ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
                 ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"],
+                ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"],
                 ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"],
                 ["spese", "💼 Spese Academy", coral, coralDim],
                 ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
@@ -3506,6 +3520,65 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             <span style={{ fontSize: 20, fontWeight: 800, color: textPrimary, flexShrink: 0, marginLeft: 10 }}>{c.presenze}</span>
           </button>
         ))}
+      </div>
+    );
+  }
+
+  if (view.page === "collega-entrate") {
+    const entrateOrfane = entrate
+      .filter((e) => e.portiereId === null || e.portiereId === undefined || e.portiereId === "")
+      .sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+
+    return (
+      <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Ricollega entrate" />
+        <div style={{ height: 18 }} />
+
+        <div className="no-print" style={{ ...cardStyle, marginBottom: 16 }}>
+          <p style={{ margin: 0, fontSize: 13, color: textSecondary }}>
+            Qui trovi le entrate registrate in passato <strong>senza un portiere collegato</strong> (spesso arrivate da migrazioni dati, con il nome solo nella nota). Leggi la nota e assegna il portiere giusto — una volta fatto, contano correttamente ovunque nel gestionale, inclusa la Classifica presenze.
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: entrateOrfane.length > 0 ? coral : "#1f9d55" }}>
+            {entrateOrfane.length === 0 ? "✅ Nessuna entrata orfana, tutto collegato!" : `${entrateOrfane.length} entrate da ricollegare`}
+          </p>
+        </div>
+
+        {entrateOrfane.map((e) => {
+          const suggerito = suggerisciPortiere(`${e.note || ""} ${e.fonte || ""}`, portieri);
+          return (
+            <div key={e.id} style={cardStyle}>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: textPrimary }}>
+                {formatData(e.data)} · €{Number(e.importo || 0).toFixed(2)}
+              </p>
+              <p style={{ margin: "4px 0 10px", fontSize: 13, color: textSecondary }}>
+                {e.fonte ? `${e.fonte} — ` : ""}{e.note || "(nessuna nota)"}
+              </p>
+
+              {suggerito && (
+                <button
+                  onClick={() => modificaEntrata(e.id, { portiereId: String(suggerito.id) })}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                    background: whatsappDim, border: `1px solid ${whatsapp}`, borderRadius: 9, padding: "10px 12px",
+                    marginBottom: 10, cursor: "pointer",
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: whatsapp, fontWeight: 600 }}>💡 Forse: {suggerito.nome}</span>
+                  <span style={{ fontSize: 12, color: whatsapp, fontWeight: 700 }}>✅ Conferma</span>
+                </button>
+              )}
+
+              <label style={labelStyle}>{suggerito ? "Oppure scegli manualmente" : "Assegna al portiere"}</label>
+              <SelettorePortiere
+                portieri={portieri}
+                value={e.portiereId || ""}
+                onChange={(v) => modificaEntrata(e.id, { portiereId: v })}
+              />
+            </div>
+          );
+        })}
       </div>
     );
   }
