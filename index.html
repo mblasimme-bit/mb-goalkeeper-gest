@@ -3585,45 +3585,6 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     );
   }
 
-  if (view.page === "recap-giorno") {
-    return (
-      <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
-        {printStyle}
-        <Menu />
-        <TopBar title={`Recap di oggi`} />
-        <div style={{ height: 18 }} />
-
-        <p style={{ fontSize: 13, color: textMuted, marginBottom: 16 }}>
-          {formatData(oggiRecap)} — si aggiorna da solo ogni giorno, non serve azzerarlo a mano.
-        </p>
-
-        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-          <div style={{ ...cardStyle, flex: 1, margin: 0, textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#1f9d55" }}>€{incassatoOggi.toFixed(2)}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>Incassato oggi</p>
-          </div>
-          <div style={{ ...cardStyle, flex: 1, margin: 0, textAlign: "center" }}>
-            <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: coral }}>€{spesoOggi.toFixed(2)}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>Speso oggi</p>
-          </div>
-        </div>
-
-        {transazioniOggi.length === 0 ? (
-          <p style={{ fontSize: 14, color: textMuted, textAlign: "center", marginTop: 30 }}>Nessun movimento registrato oggi.</p>
-        ) : (
-          transazioniOggi.map((t, i) => (
-            <div key={i} style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p style={{ margin: 0, fontSize: 14, color: textPrimary }}>{t.causale}</p>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: t.movimento === "spesa" ? coral : "#1f9d55" }}>
-                {t.movimento === "spesa" ? "-" : "+"}€{t.importo.toFixed(2)}
-              </p>
-            </div>
-          ))
-        )}
-      </div>
-    );
-  }
-
   if (view.page === "contabilita") {
     return (
       <PaginaContabilita
@@ -5571,6 +5532,45 @@ create policy "solo autenticati" on gestionale_kv
       </button>
     );
   };
+
+  if (view.page === "recap-giorno") {
+    return (
+      <div style={{ padding: 20, maxWidth: 600, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Recap di oggi" />
+        <div style={{ height: 18 }} />
+
+        <p style={{ fontSize: 13, color: textMuted, marginBottom: 16 }}>
+          {formatData(oggiRecap)} — si aggiorna da solo ogni giorno, non serve azzerarlo a mano.
+        </p>
+
+        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+          <div style={{ ...cardStyle, flex: 1, margin: 0, textAlign: "center" }}>
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#1f9d55" }}>€{incassatoOggi.toFixed(2)}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>Incassato oggi</p>
+          </div>
+          <div style={{ ...cardStyle, flex: 1, margin: 0, textAlign: "center" }}>
+            <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: coral }}>€{spesoOggi.toFixed(2)}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>Speso oggi</p>
+          </div>
+        </div>
+
+        {transazioniOggi.length === 0 ? (
+          <p style={{ fontSize: 14, color: textMuted, textAlign: "center", marginTop: 30 }}>Nessun movimento registrato oggi.</p>
+        ) : (
+          transazioniOggi.map((t, i) => (
+            <div key={i} style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p style={{ margin: 0, fontSize: 14, color: textPrimary }}>{t.causale}</p>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: t.movimento === "spesa" ? coral : "#1f9d55" }}>
+                {t.movimento === "spesa" ? "-" : "+"}€{t.importo.toFixed(2)}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: bg, minHeight: "100%", fontFamily: "system-ui, sans-serif" }}>
