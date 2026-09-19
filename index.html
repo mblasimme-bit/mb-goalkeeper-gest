@@ -6301,6 +6301,7 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
         <div style={{ fontSize: 12, color: textSecondary, height: 18, marginTop: 8 }}>
           {saveState === "saving" && "Salvataggio..."}
           {saveState === "saved" && "Salvato"}
+          {saveState === "error" && <span style={{ color: coral, fontWeight: 700 }}>⚠️ Non salvato, controlla la connessione e riprova</span>}
         </div>
       </div>
     </div>
@@ -6509,6 +6510,7 @@ function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa,
         <div style={{ fontSize: 12, color: textSecondary, height: 18, marginTop: 8 }}>
           {saveState === "saving" && "Salvataggio..."}
           {saveState === "saved" && "Salvato"}
+          {saveState === "error" && <span style={{ color: coral, fontWeight: 700 }}>⚠️ Non salvato, controlla la connessione e riprova</span>}
         </div>
       </div>
     </div>
@@ -7391,6 +7393,7 @@ function PaginaEventi({ eventi, aggiungiEvento, modificaEvento, rimuoviEvento, c
         <div className="no-print" style={{ fontSize: 12, color: textSecondary, height: 18, marginTop: 8 }}>
           {saveState === "saving" && "Salvataggio..."}
           {saveState === "saved" && "Salvato"}
+          {saveState === "error" && <span style={{ color: coral, fontWeight: 700 }}>⚠️ Non salvato, controlla la connessione e riprova</span>}
         </div>
       </div>
     </div>
@@ -7909,6 +7912,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
         <div style={{ fontSize: 12, color: textSecondary, height: 18, marginTop: 8 }}>
           {saveState === "saving" && "Salvataggio..."}
           {saveState === "saved" && "Salvato"}
+          {saveState === "error" && <span style={{ color: coral, fontWeight: 700 }}>⚠️ Non salvato, controlla la connessione e riprova</span>}
         </div>
       </div>
     </div>
@@ -8480,11 +8484,39 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
               <p style={{ margin: "0 0 8px", fontSize: 13, color: lilla, fontWeight: 700 }}>
                 ⭐ Pacchetto speciale · {pk.oreTotali || pk.pianificazione.reduce((s, x) => s + (Number(x.durata) || 0), 0)} ore totali
               </p>
-              {pk.pianificazione.map((s, i) => (
-                <p key={i} style={{ margin: "3px 0", fontSize: 13, color: textPrimary }}>
-                  {i + 1}. {formatData(s.data)} — {s.durata} {s.durata === 1 ? "ora" : "ore"}
-                </p>
-              ))}
+              {pk.pianificazione.map((s, i) => {
+                const svolta = pk.sedute.includes(s.data);
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "5px 0" }}>
+                    <span style={{ fontSize: 13, color: textPrimary }}>
+                      {i + 1}. {formatData(s.data)} — {s.durata} {s.durata === 1 ? "ora" : "ore"}
+                    </span>
+                    <button
+                      className="no-print"
+                      onClick={() => {
+                        if (svolta) {
+                          rimuoviSeduta(pk.id, pk.sedute.indexOf(s.data));
+                        } else {
+                          aggiungiSeduta(pk.id, s.data);
+                        }
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: "4px 9px",
+                        borderRadius: 7,
+                        cursor: "pointer",
+                        border: svolta ? "1px solid #1f9d55" : `1px solid ${border}`,
+                        background: svolta ? "rgba(31,157,85,0.12)" : surface2,
+                        color: svolta ? "#1f9d55" : textMuted,
+                      }}
+                    >
+                      {svolta ? "✅ Svolta" : "Segna svolta"}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -8505,9 +8537,6 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
               {eDavveroPagato(pk.pagato) ? "✅ Saldato" : "⏳ Segna come saldato"}
             </button>
             {insoluto && <span style={{ fontSize: 12, color: coral, fontWeight: 700 }}>⚠️ INSOLUTO</span>}
-            <span className="no-print" style={{ fontSize: 10, color: textMuted, marginLeft: 8 }}>
-              (debug: pagato = {JSON.stringify(pk.pagato)})
-            </span>
           </div>
 
           <div className="no-print" style={{ marginTop: 14, maxWidth: 260 }}>
