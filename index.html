@@ -2567,6 +2567,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
                 ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"],
                 ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"],
+                ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"],
                 ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"],
                 ["spese", "💼 Spese Academy", coral, coralDim],
                 ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim],
@@ -3520,6 +3521,55 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               </div>
             </div>
             <span style={{ fontSize: 20, fontWeight: 800, color: textPrimary, flexShrink: 0, marginLeft: 10 }}>{c.presenze}</span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (view.page === "profili-incompleti") {
+    const CAMPI_DA_CONTROLLARE = [
+      ["telefono", "Telefono"],
+      ["email", "Email"],
+      ["dataNascita", "Data di nascita"],
+      ["altezza", "Altezza"],
+      ["peso", "Peso"],
+      ["taglieGuanti", "Taglia guanti"],
+    ];
+    const profiliIncompleti = portieri
+      .map((p) => {
+        const mancanti = CAMPI_DA_CONTROLLARE.filter(([chiave]) => !p[chiave] && p[chiave] !== 0).map(([, label]) => label);
+        return { portiere: p, mancanti };
+      })
+      .filter((x) => x.mancanti.length > 0)
+      .sort((a, b) => b.mancanti.length - a.mancanti.length);
+
+    return (
+      <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Profili da completare" />
+        <div style={{ height: 18 }} />
+
+        <div className="no-print" style={{ ...cardStyle, marginBottom: 16 }}>
+          <p style={{ margin: 0, fontSize: 13, color: textSecondary }}>
+            Controlla i dati principali della scheda (non le note) — telefono, email, data di nascita, altezza, peso, taglia guanti. Utile per capire chi non ha mai completato il modulo di iscrizione o ha lasciato qualcosa vuoto.
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: profiliIncompleti.length > 0 ? coral : "#1f9d55" }}>
+            {profiliIncompleti.length === 0 ? "✅ Tutti i profili sono completi!" : `${profiliIncompleti.length} profilo/i con dati mancanti`}
+          </p>
+        </div>
+
+        {profiliIncompleti.map(({ portiere, mancanti }) => (
+          <button
+            key={portiere.id}
+            onClick={() => setView({ page: "dettaglio", id: portiere.id })}
+            style={{ ...cardStyle, display: "block", width: "100%", textAlign: "left", cursor: "pointer" }}
+          >
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: textPrimary }}>{portiere.nome}</p>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: coral }}>
+              Mancano: {mancanti.join(", ")}
+            </p>
           </button>
         ))}
       </div>
