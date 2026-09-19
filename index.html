@@ -4305,28 +4305,45 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
           {insolutiList.length} voce/i non ancora saldate · totale €{insolutiTotale.toFixed(2)}
         </p>
         {insolutiList.length === 0 && <p style={{ fontSize: 14, color: textMuted }}>Nessun insoluto al momento 🎉</p>}
-        {insolutiList.map((i) => (
-          <div key={`${i.tipo}-${i.id}`} style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: textPrimary }}>{i.nome}</p>
-              <p style={{ margin: "3px 0 0", fontSize: 13, color: textMuted }}>
-                {i.dettaglio} · {formatData(i.data)} · <span style={{ color: coral, fontWeight: 700 }}>€{i.importo.toFixed(2)}</span>
-              </p>
+        {insolutiList.map((i) => {
+          const pp = portieri.find((p) => String(p.id) === String(i.portiereId));
+          const messaggio = `Ciao! Ti scrivo per ricordarti un pagamento in sospeso di €${i.importo.toFixed(2)} (${i.dettaglio}) per ${i.nome}. Grazie! 🙂`;
+          return (
+            <div key={`${i.tipo}-${i.id}`} style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: textPrimary }}>{i.nome}</p>
+                <p style={{ margin: "3px 0 0", fontSize: 13, color: textMuted }}>
+                  {i.dettaglio} · {formatData(i.data)} · <span style={{ color: coral, fontWeight: 700 }}>€{i.importo.toFixed(2)}</span>
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                {pp && pp.telefono && (
+                  <a
+                    href={`https://wa.me/${pp.telefono.replace(/[^\d]/g, "")}?text=${encodeURIComponent(messaggio)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Promemoria WhatsApp"
+                    style={{ background: whatsappDim, color: whatsapp, border: `1px solid ${whatsapp}`, borderRadius: 9, padding: "8px 10px", fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center" }}
+                  >
+                    💬
+                  </a>
+                )}
+                <button
+                  onClick={() => {
+                    if (i.tipo === "pacchetto") {
+                      modificaPacchetto(i.id, { pagato: true, dataPagamento: new Date().toISOString().slice(0, 10) });
+                    } else {
+                      modificaEntrata(i.id, { pagato: true });
+                    }
+                  }}
+                  style={{ background: "rgba(31,157,85,0.12)", color: "#1f9d55", border: "1px solid #1f9d55", borderRadius: 9, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                >
+                  ✅ Segna pagato
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => {
-                if (i.tipo === "pacchetto") {
-                  modificaPacchetto(i.id, { pagato: true, dataPagamento: new Date().toISOString().slice(0, 10) });
-                } else {
-                  modificaEntrata(i.id, { pagato: true });
-                }
-              }}
-              style={{ background: "rgba(31,157,85,0.12)", color: "#1f9d55", border: "1px solid #1f9d55", borderRadius: 9, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
-            >
-              ✅ Segna pagato
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
@@ -5045,18 +5062,17 @@ create policy "solo autenticati" on gestionale_kv
         </div>
 
         <div style={cardStyle}>
-          <p style={sectionLabelStyle}>Integrazioni <span style={{ fontSize: 10, color: textMuted, fontWeight: 500, textTransform: "none" }}>(in arrivo)</span></p>
+          <p style={sectionLabelStyle}>Integrazioni</p>
+          <p style={{ fontSize: 13, color: textSecondary, margin: "0 0 10px" }}>
+            💬 I promemoria WhatsApp (pagamenti in sospeso, compleanni) sono già pronti: li trovi come pulsante diretto nelle pagine "Insoluti" e nel widget Avvisi in home — il messaggio è già scritto, basta un tocco per aprirlo e inviarlo.
+          </p>
           <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, opacity: 0.6 }}>
             <input type="checkbox" checked={!!settings.integrazioneGoogleCalendar} onChange={(e) => updateSettings({ integrazioneGoogleCalendar: e.target.checked })} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} disabled />
-            Sincronizza eventi con Google Calendar
-          </label>
-          <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, opacity: 0.6, marginTop: 8 }}>
-            <input type="checkbox" checked={!!settings.integrazioneWhatsapp} onChange={(e) => updateSettings({ integrazioneWhatsapp: e.target.checked })} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} disabled />
-            Invia promemoria via WhatsApp
+            Sincronizza eventi con Google Calendar <span style={{ fontSize: 10, color: textMuted }}>(in arrivo)</span>
           </label>
           <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, opacity: 0.6, marginTop: 8 }}>
             <input type="checkbox" checked={!!settings.invioRicevuteEmail} onChange={(e) => updateSettings({ invioRicevuteEmail: e.target.checked })} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} disabled />
-            Invia ricevute pagamento via email
+            Invia ricevute pagamento via email <span style={{ fontSize: 10, color: textMuted }}>(in arrivo)</span>
           </label>
         </div>
 
@@ -5767,11 +5783,31 @@ create policy "solo autenticati" on gestionale_kv
                 </button>
               )}
               {compleanniImminenti.length > 0 && (
-                <button onClick={() => setView({ page: "lista" })} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
-                  <p style={{ margin: 0, fontSize: 12, color: coral }}>
-                    🎂 {compleanniImminenti.map((c) => `${c.portiere.nome}${c.giorni === 0 ? " (oggi!)" : c.giorni === 1 ? " (domani)" : ` (tra ${c.giorni}g)`}`).join(", ")}
-                  </p>
-                </button>
+                <div style={{ marginTop: 2 }}>
+                  {compleanniImminenti.map((c) => {
+                    const quando = c.giorni === 0 ? "oggi!" : c.giorni === 1 ? "domani" : `tra ${c.giorni}g`;
+                    const messaggioAuguri = `Tanti auguri di buon compleanno${c.giorni === 0 ? " " : ` per ${quando === "domani" ? "domani" : "il tuo compleanno in arrivo"} `}${c.portiere.nome}! 🎉🎂 Da tutti noi dell'academy!`;
+                    return (
+                      <div key={c.portiere.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 2 }}>
+                        <button onClick={() => setView({ page: "dettaglio", id: c.portiere.id })} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", minWidth: 0 }}>
+                          <p style={{ margin: 0, fontSize: 12, color: coral, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>🎂 {c.portiere.nome} ({quando})</p>
+                        </button>
+                        {c.portiere.telefono && (
+                          <a
+                            href={`https://wa.me/${c.portiere.telefono.replace(/[^\d]/g, "")}?text=${encodeURIComponent(messaggioAuguri)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Fai gli auguri su WhatsApp"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ flexShrink: 0, fontSize: 12, textDecoration: "none", color: whatsapp }}
+                          >
+                            💬
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
@@ -7922,7 +7958,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
 function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, apriForm, confirmAction, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
   const rigeneraDateIniziale = (dataInizio, numeroSedute) => {
     if (!dataInizio) return [];
-    const n = Math.min(10, Math.max(3, Number(numeroSedute) || 4));
+    const n = Math.min(10, Math.max(2, Number(numeroSedute) || 4));
     const out = [];
     for (let i = 0; i < n; i++) {
       const base = new Date(dataInizio);
@@ -8015,7 +8051,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
   // conservando le date già impostate manualmente dove possibile.
   const rigeneraDate = (dataInizio, numeroSedute, dateEsistenti) => {
     if (!dataInizio) return [];
-    const n = Math.min(10, Math.max(3, Number(numeroSedute) || 4));
+    const n = Math.min(10, Math.max(2, Number(numeroSedute) || 4));
     const out = [];
     for (let i = 0; i < n; i++) {
       if (dateEsistenti[i]) {
@@ -8204,7 +8240,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
             <div style={{ marginBottom: 10 }}>
               <label style={labelStyle}>Numero sedute</label>
               <select style={inputStyle} value={form.numeroSedute} onChange={(e) => setNumeroSedute(e.target.value)}>
-                {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                   <option key={n} value={n}>{n} sedute</option>
                 ))}
               </select>
@@ -8563,7 +8599,7 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
                 value={pk.numeroSedute || 4}
                 onChange={(e) => modificaPacchetto(pk.id, { numeroSedute: Number(e.target.value) })}
               >
-                {[3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                {[2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                   <option key={n} value={n}>{n} sedute</option>
                 ))}
               </select>
