@@ -26,12 +26,21 @@
   body { margin: 0; min-height: 100vh; }
   * { box-sizing: border-box; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  #mb-sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+  #mb-sidebar.mb-sidebar-open { transform: translateX(0); }
+  @media (min-width: 900px) {
+    #root { padding-left: 230px; }
+    #mb-sidebar { transform: translateX(0) !important; transition: none; }
+    #mb-sidebar-backdrop { display: none !important; }
+    #mb-hamburger-btn { display: none !important; }
+  }
   @media print {
     html { background-image: none; background-color: #ffffff; }
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; color: #000 !important; background: #fff !important; box-shadow: none !important; backdrop-filter: none !important; }
     #print-area { position: absolute; top: 0; left: 0; width: 100%; }
     .no-print { display: none !important; }
+    #mb-sidebar, #mb-sidebar-backdrop { display: none !important; }
   }
 </style>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -2612,10 +2621,12 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
 
   const Menu = () => ReactDOM.createPortal(
     <React.Fragment>
-      {showMenu && (
-        <div className="no-print" style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex" }}>
-          <div style={{ width: 230, background: surface, borderRight: `1px solid ${borderStrong}`, padding: "18px 18px 18px 18px", display: "flex", flexDirection: "column", overflowY: "auto" }}>
-            {[
+      <div
+        id="mb-sidebar"
+        className={`no-print${showMenu ? " mb-sidebar-open" : ""}`}
+        style={{ position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50, width: 230, background: surface, borderRight: `1px solid ${borderStrong}`, padding: "18px 18px 18px 18px", display: "flex", flexDirection: "column", overflowY: "auto" }}
+      >
+        {[
               ["Gestione", [
                 ["lista", "🧤 Portieri", pitch, pitchDim],
                 ["guanti", "🧰 Materiale", goldSoft, goldDim],
@@ -2673,9 +2684,9 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 </div>
               </div>
             ))}
-          </div>
-          <div onClick={() => setShowMenu(false)} style={{ flex: 1, background: "rgba(0,0,0,0.5)" }} />
-        </div>
+      </div>
+      {showMenu && (
+        <div id="mb-sidebar-backdrop" className="no-print" onClick={() => setShowMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.5)" }} />
       )}
       {showRicerca && (
         <div className="no-print" style={{ position: "fixed", inset: 0, zIndex: 55, display: "flex", flexDirection: "column", alignItems: "center", padding: "60px 20px", background: "rgba(0,0,0,0.6)" }}>
@@ -2758,6 +2769,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     <div className="no-print" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", paddingTop: 4 }}>
       <div style={{ position: "absolute", top: 0, left: 0, display: "flex", gap: 8 }}>
         <button
+          id="mb-hamburger-btn"
           onClick={() => setShowMenu(true)}
           style={{ background: surface2, color: textPrimary, border: `1px solid ${border}`, borderRadius: 10, width: 44, height: 44, fontSize: 20, cursor: "pointer" }}
         >
