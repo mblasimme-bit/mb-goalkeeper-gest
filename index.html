@@ -38,6 +38,7 @@
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 <div id="root">
@@ -2378,7 +2379,34 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     window.print();
   };
 
-  const handleShare = (title, text) => {
+  const handleShare = async (title, text) => {
+    const area = document.getElementById("print-area");
+    const canGenerateImmagine = area && window.html2canvas;
+
+    if (canGenerateImmagine) {
+      try {
+        const canvas = await window.html2canvas(area, { backgroundColor: "#ffffff", scale: 2, useCORS: true });
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (blob) {
+          const file = new File([blob], `${(title || "scheda").replace(/[^a-z0-9]/gi, "_")}.png`, { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title, text }).catch(() => {});
+            return;
+          }
+          // Nessun supporto alla condivisione file: propone il download dell'immagine
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = file.name;
+          a.click();
+          URL.revokeObjectURL(url);
+          return;
+        }
+      } catch (e) {
+        // in caso di errore nella generazione immagine, prosegue con i fallback sotto
+      }
+    }
+
     if (navigator.share) {
       navigator.share({ title, text }).catch(() => {});
     } else {
