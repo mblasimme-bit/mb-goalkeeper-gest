@@ -8396,6 +8396,11 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
               </select>
             </div>
 
+            {form.numeroSedute && !form.dataInizio && (
+              <p style={{ margin: "0 0 14px", fontSize: 13, color: coral, background: coralDim, border: `1px solid ${coral}`, borderRadius: 9, padding: "8px 12px" }}>
+                ⚠️ Inserisci prima la "Data 1ª seduta" qui sopra: solo dopo compariranno le date delle singole sedute da modificare.
+              </p>
+            )}
             {form.dataInizio && (form.datePrestabilite || []).length > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <label style={labelStyle}>Date prestabilite delle sedute (modificabili)</label>
