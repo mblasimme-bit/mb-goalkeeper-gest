@@ -8219,7 +8219,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
     setForm((f) => ({ ...f, dataInizio: val, datePrestabilite: rigeneraDate(val, f.numeroSedute, f.datePrestabilite), dataScadenzaSaldo: f.dataScadenzaSaldo || val }));
   };
   const setNumeroSedute = (val) => {
-    const n = Math.min(10, Math.max(3, Number(val) || 4));
+    const n = Math.min(10, Math.max(2, Number(val) || 4));
     setForm((f) => ({ ...f, numeroSedute: String(n), datePrestabilite: rigeneraDate(f.dataInizio, n, f.datePrestabilite) }));
   };
   const setDataSeduta = (i, val) => {
