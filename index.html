@@ -2228,6 +2228,11 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
   };
 
   const rimuoviGuanto = (id) => {
+    const g = guanti.find((x) => x.id === id);
+    if (g && g.inventarioId) {
+      const art = inventario.find((i) => String(i.id) === String(g.inventarioId));
+      if (art) modificaInventario(art.id, { quantita: art.quantita + 1 });
+    }
     persist(GUANTI_KEY, guanti.filter((g) => g.id !== id), setGuanti, { saltaFusione: true });
   };
 
@@ -6367,6 +6372,7 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
   const submit = () => {
     if (!form.portiereId || !form.data) return;
     const portiere = portieri.find((p) => String(p.id) === String(form.portiereId));
+    const art = form.inventarioId ? inventario.find((i) => String(i.id) === String(form.inventarioId)) : null;
     aggiungiGuanto({
       portiereId: form.portiereId,
       nome: portiere ? portiere.nome : "—",
@@ -6375,10 +6381,10 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
       importo: form.tipo === "vendita" ? Number(form.importo) || 0 : 0,
       note: form.note,
       inventarioId: form.inventarioId || null,
+      prodottoDettaglio: art ? [art.articolo, art.fornitore, art.modello, art.taglia ? `taglia ${art.taglia}` : ""].filter(Boolean).join(" · ") : null,
     });
-    if (form.inventarioId) {
-      const art = inventario.find((i) => String(i.id) === String(form.inventarioId));
-      if (art) modificaInventario(art.id, { quantita: Math.max(0, art.quantita - 1) });
+    if (art) {
+      modificaInventario(art.id, { quantita: Math.max(0, art.quantita - 1) });
     }
     setForm({ portiereId: "", data: "", tipo: "regalo", importo: "", note: "", inventarioId: "" });
     setShowForm(false);
@@ -6489,9 +6495,11 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
           return (
             <div key={g.id} style={{ ...cardStyle, marginBottom: 10, display: "flex", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 14, color: textPrimary, fontWeight: 600 }}>{g.nome}</p>
+                <p style={{ margin: 0, fontSize: 14, color: textPrimary, fontWeight: 600 }}>
+                  {g.prodottoDettaglio || (g.tipo === "vendita" ? "Materiale venduto" : "Materiale regalato")}
+                </p>
                 <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
-                  {formatData(g.data)}
+                  {g.nome} · {formatData(g.data)}
                   {g.tipo === "vendita" ? ` · €${Number(g.importo).toFixed(2)}` : ""}
                   {g.note ? ` · ${g.note}` : ""}
                 </p>
