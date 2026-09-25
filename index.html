@@ -3370,6 +3370,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         rinnovoDa={view.rinnovoDa}
         apriForm={view.apriForm}
         confirmAction={confirmAction}
+        settings={settings}
         setView={setView}
         Menu={Menu}
         TopBar={TopBar}
@@ -8260,7 +8261,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
   );
 }
 
-function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, apriForm, confirmAction, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
+function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, apriForm, confirmAction, settings, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
   const rigeneraDateIniziale = (dataInizio, numeroSedute) => {
     if (!dataInizio) return [];
     const n = Math.min(10, Math.max(2, Number(numeroSedute) || 4));
@@ -8601,8 +8602,24 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
           const fatte = new Set(pk.sedute).size;
           const completo = fatte >= pk.numeroSedute;
           const daRinnovare = completo && !pk.rinnovato;
+          const rimanenti = pk.numeroSedute - fatte;
+
+          // Arancione: manca solo una seduta. Rosso: pacchetto terminato (in attesa di rinnovo)
+          const coloreRiga = daRinnovare
+            ? { bg: coralDim, bd: coral }
+            : rimanenti === 1
+            ? { bg: "rgba(245,158,11,0.12)", bd: "#f59e0b" }
+            : null;
+
           return (
-            <div key={pk.id} style={{ ...cardStyle, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div
+              key={pk.id}
+              style={{
+                ...cardStyle,
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                ...(coloreRiga ? { background: coloreRiga.bg, border: `1px solid ${coloreRiga.bd}` } : {}),
+              }}
+            >
               <button
                 onClick={() => setView({ page: "pacchetto-dettaglio", id: pk.id })}
                 style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", padding: 0, flex: 1, minWidth: 0 }}
