@@ -1164,6 +1164,7 @@ function GestionalePortieri() {
   const [showFiltro, setShowFiltro] = useState(false);
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [notaVeloceHome, setNotaVeloceHome] = useState("");
   const [showRicerca, setShowRicerca] = useState(false);
   const [queryRicerca, setQueryRicerca] = useState("");
   const [dbConfig, setDbConfig] = useState(null);
@@ -6071,26 +6072,61 @@ create policy "solo autenticati" on gestionale_kv
           <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} style={{ flex: "1 1 45%", minWidth: 140 }} />
         </div>
 
-        <button
+        <div
           className="no-print"
-          onClick={() => setView({ page: "note" })}
           style={{
-            width: "100%", textAlign: "left", cursor: "pointer", marginBottom: 16, minHeight: 160,
+            width: "100%", marginBottom: 16, minHeight: 160,
             background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 14, padding: "20px 22px",
             display: "flex", flexDirection: "column",
           }}
         >
-          <p style={{ margin: 0, fontSize: 15, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
+          <button
+            onClick={() => setView({ page: "note" })}
+            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}
+          >
+            <p style={{ margin: 0, fontSize: 15, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
+            <span style={{ fontSize: 16, color: lilla }}>→</span>
+          </button>
+
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <input
+              style={{ ...inputStyle, flex: 1 }}
+              type="text"
+              placeholder="Scrivi una nota veloce e premi Invio..."
+              value={notaVeloceHome}
+              onChange={(e) => setNotaVeloceHome(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && notaVeloceHome.trim()) {
+                  aggiungiNota(notaVeloceHome);
+                  setNotaVeloceHome("");
+                }
+              }}
+            />
+            <button
+              onClick={() => {
+                if (notaVeloceHome.trim()) {
+                  aggiungiNota(notaVeloceHome);
+                  setNotaVeloceHome("");
+                }
+              }}
+              style={{ background: lilla, color: "#fff", border: "none", borderRadius: 10, padding: "0 16px", fontSize: 18, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+            >
+              +
+            </button>
+          </div>
+
           {noteVeloci.length === 0 ? (
-            <p style={{ margin: "10px 0 0", fontSize: 15, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
+            <p style={{ margin: "12px 0 0", fontSize: 14, color: textMuted }}>Nessuna nota ancora — scrivila qui sopra</p>
           ) : (
-            noteVeloci.slice(0, 4).map((n) => (
-              <p key={n.id} style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.4, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
-                · {n.testo}
-              </p>
-            ))
+            <button onClick={() => setView({ page: "note" })} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
+              {noteVeloci.slice(0, 4).map((n) => (
+                <p key={n.id} style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.4, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
+                  · {n.testo}
+                </p>
+              ))}
+            </button>
           )}
-        </button>
+        </div>
 
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
           <button
