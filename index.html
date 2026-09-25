@@ -6075,17 +6075,17 @@ create policy "solo autenticati" on gestionale_kv
           className="no-print"
           onClick={() => setView({ page: "note" })}
           style={{
-            width: "100%", textAlign: "left", cursor: "pointer", marginBottom: 16,
-            background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "16px 18px",
+            width: "100%", textAlign: "left", cursor: "pointer", marginBottom: 16, minHeight: 160,
+            background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 14, padding: "20px 22px",
             display: "flex", flexDirection: "column",
           }}
         >
-          <p style={{ margin: 0, fontSize: 13, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
+          <p style={{ margin: 0, fontSize: 15, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
           {noteVeloci.length === 0 ? (
-            <p style={{ margin: "6px 0 0", fontSize: 14, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
+            <p style={{ margin: "10px 0 0", fontSize: 15, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
           ) : (
-            noteVeloci.slice(0, 5).map((n) => (
-              <p key={n.id} style={{ margin: "6px 0 0", fontSize: 14, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+            noteVeloci.slice(0, 4).map((n) => (
+              <p key={n.id} style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.4, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical" }}>
                 · {n.testo}
               </p>
             ))
