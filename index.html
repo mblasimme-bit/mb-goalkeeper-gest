@@ -518,7 +518,7 @@ function calcolaIncassiMeseAnno(guanti, pacchetti, entrate, eventi, sponsorComm)
   return { mese, anno, etichettaMese: MESI[Number(meseKey.slice(5, 7)) - 1], annoKey };
 }
 
-function IncassiMonitor({ guanti, pacchetti, entrate, eventi, sponsorComm, masked, onNavigate }) {
+function IncassiMonitor({ guanti, pacchetti, entrate, eventi, sponsorComm, masked, onNavigate, soloMese }) {
   const { mese, anno, etichettaMese, annoKey } = useMemo(
     () => calcolaIncassiMeseAnno(guanti, pacchetti, entrate, eventi, sponsorComm),
     [guanti, pacchetti, entrate, eventi, sponsorComm]
@@ -538,6 +538,7 @@ function IncassiMonitor({ guanti, pacchetti, entrate, eventi, sponsorComm, maske
         <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>{showMasked ? "••••" : `€${mese.toFixed(2)}`}</p>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi di {etichettaMese}</p>
       </button>
+      {!soloMese && (
       <button
         onClick={handleClick}
         style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: "rgba(31,157,85,0.07)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
@@ -545,6 +546,7 @@ function IncassiMonitor({ guanti, pacchetti, entrate, eventi, sponsorComm, maske
         <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>{showMasked ? "••••" : `€${anno.toFixed(2)}`}</p>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi anno {annoKey}</p>
       </button>
+      )}
     </>
   );
 }
@@ -5954,30 +5956,6 @@ create policy "solo autenticati" on gestionale_kv
         </div>
 
         <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-          {(() => {
-            const oggiStr = new Date().toISOString().slice(0, 10);
-            const d = new Date();
-            const wd = (d.getDay() + 6) % 7; // lunedì = 0
-            const lunedi = new Date(d);
-            lunedi.setDate(d.getDate() - wd);
-            const domenica = new Date(lunedi);
-            domenica.setDate(lunedi.getDate() + 6);
-            const lunediStr = lunedi.toISOString().slice(0, 10);
-            const domenicaStr = domenica.toISOString().slice(0, 10);
-            const seduteOggi = entrate.filter((e) => e.data === oggiStr).length;
-            const seduteSettimana = entrate.filter((e) => e.data >= lunediStr && e.data <= domenicaStr).length;
-            return (
-              <button
-                className="no-print"
-                onClick={() => setView({ page: "calendario" })}
-                style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: surface2, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 16px" }}
-              >
-                <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: textPrimary }}>{seduteSettimana}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted, fontWeight: 600 }}>📅 Sedute settimana · {seduteOggi} oggi</p>
-              </button>
-            );
-          })()}
-
           {hasAvvisi && (
             <div
               className="no-print"
@@ -6047,55 +6025,72 @@ create policy "solo autenticati" on gestionale_kv
             </button>
           )}
 
-          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} sponsorComm={sponsorComm} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} onNavigate={() => setView({ page: "contabilita" })} />
+          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} sponsorComm={sponsorComm} masked={settings.nascondiImportiHome || settings.modalitaPresentazione} onNavigate={() => setView({ page: "contabilita" })} soloMese={true} />
 
           {transazioniOggi.length > 0 && (
             <button
               className="no-print"
               onClick={() => setView({ page: "recap-giorno" })}
               style={{
-                width: "100%", textAlign: "left", cursor: "pointer", marginTop: 10,
+                flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer",
                 background: "rgba(31,157,85,0.12)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
               }}
             >
-              <div>
-                <p style={{ margin: 0, fontSize: 12, color: "#1f9d55", fontWeight: 700 }}>📅 Recap di oggi</p>
-                <p style={{ margin: "2px 0 0", fontSize: 13, color: textPrimary }}>
-                  {settings.nascondiImportiHome || settings.modalitaPresentazione ? "••••" : `+€${incassatoOggi.toFixed(2)}${spesoOggi > 0 ? ` · -€${spesoOggi.toFixed(2)}` : ""}`}
-                  {" · "}{transazioniOggi.length} movimento/i
-                </p>
-              </div>
-              <span style={{ fontSize: 18, color: "#1f9d55" }}>→</span>
+              <p style={{ margin: 0, fontSize: 12, color: "#1f9d55", fontWeight: 700 }}>📅 Recap di oggi</p>
+              <p style={{ margin: "2px 0 0", fontSize: 13, color: textPrimary }}>
+                {settings.nascondiImportiHome || settings.modalitaPresentazione ? "••••" : `+€${incassatoOggi.toFixed(2)}${spesoOggi > 0 ? ` · -€${spesoOggi.toFixed(2)}` : ""}`}
+                {" · "}{transazioniOggi.length} mov.
+              </p>
             </button>
           )}
+
+          {(() => {
+            const oggiStr = new Date().toISOString().slice(0, 10);
+            const d = new Date();
+            const wd = (d.getDay() + 6) % 7; // lunedì = 0
+            const lunedi = new Date(d);
+            lunedi.setDate(d.getDate() - wd);
+            const domenica = new Date(lunedi);
+            domenica.setDate(lunedi.getDate() + 6);
+            const lunediStr = lunedi.toISOString().slice(0, 10);
+            const domenicaStr = domenica.toISOString().slice(0, 10);
+            const seduteOggi = entrate.filter((e) => e.data === oggiStr).length;
+            const seduteSettimana = entrate.filter((e) => e.data >= lunediStr && e.data <= domenicaStr).length;
+            return (
+              <button
+                className="no-print"
+                onClick={() => setView({ page: "calendario" })}
+                style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "pointer", background: surface2, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 16px" }}
+              >
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: textPrimary }}>{seduteSettimana}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted, fontWeight: 600 }}>📅 Sedute settimana · {seduteOggi} oggi</p>
+              </button>
+            );
+          })()}
+
+          <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} style={{ flex: "1 1 45%", minWidth: 140 }} />
         </div>
 
-        <div className="no-print" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10, alignItems: "stretch" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
-            <OverviewCard icon="📦" label="Pacchetti attivi" value={pacchettiAttivi} fg={sky} bgc={skyDim} onClick={() => setView({ page: "pacchetti" })} style={{ flex: 1, minWidth: 0, width: "auto" }} />
-            <OverviewCard icon="🧰" label="Materiale" value={guanti.length} fg={goldSoft} bgc={goldDim} onClick={() => setView({ page: "guanti" })} style={{ flex: 1, minWidth: 0, width: "auto" }} />
-          </div>
-          <button
-            onClick={() => setView({ page: "note" })}
-            style={{
-              minWidth: 0, textAlign: "left", cursor: "pointer",
-              background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 16px",
-              display: "flex", flexDirection: "column",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: 12, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
-            {noteVeloci.length === 0 ? (
-              <p style={{ margin: "4px 0 0", fontSize: 13, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
-            ) : (
-              noteVeloci.slice(0, 3).map((n) => (
-                <p key={n.id} style={{ margin: "4px 0 0", fontSize: 13, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-                  · {n.testo}
-                </p>
-              ))
-            )}
-          </button>
-        </div>
+        <button
+          className="no-print"
+          onClick={() => setView({ page: "note" })}
+          style={{
+            width: "100%", textAlign: "left", cursor: "pointer", marginBottom: 16,
+            background: lillaDim, border: `1px solid ${lilla}`, borderRadius: 12, padding: "16px 18px",
+            display: "flex", flexDirection: "column",
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 13, color: lilla, fontWeight: 700 }}>📝 Note veloci {noteVeloci.length > 0 ? `(${noteVeloci.length})` : ""}</p>
+          {noteVeloci.length === 0 ? (
+            <p style={{ margin: "6px 0 0", fontSize: 14, color: textPrimary }}>Nessuna nota ancora — tocca per scriverne una</p>
+          ) : (
+            noteVeloci.slice(0, 5).map((n) => (
+              <p key={n.id} style={{ margin: "6px 0 0", fontSize: 14, color: textPrimary, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                · {n.testo}
+              </p>
+            ))
+          )}
+        </button>
 
         <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
           <button
