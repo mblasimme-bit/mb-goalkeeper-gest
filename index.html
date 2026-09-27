@@ -6648,10 +6648,6 @@ function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa,
           {spese.length} spese registrate · totale €{totale.toFixed(2)}
         </p>
 
-        <div className="no-print" style={{ marginTop: 16, display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} sponsorComm={sponsorComm} onNavigate={() => setView({ page: "contabilita" })} />
-        </div>
-
         <div className="no-print" style={{ margin: "16px 0" }}>
           <ExportBar onPrint={handlePrint} onShare={() => handleShare("Spese Academy", `${spese.length} spese registrate, totale €${totale.toFixed(2)}`)} />
         </div>
@@ -7258,6 +7254,10 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
       <Menu />
       <div id="print-area" style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 40px 48px" }}>
         <TopBar title="Contabilità" />
+
+        <div className="no-print" style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 10 }}>
+          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} sponsorComm={sponsorComm} onNavigate={() => {}} />
+        </div>
 
         {entrate.filter((e) => e.portiereId === null || e.portiereId === undefined || e.portiereId === "").length > 0 && (
           <button
