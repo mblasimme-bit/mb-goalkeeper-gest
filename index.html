@@ -7030,6 +7030,19 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
   const dentroPeriodo = (data) => (!periodoDa || (data && data >= periodoDa)) && (!periodoA || (data && data <= periodoA));
 
   const incassiVociAll = useMemo(() => ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm), [guanti, pacchetti, entrate, eventi, sponsorComm]);
+  const incassiSettimana = useMemo(() => {
+    const d = new Date();
+    const wd = (d.getDay() + 6) % 7; // lunedì = 0
+    const lunedi = new Date(d);
+    lunedi.setDate(d.getDate() - wd);
+    const domenica = new Date(lunedi);
+    domenica.setDate(lunedi.getDate() + 6);
+    const lunediStr = lunedi.toISOString().slice(0, 10);
+    const domenicaStr = domenica.toISOString().slice(0, 10);
+    return incassiVociAll
+      .filter((v) => v.data && v.data >= lunediStr && v.data <= domenicaStr)
+      .reduce((s, v) => s + v.importo, 0);
+  }, [incassiVociAll]);
   const incassiVoci = useMemo(() => {
     let list = incassiVociAll;
     if (categoriaAttiva && categoriaAttiva.tipo === "incasso") {
@@ -7255,10 +7268,6 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
       <div id="print-area" style={{ maxWidth: 1400, margin: "0 auto", padding: "20px 40px 48px" }}>
         <TopBar title="Contabilità" />
 
-        <div className="no-print" style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} sponsorComm={sponsorComm} onNavigate={() => {}} />
-        </div>
-
         {entrate.filter((e) => e.portiereId === null || e.portiereId === undefined || e.portiereId === "").length > 0 && (
           <button
             className="no-print"
@@ -7364,6 +7373,17 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
               <p style={{ margin: "2px 0 0", fontSize: 11, color: textMuted }}>Saldo {etichettaMeseRiepilogo} · tot. {mostra(riepilogoSaldoTotale)}</p>
             </div>
           </div>
+        </div>
+
+        <div className="no-print" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
+          <button
+            onClick={() => {}}
+            style={{ flex: "1 1 45%", minWidth: 140, textAlign: "left", cursor: "default", background: "rgba(31,157,85,0.07)", border: "1px solid #1f9d55", borderRadius: 12, padding: "12px 16px" }}
+          >
+            <p style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#1f9d55" }}>€{incassiSettimana.toFixed(2)}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#1f9d55", fontWeight: 600 }}>Incassi settimana</p>
+          </button>
+          <IncassiMonitor guanti={guanti} pacchetti={pacchetti} entrate={entrate} eventi={eventi} sponsorComm={sponsorComm} onNavigate={() => {}} />
         </div>
 
         {categoriaAttiva && (
