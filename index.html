@@ -8498,6 +8498,11 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
               Saldo già incassato (altrimenti resta tra gli insoluti finché non lo segni pagato)
             </label>
 
+            {(!formSpeciale.portiereId || !formSpeciale.dataInizio) && (
+              <p style={{ margin: "0 0 10px", fontSize: 13, color: coral, background: coralDim, border: `1px solid ${coral}`, borderRadius: 9, padding: "8px 12px" }}>
+                ⚠️ Manca ancora: {[!formSpeciale.portiereId && "portiere", !formSpeciale.dataInizio && "data 1ª seduta"].filter(Boolean).join(", ")}
+              </p>
+            )}
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={submitSpeciale}
@@ -8574,6 +8579,11 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
               <input type="checkbox" checked={form.pagato} onChange={(e) => setForm((f) => ({ ...f, pagato: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} />
               Saldo già incassato (altrimenti resta tra gli insoluti finché non lo segni pagato)
             </label>
+            {(!form.portiereId || !form.dataInizio || !form.numeroSedute) && (
+              <p style={{ margin: "0 0 10px", fontSize: 13, color: coral, background: coralDim, border: `1px solid ${coral}`, borderRadius: 9, padding: "8px 12px" }}>
+                ⚠️ Manca ancora: {[!form.portiereId && "portiere", !form.dataInizio && "data 1ª seduta", !form.numeroSedute && "numero sedute"].filter(Boolean).join(", ")}
+              </p>
+            )}
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={submit} disabled={!form.portiereId || !form.dataInizio || !form.numeroSedute} style={{ ...primaryBtn, flex: 1, opacity: form.portiereId && form.dataInizio && form.numeroSedute ? 1 : 0.5, cursor: form.portiereId && form.dataInizio && form.numeroSedute ? "pointer" : "not-allowed" }}>
                 Crea e apri
@@ -8583,7 +8593,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
           </div>
         )}
 
-        {pacchetti.map((pk) => {
+        {[...pacchetti].sort((a, b) => (b.dataInizio || "").localeCompare(a.dataInizio || "")).map((pk) => {
           const fatte = new Set(pk.sedute).size;
           const completo = fatte >= pk.numeroSedute;
           const daRinnovare = completo && !pk.rinnovato;
