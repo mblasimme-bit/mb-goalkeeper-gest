@@ -2270,6 +2270,13 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     return newPk.id;
   };
 
+  const rinnovaPacchetto = (entry, idVecchio) => {
+    const newPk = { ...entry, id: generaId(), sedute: [] };
+    const next = pacchetti.map((pk) => (pk.id === idVecchio ? { ...pk, rinnovato: true } : pk));
+    persist(PACCHETTI_KEY, [...next, newPk], setPacchetti);
+    return newPk.id;
+  };
+
   const aggiungiSeduta = (pacchettoId, data) => {
     const next = pacchetti.map((pk) =>
       pk.id === pacchettoId
@@ -3365,6 +3372,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         portieri={portieri}
         pacchetti={pacchetti}
         aggiungiPacchetto={aggiungiPacchetto}
+        rinnovaPacchetto={rinnovaPacchetto}
         rimuoviPacchetto={rimuoviPacchetto}
         modificaPacchetto={modificaPacchetto}
         rinnovoDa={view.rinnovoDa}
@@ -8246,7 +8254,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
   );
 }
 
-function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, apriForm, confirmAction, settings, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
+function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacchetto, rimuoviPacchetto, modificaPacchetto, rinnovoDa, apriForm, confirmAction, settings, setView, Menu, TopBar, printStyle, handlePrint, handleShare }) {
   const rigeneraDateIniziale = (dataInizio, numeroSedute) => {
     if (!dataInizio) return [];
     const n = Math.min(10, Math.max(2, Number(numeroSedute) || 4));
@@ -8374,7 +8382,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
   const submit = () => {
     if (!form.portiereId || !form.dataInizio || !form.numeroSedute) return;
     const portiere = portieri.find((p) => String(p.id) === String(form.portiereId));
-    const id = aggiungiPacchetto({
+    const nuovoPacchetto = {
       portiereId: form.portiereId,
       nome: portiere ? portiere.nome : "—",
       dataInizio: form.dataInizio,
@@ -8386,10 +8394,10 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rimuoviPacche
       metodoPagamento: form.metodoPagamento || null,
       pagato: form.pagato,
       dataPagamento: form.pagato ? new Date().toISOString().slice(0, 10) : null,
-    });
-    if (rinnovoDa && rinnovoDa.idVecchio) {
-      modificaPacchetto(rinnovoDa.idVecchio, { rinnovato: true });
-    }
+    };
+    const id = (rinnovoDa && rinnovoDa.idVecchio)
+      ? rinnovaPacchetto(nuovoPacchetto, rinnovoDa.idVecchio)
+      : aggiungiPacchetto(nuovoPacchetto);
     setForm({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false });
     setShowForm(false);
     setView({ page: "pacchetto-dettaglio", id });
