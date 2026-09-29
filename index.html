@@ -8842,7 +8842,16 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
             </div>
           )}
           {completo && pk.rinnovato && (
-            <p style={{ margin: "10px 0 0", fontSize: 12, color: textMuted }}>✅ Già rinnovato</p>
+            <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10 }}>
+              <p style={{ margin: 0, fontSize: 12, color: textMuted }}>✅ Già rinnovato</p>
+              <button
+                className="no-print"
+                onClick={() => modificaPacchetto(pk.id, { rinnovato: false })}
+                style={{ background: "none", border: "none", color: textMuted, fontSize: 11, textDecoration: "underline", cursor: "pointer", padding: 0 }}
+              >
+                annulla
+              </button>
+            </div>
           )}
 
           {pk.tipo === "speciale" && pk.pianificazione && (
