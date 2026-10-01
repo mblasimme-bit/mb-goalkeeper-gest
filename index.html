@@ -6520,23 +6520,35 @@ function PaginaGuanti({ portieri, guanti, aggiungiGuanto, rimuoviGuanto, modific
                 </select>
               </div>
             </div>
+            {disponibili.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <label style={labelStyle}>Prodotto dall'inventario (facoltativo)</label>
+                <select
+                  style={inputStyle}
+                  value={form.inventarioId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    const art = disponibili.find((i) => String(i.id) === String(id));
+                    setForm((f) => ({
+                      ...f,
+                      inventarioId: id,
+                      importo: art && art.prezzo != null && f.tipo === "vendita" ? String(art.prezzo) : f.importo,
+                    }));
+                  }}
+                >
+                  <option value="">— nessuno / non tracciato —</option>
+                  {disponibili.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {[i.articolo, i.fornitore, i.modello, i.taglia ? `taglia ${i.taglia}` : ""].filter(Boolean).join(" · ")} (disp. {i.quantita}{i.prezzo != null ? ` · €${i.prezzo}` : ""})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {form.tipo === "vendita" && (
               <div style={{ marginBottom: 10 }}>
                 <label style={labelStyle}>Importo (€)</label>
                 <input style={inputStyle} type="number" step="0.01" value={form.importo} onChange={(e) => setForm((f) => ({ ...f, importo: e.target.value }))} />
-              </div>
-            )}
-            {disponibili.length > 0 && (
-              <div style={{ marginBottom: 10 }}>
-                <label style={labelStyle}>Prodotto dall'inventario (facoltativo)</label>
-                <select style={inputStyle} value={form.inventarioId} onChange={(e) => setForm((f) => ({ ...f, inventarioId: e.target.value }))}>
-                  <option value="">— nessuno / non tracciato —</option>
-                  {disponibili.map((i) => (
-                    <option key={i.id} value={i.id}>
-                      {[i.articolo, i.fornitore, i.modello, i.taglia ? `taglia ${i.taglia}` : ""].filter(Boolean).join(" · ")} (disp. {i.quantita})
-                    </option>
-                  ))}
-                </select>
               </div>
             )}
             <div style={{ marginBottom: 14 }}>
@@ -7850,7 +7862,7 @@ function PaginaSponsor({
   const [showForm, setShowForm] = useState(false);
   const [formComm, setFormComm] = useState({ nome: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "" });
   const [formTech, setFormTech] = useState({ azienda: "", note: "" });
-  const [formInv, setFormInv] = useState({ articolo: "", fornitore: "", modello: "", taglia: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: new Date().toISOString().slice(0, 10) });
+  const [formInv, setFormInv] = useState({ articolo: "", fornitore: "", modello: "", taglia: "", prezzo: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: new Date().toISOString().slice(0, 10) });
 
   const totComm = sponsorComm.reduce((s, x) => s + (Number(x.importo) || 0), 0);
 
@@ -7871,10 +7883,11 @@ function PaginaSponsor({
     aggiungiInventario({
       ...formInv,
       quantita: Number(formInv.quantita),
+      prezzo: formInv.prezzo ? Number(formInv.prezzo) : null,
       sponsorTechId: formInv.sponsorTechId || null,
       assegnatoA: formInv.assegnatoA || null,
     });
-    setFormInv({ articolo: "", fornitore: "", modello: "", taglia: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: new Date().toISOString().slice(0, 10) });
+    setFormInv({ articolo: "", fornitore: "", modello: "", taglia: "", prezzo: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: new Date().toISOString().slice(0, 10) });
     setShowForm(false);
   };
 
@@ -8017,7 +8030,7 @@ function PaginaSponsor({
                     <input style={inputStyle} type="text" placeholder="es. Phantom GT2" value={formInv.modello} onChange={(e) => setFormInv((f) => ({ ...f, modello: e.target.value }))} />
                   </div>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
                   <div>
                     <label style={labelStyle}>Taglia</label>
                     <input style={inputStyle} type="text" placeholder="es. M, 8, 9½…" value={formInv.taglia} onChange={(e) => setFormInv((f) => ({ ...f, taglia: e.target.value }))} />
@@ -8025,6 +8038,10 @@ function PaginaSponsor({
                   <div>
                     <label style={labelStyle}>Quantità</label>
                     <input style={inputStyle} type="number" min="1" value={formInv.quantita} onChange={(e) => setFormInv((f) => ({ ...f, quantita: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Prezzo vendita (€)</label>
+                    <input style={inputStyle} type="number" step="0.01" placeholder="facoltativo" value={formInv.prezzo} onChange={(e) => setFormInv((f) => ({ ...f, prezzo: e.target.value }))} />
                   </div>
                   <div>
                     <label style={labelStyle}>Data</label>
