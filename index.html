@@ -385,6 +385,7 @@ const SPESA_COLOR = {
 };
 
 const MESI = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+const TIPI_SEDUTA = ["Singola esclusiva", "Gruppo 2/3", "Gruppo misto", "Atletica", "Analisi video", "Analisi partita in presenza"];
 
 function meseLabel(key) {
   if (key === "n.d.") return "Data non indicata";
@@ -402,7 +403,7 @@ function ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm) {
     .map((pk) => ({ data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale) || 0, fonte: "Pacchetto", dettaglio: pk.nome, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamento, portiereId: pk.portiereId }));
   const manuali = (entrate || [])
     .filter((e) => eDavveroPagato(e.pagato))
-    .map((e) => ({ data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Manuale", dettaglio: e.note || "voce importata", sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamento }));
+    .map((e) => ({ data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Manuale", dettaglio: [e.tipoSeduta, e.note].filter(Boolean).join(" · ") || "voce importata", sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamento }));
   const daEventi = (eventi || [])
     .filter((ev) => ev.incassoReale)
     .map((ev) => ({ data: ev.dataInizio, importo: Number(ev.incassoReale) || 0, fonte: "Evento", dettaglio: ev.titolo, sourceType: "evento-incasso", sourceId: ev.id }));
@@ -1203,7 +1204,7 @@ function GestionalePortieri() {
   const [verificaPortiereScelto, setVerificaPortiereScelto] = useState({}); // { [id]: portiereId } selezione in corso
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [showQuickSeduta, setShowQuickSeduta] = useState(false);
-  const [quickForm, setQuickForm] = useState({ portiereId: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true });
+  const [quickForm, setQuickForm] = useState({ portiereId: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
   const [quickJustSaved, setQuickJustSaved] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const confirmAction = (message, onConfirm) => {
@@ -1218,7 +1219,7 @@ function GestionalePortieri() {
   const insolutiTotale = insolutiList.reduce((s, i) => s + i.importo, 0);
   const [showPagamentoForm, setShowPagamentoForm] = useState(false);
   const [pagamentoJustSaved, setPagamentoJustSaved] = useState(false);
-  const [pagamentoForm, setPagamentoForm] = useState({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true });
+  const [pagamentoForm, setPagamentoForm] = useState({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
   const printRef = useRef(null);
 
   const SUPABASE_TABLE = "gestionale_kv";
@@ -2323,8 +2324,9 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
       metodoPagamento: quickForm.metodoPagamento || null,
       pagato: quickForm.pagato,
       fonte: "Seduta singola",
+      tipoSeduta: quickForm.tipoSeduta || "Singola esclusiva",
     });
-    setQuickForm({ portiereId: "", importo: settings.prezzoDefaultSeduta || "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true });
+    setQuickForm({ portiereId: "", importo: settings.prezzoDefaultSeduta || "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
     setQuickJustSaved(true);
     setTimeout(() => setQuickJustSaved(false), 1800);
   };
@@ -3277,6 +3279,14 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                     </div>
                   </div>
                   <div style={{ marginBottom: 12 }}>
+                    <label style={labelStyle}>Tipo di seduta</label>
+                    <select style={inputStyle} value={pagamentoForm.tipoSeduta} onChange={(e) => setPagamentoForm((f) => ({ ...f, tipoSeduta: e.target.value }))}>
+                      {TIPI_SEDUTA.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
                     <label style={labelStyle}>Note</label>
                     <input style={inputStyle} type="text" value={pagamentoForm.note} placeholder="es. seduta del 12/09" onChange={(e) => setPagamentoForm((f) => ({ ...f, note: e.target.value }))} />
                   </div>
@@ -3297,8 +3307,8 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                     <button
                       onClick={() => {
                         if (!pagamentoForm.data || !pagamentoForm.importo) return;
-                        aggiungiEntrata({ portiereId: p.id, data: pagamentoForm.data, importo: Number(pagamentoForm.importo), note: pagamentoForm.note, metodoPagamento: pagamentoForm.metodoPagamento || null, pagato: pagamentoForm.pagato, fonte: "Seduta singola" });
-                        setPagamentoForm({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true });
+                        aggiungiEntrata({ portiereId: p.id, data: pagamentoForm.data, importo: Number(pagamentoForm.importo), note: pagamentoForm.note, metodoPagamento: pagamentoForm.metodoPagamento || null, pagato: pagamentoForm.pagato, fonte: "Seduta singola", tipoSeduta: pagamentoForm.tipoSeduta || "Singola esclusiva" });
+                        setPagamentoForm({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
                         setPagamentoJustSaved(true);
                         setTimeout(() => setPagamentoJustSaved(false), 2200);
                       }}
@@ -5912,6 +5922,18 @@ create policy "solo autenticati" on gestionale_kv
                     value={quickForm.importo}
                     onChange={(e) => setQuickForm((f) => ({ ...f, importo: e.target.value }))}
                   />
+                </div>
+                <div>
+                  <label style={labelStyle}>Tipo di seduta</label>
+                  <select
+                    style={inputStyle}
+                    value={quickForm.tipoSeduta}
+                    onChange={(e) => setQuickForm((f) => ({ ...f, tipoSeduta: e.target.value }))}
+                  >
+                    {TIPI_SEDUTA.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label style={labelStyle}>Data</label>
