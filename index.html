@@ -8711,10 +8711,45 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
   const [editData, setEditData] = useState("");
   const [modalitaCliente, setModalitaCliente] = useState(false);
   const [editIdxPrestabilita, setEditIdxPrestabilita] = useState(null);
+  const [showEstendi, setShowEstendi] = useState(false);
+  const [nSedudeDaAggiungere, setNSedudeDaAggiungere] = useState("2");
   const fatte = new Set(pk.sedute).size;
   const completo = fatte >= pk.numeroSedute;
   const datePrestabilite = pk.datePrestabilite || [];
   const insoluto = pk.importoTotale && eNonPagato(pk.pagato);
+
+  const estendiPacchetto = () => {
+    const n = Math.max(1, Number(nSedudeDaAggiungere) || 1);
+    if (pk.tipo === "speciale") {
+      const pianificazione = pk.pianificazione || [];
+      const ultima = pianificazione.length ? pianificazione[pianificazione.length - 1].data : pk.dataInizio;
+      const nuove = [];
+      for (let i = 0; i < n; i++) {
+        const d = new Date(ultima);
+        d.setDate(d.getDate() + 7 * (i + 1));
+        nuove.push({ data: d.toISOString().slice(0, 10), durata: 1 });
+      }
+      modificaPacchetto(pk.id, {
+        numeroSedute: pk.numeroSedute + n,
+        pianificazione: [...pianificazione, ...nuove],
+        oreTotali: (pk.oreTotali || pianificazione.reduce((s, x) => s + (Number(x.durata) || 0), 0)) + n,
+      });
+    } else {
+      const base = datePrestabilite.length ? datePrestabilite[datePrestabilite.length - 1] : pk.dataInizio;
+      const nuove = [];
+      for (let i = 0; i < n; i++) {
+        const d = new Date(base);
+        d.setDate(d.getDate() + 7 * (i + 1));
+        nuove.push(d.toISOString().slice(0, 10));
+      }
+      modificaPacchetto(pk.id, {
+        numeroSedute: pk.numeroSedute + n,
+        datePrestabilite: [...datePrestabilite, ...nuove],
+      });
+    }
+    setShowEstendi(false);
+    setNSedudeDaAggiungere("2");
+  };
 
   const submit = () => {
     if (!nuovaData || completo) return;
@@ -8850,6 +8885,32 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
               €{Number(pk.importoTotale).toFixed(2)} totale · €{(Number(pk.importoTotale) / pk.numeroSedute).toFixed(2)} a seduta
             </p>
           ) : null}
+
+          {!completo && (
+            <div className="no-print" style={{ marginTop: 12 }}>
+              {!showEstendi ? (
+                <button
+                  onClick={() => setShowEstendi(true)}
+                  style={{ background: "none", border: `1px solid ${border}`, borderRadius: 9, padding: "7px 12px", fontSize: 13, color: textSecondary, cursor: "pointer" }}
+                >
+                  ➕ Aggiungi sedute a questo pacchetto
+                </button>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <label style={{ fontSize: 13, color: textSecondary }}>Quante sedute aggiungere?</label>
+                  <input
+                    type="number"
+                    min="1"
+                    style={{ ...inputStyle, width: 70 }}
+                    value={nSedudeDaAggiungere}
+                    onChange={(e) => setNSedudeDaAggiungere(e.target.value)}
+                  />
+                  <button onClick={estendiPacchetto} style={{ ...primaryBtn, padding: "7px 14px", fontSize: 13 }}>Aggiungi</button>
+                  <button onClick={() => setShowEstendi(false)} style={{ ...ghostBtn, padding: "7px 14px", fontSize: 13 }}>Annulla</button>
+                </div>
+              )}
+            </div>
+          )}
 
           {completo && !pk.rinnovato && (
             <div className="no-print" style={{ marginTop: 14, padding: "12px 14px", borderRadius: 10, background: pitchDim, border: `1px solid ${pitch}` }}>
