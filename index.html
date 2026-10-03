@@ -1197,6 +1197,7 @@ function GestionalePortieri() {
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [notaVeloceHome, setNotaVeloceHome] = useState("");
+  const [meseAppuntamenti, setMeseAppuntamenti] = useState(new Date().toISOString().slice(0, 7));
   const [showRicerca, setShowRicerca] = useState(false);
   const [queryRicerca, setQueryRicerca] = useState("");
   const [dbConfig, setDbConfig] = useState(null);
@@ -2702,6 +2703,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 ["guanti", "🧰 Materiale", goldSoft, goldDim],
                 ["pacchetti", "📦 Pacchetti", sky, skyDim],
                 ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"],
+                ["appuntamenti-pacchetti", "🗓️ Appuntamenti pacchetti (PDF)", sky, skyDim],
               ]],
               ["Amministrazione", [
                 ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
@@ -4600,6 +4602,74 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             >
               ✅ Segna pagato
             </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (view.page === "appuntamenti-pacchetti") {
+    const appuntamenti = pacchetti.flatMap((pk) => {
+      const sorgente = pk.tipo === "speciale"
+        ? (pk.pianificazione || []).map((s) => ({ data: s.data, orario: null, durata: s.durata }))
+        : (pk.datePrestabilite || []).map((d) => ({ data: d, orario: pk.orario, durata: null }));
+      return sorgente
+        .filter((s) => s.data && s.data.slice(0, 7) === meseAppuntamenti)
+        .map((s) => ({
+          data: s.data,
+          orario: s.orario,
+          durata: s.durata,
+          nome: pk.nome,
+          speciale: pk.tipo === "speciale",
+          svolta: pk.sedute.includes(s.data),
+        }));
+    }).sort((a, b) => (a.data + (a.orario || "00:00")).localeCompare(b.data + (b.orario || "00:00")));
+
+    const perGiorno = {};
+    appuntamenti.forEach((a) => {
+      if (!perGiorno[a.data]) perGiorno[a.data] = [];
+      perGiorno[a.data].push(a);
+    });
+    const giorniOrdinati = Object.keys(perGiorno).sort();
+    const etichettaMese = `${MESI[Number(meseAppuntamenti.slice(5, 7)) - 1]} ${meseAppuntamenti.slice(0, 4)}`;
+
+    return (
+      <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+        {printStyle}
+        <Menu />
+        <TopBar title="Appuntamenti pacchetti" />
+        <div style={{ height: 18 }} />
+
+        <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+          <input
+            type="month"
+            style={{ ...inputStyle, width: 170 }}
+            value={meseAppuntamenti}
+            onChange={(e) => setMeseAppuntamenti(e.target.value)}
+          />
+          <button onClick={handlePrint} style={primaryBtn}>🖨️ Stampa / Esporta PDF</button>
+        </div>
+
+        <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Appuntamenti pacchetti — {etichettaMese}</h1>
+        <p style={{ fontSize: 13, color: textMuted, marginBottom: 18 }}>
+          {appuntamenti.length} appuntamento/i in {giorniOrdinati.length} giorno/i diverso/i
+        </p>
+
+        {giorniOrdinati.length === 0 && (
+          <p style={{ fontSize: 14, color: textMuted, textAlign: "center", marginTop: 30 }}>Nessun appuntamento da pacchetti in questo mese.</p>
+        )}
+
+        {giorniOrdinati.map((giorno) => (
+          <div key={giorno} style={{ ...cardStyle, marginBottom: 12 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 700, color: sky }}>
+              {formatData(giorno)}
+            </p>
+            {perGiorno[giorno].map((a, i) => (
+              <p key={i} style={{ margin: "4px 0", fontSize: 14, color: textPrimary }}>
+                {a.svolta ? "✅" : "⬜"} {a.orario ? `${a.orario} — ` : ""}{a.nome}
+                {a.speciale ? ` (⭐ ${a.durata} ${a.durata === 1 ? "ora" : "ore"})` : ""}
+              </p>
+            ))}
           </div>
         ))}
       </div>
