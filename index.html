@@ -398,12 +398,43 @@ function ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm) {
   const vendite = guanti
     .filter((g) => g.tipo === "vendita")
     .map((g) => ({ data: g.data, importo: Number(g.importo) || 0, fonte: "Materiale", dettaglio: g.nome, sourceType: "materiale", sourceId: g.id, note: g.note }));
-  const daPacchetti = pacchetti
-    .filter((pk) => pk.importoTotale && eDavveroPagato(pk.pagato))
-    .map((pk) => ({ data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale) || 0, fonte: "Pacchetto", dettaglio: pk.nome, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamento, portiereId: pk.portiereId }));
-  const manuali = (entrate || [])
-    .filter((e) => eDavveroPagato(e.pagato))
-    .map((e) => ({ data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Manuale", dettaglio: [e.tipoSeduta, e.note].filter(Boolean).join(" · ") || "voce importata", sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamento }));
+  const daPacchetti = pacchetti.flatMap((pk) => {
+    const tot = Number(pk.importoTotale) || 0;
+    if (!tot) return [];
+    const acconto = Number(pk.acconto) || 0;
+    const voci = [];
+    if (acconto > 0 && pk.dataAcconto) {
+      voci.push({ data: pk.dataAcconto, importo: Math.min(acconto, tot), fonte: "Pacchetto", dettaglio: `${pk.nome} · acconto`, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamentoAcconto || pk.metodoPagamento, portiereId: pk.portiereId, parte: "acconto" });
+    }
+    if (eDavveroPagato(pk.pagato)) {
+      const saldo = tot - acconto;
+      if (saldo > 0.009) {
+        voci.push({ data: pk.dataPagamento || pk.dataInizio, importo: saldo, fonte: "Pacchetto", dettaglio: acconto > 0 ? `${pk.nome} · saldo` : pk.nome, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamento, portiereId: pk.portiereId, parte: acconto > 0 ? "saldo" : null });
+      } else if (acconto <= 0) {
+        voci.push({ data: pk.dataPagamento || pk.dataInizio, importo: tot, fonte: "Pacchetto", dettaglio: pk.nome, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamento, portiereId: pk.portiereId, parte: null });
+      }
+    }
+    return voci;
+  });
+  const manuali = (entrate || []).flatMap((e) => {
+    const tot = Number(e.importo) || 0;
+    if (!tot) return [];
+    const acconto = Number(e.acconto) || 0;
+    const dettaglioBase = [e.tipoSeduta, e.note].filter(Boolean).join(" · ") || "voce importata";
+    const voci = [];
+    if (acconto > 0 && e.dataAcconto) {
+      voci.push({ data: e.dataAcconto, importo: Math.min(acconto, tot), fonte: e.fonte || "Manuale", dettaglio: `${dettaglioBase} · acconto`, sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamentoAcconto || e.metodoPagamento, parte: "acconto" });
+    }
+    if (eDavveroPagato(e.pagato)) {
+      const saldo = tot - acconto;
+      if (saldo > 0.009) {
+        voci.push({ data: e.data, importo: saldo, fonte: e.fonte || "Manuale", dettaglio: acconto > 0 ? `${dettaglioBase} · saldo` : dettaglioBase, sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamento, parte: acconto > 0 ? "saldo" : null });
+      } else if (acconto <= 0) {
+        voci.push({ data: e.data, importo: tot, fonte: e.fonte || "Manuale", dettaglio: dettaglioBase, sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamento, parte: null });
+      }
+    }
+    return voci;
+  });
   const daEventi = (eventi || [])
     .filter((ev) => ev.incassoReale)
     .map((ev) => ({ data: ev.dataInizio, importo: Number(ev.incassoReale) || 0, fonte: "Evento", dettaglio: ev.titolo, sourceType: "evento-incasso", sourceId: ev.id }));
@@ -469,11 +500,11 @@ function ricavaInsoluti(pacchetti, entrate, portieri) {
   };
   const oggi = new Date().toISOString().slice(0, 10);
   const daPacchetti = (pacchetti || [])
-    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (pk.dataScadenzaSaldo || pk.dataInizio) <= oggi)
-    .map((pk) => ({ tipo: "pacchetto", id: pk.id, portiereId: pk.portiereId, nome: nomePortiere(pk.portiereId), importo: Number(pk.importoTotale) || 0, data: pk.dataScadenzaSaldo || pk.dataInizio, dettaglio: `Pacchetto da ${pk.numeroSedute} sedute` }));
+    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0) > 0.009 && (pk.dataScadenzaSaldo || pk.dataInizio) <= oggi)
+    .map((pk) => ({ tipo: "pacchetto", id: pk.id, portiereId: pk.portiereId, nome: nomePortiere(pk.portiereId), importo: (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0), data: pk.dataScadenzaSaldo || pk.dataInizio, dettaglio: `Pacchetto da ${pk.numeroSedute} sedute${pk.acconto ? ` · acconto già versato €${Number(pk.acconto).toFixed(2)}` : ""}` }));
   const daSedute = (entrate || [])
-    .filter((e) => eNonPagato(e.pagato) && e.data <= oggi)
-    .map((e) => ({ tipo: "seduta", id: e.id, portiereId: e.portiereId, nome: nomePortiere(e.portiereId), importo: Number(e.importo) || 0, data: e.data, dettaglio: e.note || "Seduta singola" }));
+    .filter((e) => eNonPagato(e.pagato) && (Number(e.importo) || 0) - (Number(e.acconto) || 0) > 0.009 && e.data <= oggi)
+    .map((e) => ({ tipo: "seduta", id: e.id, portiereId: e.portiereId, nome: nomePortiere(e.portiereId), importo: (Number(e.importo) || 0) - (Number(e.acconto) || 0), data: e.data, dettaglio: (e.note || "Seduta singola") + (e.acconto ? ` · acconto già versato €${Number(e.acconto).toFixed(2)}` : "") }));
   return [...daPacchetti, ...daSedute].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
 }
 
@@ -484,11 +515,11 @@ function ricavaProssimiIncassi(pacchetti, entrate, portieri) {
   };
   const oggi = new Date().toISOString().slice(0, 10);
   const daPacchetti = (pacchetti || [])
-    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (pk.dataScadenzaSaldo || pk.dataInizio) > oggi)
-    .map((pk) => ({ tipo: "pacchetto", id: pk.id, portiereId: pk.portiereId, nome: nomePortiere(pk.portiereId), importo: Number(pk.importoTotale) || 0, data: pk.dataScadenzaSaldo || pk.dataInizio, dettaglio: `Pacchetto da ${pk.numeroSedute} sedute` }));
+    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0) > 0.009 && (pk.dataScadenzaSaldo || pk.dataInizio) > oggi)
+    .map((pk) => ({ tipo: "pacchetto", id: pk.id, portiereId: pk.portiereId, nome: nomePortiere(pk.portiereId), importo: (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0), data: pk.dataScadenzaSaldo || pk.dataInizio, dettaglio: `Pacchetto da ${pk.numeroSedute} sedute${pk.acconto ? ` · acconto già versato €${Number(pk.acconto).toFixed(2)}` : ""}` }));
   const daSedute = (entrate || [])
-    .filter((e) => eNonPagato(e.pagato) && e.data > oggi)
-    .map((e) => ({ tipo: "seduta", id: e.id, portiereId: e.portiereId, nome: nomePortiere(e.portiereId), importo: Number(e.importo) || 0, data: e.data, dettaglio: e.note || "Seduta singola" }));
+    .filter((e) => eNonPagato(e.pagato) && (Number(e.importo) || 0) - (Number(e.acconto) || 0) > 0.009 && e.data > oggi)
+    .map((e) => ({ tipo: "seduta", id: e.id, portiereId: e.portiereId, nome: nomePortiere(e.portiereId), importo: (Number(e.importo) || 0) - (Number(e.acconto) || 0), data: e.data, dettaglio: (e.note || "Seduta singola") + (e.acconto ? ` · acconto già versato €${Number(e.acconto).toFixed(2)}` : "") }));
   return [...daPacchetti, ...daSedute].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
 }
 
@@ -1219,7 +1250,7 @@ function GestionalePortieri() {
   const insolutiTotale = insolutiList.reduce((s, i) => s + i.importo, 0);
   const [showPagamentoForm, setShowPagamentoForm] = useState(false);
   const [pagamentoJustSaved, setPagamentoJustSaved] = useState(false);
-  const [pagamentoForm, setPagamentoForm] = useState({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
+  const [pagamentoForm, setPagamentoForm] = useState({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva", acconto: "", dataAcconto: "" });
   const printRef = useRef(null);
 
   const SUPABASE_TABLE = "gestionale_kv";
@@ -3299,16 +3330,26 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                       ))}
                     </select>
                   </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                    <div>
+                      <label style={labelStyle}>Acconto (facoltativo)</label>
+                      <input style={inputStyle} type="number" step="0.01" placeholder="es. 10" value={pagamentoForm.acconto} onChange={(e) => setPagamentoForm((f) => ({ ...f, acconto: e.target.value, dataAcconto: e.target.value && !f.dataAcconto ? new Date().toISOString().slice(0, 10) : f.dataAcconto }))} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Data acconto</label>
+                      <input style={inputStyle} type="date" value={pagamentoForm.dataAcconto} onChange={(e) => setPagamentoForm((f) => ({ ...f, dataAcconto: e.target.value }))} />
+                    </div>
+                  </div>
                   <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 12 }}>
                     <input type="checkbox" checked={pagamentoForm.pagato} onChange={(e) => setPagamentoForm((f) => ({ ...f, pagato: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} />
-                    Pagata (se disattivi, resta tra gli insoluti)
+                    Saldo per intero già incassato (se disattivi, il residuo resta tra gli insoluti)
                   </label>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     <button
                       onClick={() => {
                         if (!pagamentoForm.data || !pagamentoForm.importo) return;
-                        aggiungiEntrata({ portiereId: p.id, data: pagamentoForm.data, importo: Number(pagamentoForm.importo), note: pagamentoForm.note, metodoPagamento: pagamentoForm.metodoPagamento || null, pagato: pagamentoForm.pagato, fonte: "Seduta singola", tipoSeduta: pagamentoForm.tipoSeduta || "Singola esclusiva" });
-                        setPagamentoForm({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
+                        aggiungiEntrata({ portiereId: p.id, data: pagamentoForm.data, importo: Number(pagamentoForm.importo), note: pagamentoForm.note, metodoPagamento: pagamentoForm.metodoPagamento || null, pagato: pagamentoForm.pagato, fonte: "Seduta singola", tipoSeduta: pagamentoForm.tipoSeduta || "Singola esclusiva", acconto: pagamentoForm.acconto ? Number(pagamentoForm.acconto) : null, dataAcconto: pagamentoForm.acconto ? (pagamentoForm.dataAcconto || new Date().toISOString().slice(0, 10)) : null });
+                        setPagamentoForm({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva", acconto: "", dataAcconto: "" });
                         setPagamentoJustSaved(true);
                         setTimeout(() => setPagamentoJustSaved(false), 2200);
                       }}
@@ -7193,7 +7234,7 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
   const riepilogoSaldoTotale = riepilogoIncassiTotale - riepilogoUsciteTotale;
 
   const startEditIncasso = (v) => {
-    setEditKey(`incasso-${v.sourceType}-${v.sourceId}`);
+    setEditKey(`incasso-${v.sourceType}-${v.sourceId}${v.parte ? `-${v.parte}` : ""}`);
     setEditForm({ importo: v.importo, data: v.data, note: v.note || "", portiereId: v.portiereId != null ? String(v.portiereId) : "", metodoPagamento: v.metodoPagamento || "" });
   };
 
@@ -7201,20 +7242,36 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
     if (v.sourceType === "materiale") {
       modificaGuanto(v.sourceId, { importo: Number(editForm.importo) || 0, data: editForm.data, note: editForm.note });
     } else if (v.sourceType === "manuale") {
-      modificaEntrata(v.sourceId, {
-        importo: Number(editForm.importo) || 0,
-        data: editForm.data,
-        note: editForm.note,
-        portiereId: editForm.portiereId ? Number(editForm.portiereId) : null,
-        metodoPagamento: editForm.metodoPagamento || null,
-      });
+      if (v.parte === "acconto") {
+        modificaEntrata(v.sourceId, { acconto: Number(editForm.importo) || 0, dataAcconto: editForm.data, metodoPagamentoAcconto: editForm.metodoPagamento || null });
+      } else {
+        modificaEntrata(v.sourceId, {
+          importo: Number(editForm.importo) || 0,
+          data: editForm.data,
+          note: editForm.note,
+          portiereId: editForm.portiereId ? Number(editForm.portiereId) : null,
+          metodoPagamento: editForm.metodoPagamento || null,
+        });
+      }
     } else {
-      modificaPacchetto(v.sourceId, { importoTotale: Number(editForm.importo) || 0, metodoPagamento: editForm.metodoPagamento || null });
+      if (v.parte === "acconto") {
+        modificaPacchetto(v.sourceId, { acconto: Number(editForm.importo) || 0, dataAcconto: editForm.data, metodoPagamentoAcconto: editForm.metodoPagamento || null });
+      } else {
+        modificaPacchetto(v.sourceId, { importoTotale: Number(editForm.importo) || 0, metodoPagamento: editForm.metodoPagamento || null });
+      }
     }
     setEditKey(null);
   };
 
   const eliminaIncasso = (v) => {
+    if (v.parte === "acconto") {
+      const msg = "Rimuovere l'acconto registrato? Il resto del pacchetto/seduta non viene toccato.";
+      confirmAction(msg, () => {
+        if (v.sourceType === "manuale") modificaEntrata(v.sourceId, { acconto: null, dataAcconto: null });
+        else modificaPacchetto(v.sourceId, { acconto: null, dataAcconto: null });
+      });
+      return;
+    }
     let msg = "Rimuovere l'importo di questo pacchetto? Il pacchetto in sé resterà, solo l'incasso verrà azzerato.";
     if (v.sourceType === "materiale") msg = "Eliminare questa vendita di materiale?";
     if (v.sourceType === "manuale") msg = "Eliminare questa entrata?";
@@ -7486,7 +7543,7 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
               {!isCollapsed && (
                 <div style={{ background: surface, padding: "10px 16px" }}>
                   {m.incassiVoci.map((v, i) => {
-                    const key = `incasso-${v.sourceType}-${v.sourceId}`;
+                    const key = `incasso-${v.sourceType}-${v.sourceId}${v.parte ? `-${v.parte}` : ""}`;
                     if (editKey === key) {
                       return (
                         <div key={key} className="no-print" style={{ padding: "8px 0", borderTop: i > 0 ? `1px solid ${border}` : "none", display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -8317,8 +8374,10 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
           importoTotale: "",
           metodoPagamento: "",
           pagato: false,
+          acconto: "",
+          dataAcconto: "",
         }
-      : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false }
+      : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false, acconto: "", dataAcconto: "" }
   );
   const [showForm, setShowForm] = useState(!!rinnovoDa || !!apriForm);
   const [tipoForm, setTipoForm] = useState("normale"); // "normale" | "speciale"
@@ -8433,6 +8492,8 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       metodoPagamento: form.metodoPagamento || null,
       pagato: form.pagato,
       dataPagamento: form.pagato ? new Date().toISOString().slice(0, 10) : null,
+      acconto: form.acconto ? Number(form.acconto) : null,
+      dataAcconto: form.acconto ? (form.dataAcconto || new Date().toISOString().slice(0, 10)) : null,
     };
     const id = (rinnovoDa && rinnovoDa.idVecchio)
       ? rinnovaPacchetto(nuovoPacchetto, rinnovoDa.idVecchio)
@@ -8622,9 +8683,19 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
                 ))}
               </select>
             </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+              <div>
+                <label style={labelStyle}>Acconto ricevuto (facoltativo)</label>
+                <input style={inputStyle} type="number" step="0.01" placeholder="es. 20" value={form.acconto} onChange={(e) => setForm((f) => ({ ...f, acconto: e.target.value, dataAcconto: e.target.value && !f.dataAcconto ? new Date().toISOString().slice(0, 10) : f.dataAcconto }))} />
+              </div>
+              <div>
+                <label style={labelStyle}>Data acconto</label>
+                <input style={inputStyle} type="date" value={form.dataAcconto} onChange={(e) => setForm((f) => ({ ...f, dataAcconto: e.target.value }))} />
+              </div>
+            </div>
             <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 14 }}>
               <input type="checkbox" checked={form.pagato} onChange={(e) => setForm((f) => ({ ...f, pagato: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} />
-              Saldo già incassato (altrimenti resta tra gli insoluti finché non lo segni pagato)
+              Saldo per intero già incassato (altrimenti resta il saldo residuo tra gli insoluti)
             </label>
             {(!form.portiereId || !form.dataInizio || !form.numeroSedute) && (
               <p style={{ margin: "0 0 10px", fontSize: 13, color: coral, background: coralDim, border: `1px solid ${coral}`, borderRadius: 9, padding: "8px 12px" }}>
@@ -8716,7 +8787,11 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
   const fatte = new Set(pk.sedute).size;
   const completo = fatte >= pk.numeroSedute;
   const datePrestabilite = pk.datePrestabilite || [];
-  const insoluto = pk.importoTotale && eNonPagato(pk.pagato);
+  const saldoResiduo = (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0);
+  const insoluto = pk.importoTotale && eNonPagato(pk.pagato) && saldoResiduo > 0.009;
+  const [editAcconto, setEditAcconto] = useState(false);
+  const [accontoTmp, setAccontoTmp] = useState(pk.acconto || "");
+  const [dataAccontoTmp, setDataAccontoTmp] = useState(pk.dataAcconto || new Date().toISOString().slice(0, 10));
 
   const estendiPacchetto = () => {
     const n = Math.max(1, Number(nSedudeDaAggiungere) || 1);
@@ -9013,6 +9088,34 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
             </button>
             {insoluto && <span style={{ fontSize: 12, color: coral, fontWeight: 700 }}>⚠️ INSOLUTO</span>}
           </div>
+
+          {!eDavveroPagato(pk.pagato) && pk.importoTotale ? (
+            <div className="no-print" style={{ marginTop: 10 }}>
+              {!editAcconto ? (
+                <button
+                  onClick={() => setEditAcconto(true)}
+                  style={{ background: "none", border: `1px solid ${border}`, borderRadius: 9, padding: "7px 12px", fontSize: 13, color: textSecondary, cursor: "pointer" }}
+                >
+                  {pk.acconto ? `💶 Acconto: €${Number(pk.acconto).toFixed(2)} · saldo residuo €${saldoResiduo.toFixed(2)}` : "💶 Registra un acconto"}
+                </button>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <input type="number" step="0.01" placeholder="Importo acconto" style={{ ...inputStyle, width: 130 }} value={accontoTmp} onChange={(e) => setAccontoTmp(e.target.value)} />
+                  <input type="date" style={{ ...inputStyle, width: 150 }} value={dataAccontoTmp} onChange={(e) => setDataAccontoTmp(e.target.value)} />
+                  <button
+                    onClick={() => {
+                      modificaPacchetto(pk.id, { acconto: accontoTmp ? Number(accontoTmp) : null, dataAcconto: accontoTmp ? dataAccontoTmp : null });
+                      setEditAcconto(false);
+                    }}
+                    style={{ ...primaryBtn, padding: "7px 14px", fontSize: 13 }}
+                  >
+                    Salva
+                  </button>
+                  <button onClick={() => setEditAcconto(false)} style={{ ...ghostBtn, padding: "7px 14px", fontSize: 13 }}>Annulla</button>
+                </div>
+              )}
+            </div>
+          ) : null}
 
           <div className="no-print" style={{ marginTop: 14, maxWidth: 260 }}>
             <label style={labelStyle}>Portiere</label>
