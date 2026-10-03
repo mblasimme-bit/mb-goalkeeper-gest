@@ -8376,8 +8376,9 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
           pagato: false,
           acconto: "",
           dataAcconto: "",
+          note: "",
         }
-      : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false, acconto: "", dataAcconto: "" }
+      : { portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "4", datePrestabilite: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false, acconto: "", dataAcconto: "", note: "" }
   );
   const [showForm, setShowForm] = useState(!!rinnovoDa || !!apriForm);
   const [tipoForm, setTipoForm] = useState("normale"); // "normale" | "speciale"
@@ -8402,7 +8403,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
 
   const [formSpeciale, setFormSpeciale] = useState({
     portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "1",
-    pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false,
+    pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false, note: "",
   });
 
   const setDataInizioSpeciale = (val) => {
@@ -8438,8 +8439,9 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       metodoPagamento: formSpeciale.metodoPagamento || null,
       pagato: formSpeciale.pagato,
       dataPagamento: formSpeciale.pagato ? new Date().toISOString().slice(0, 10) : null,
+      note: formSpeciale.note || null,
     });
-    setFormSpeciale({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "1", pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false });
+    setFormSpeciale({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "1", pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false, note: "" });
     setShowForm(false);
     setView({ page: "pacchetto-dettaglio", id });
   };
@@ -8494,6 +8496,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       dataPagamento: form.pagato ? new Date().toISOString().slice(0, 10) : null,
       acconto: form.acconto ? Number(form.acconto) : null,
       dataAcconto: form.acconto ? (form.dataAcconto || new Date().toISOString().slice(0, 10)) : null,
+      note: form.note || null,
     };
     const id = (rinnovoDa && rinnovoDa.idVecchio)
       ? rinnovaPacchetto(nuovoPacchetto, rinnovoDa.idVecchio)
@@ -8601,6 +8604,10 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
                 ))}
               </select>
             </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Note (es. motivo di un prezzo diverso dal solito)</label>
+              <input style={inputStyle} type="text" placeholder="es. sconto famiglia, prezzo concordato…" value={formSpeciale.note} onChange={(e) => setFormSpeciale((f) => ({ ...f, note: e.target.value }))} />
+            </div>
             <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: textPrimary, cursor: "pointer", marginBottom: 14 }}>
               <input type="checkbox" checked={formSpeciale.pagato} onChange={(e) => setFormSpeciale((f) => ({ ...f, pagato: e.target.checked }))} />
               Saldo già incassato (altrimenti resta tra gli insoluti finché non lo segni pagato)
@@ -8693,6 +8700,10 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
                 <input style={inputStyle} type="date" value={form.dataAcconto} onChange={(e) => setForm((f) => ({ ...f, dataAcconto: e.target.value }))} />
               </div>
             </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={labelStyle}>Note (es. motivo di un prezzo diverso dal solito)</label>
+              <input style={inputStyle} type="text" placeholder="es. sconto famiglia, prezzo concordato…" value={form.note} onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))} />
+            </div>
             <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 14 }}>
               <input type="checkbox" checked={form.pagato} onChange={(e) => setForm((f) => ({ ...f, pagato: e.target.checked }))} style={{ width: 16, height: 16, accentColor: "var(--accent-color)" }} />
               Saldo per intero già incassato (altrimenti resta il saldo residuo tra gli insoluti)
@@ -8741,6 +8752,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
                   {pk.nome}
                   {pk.tipo === "speciale" && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: lilla }}>⭐ Speciale</span>}
                   {daRinnovare && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: pitch }}>🔄 da rinnovare</span>}
+                  {pk.note && <span style={{ marginLeft: 8, fontSize: 11 }} title={pk.note}>📝</span>}
                 </p>
                 <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
                   dal {formatData(pk.dataInizio)}{pk.importoTotale ? ` · €${Number(pk.importoTotale).toFixed(2)}` : ""}
@@ -8792,6 +8804,8 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
   const [editAcconto, setEditAcconto] = useState(false);
   const [accontoTmp, setAccontoTmp] = useState(pk.acconto || "");
   const [dataAccontoTmp, setDataAccontoTmp] = useState(pk.dataAcconto || new Date().toISOString().slice(0, 10));
+  const [editNota, setEditNota] = useState(false);
+  const [notaTmp, setNotaTmp] = useState(pk.note || "");
 
   const estendiPacchetto = () => {
     const n = Math.max(1, Number(nSedudeDaAggiungere) || 1);
@@ -9116,6 +9130,31 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
               )}
             </div>
           ) : null}
+
+          <div className="no-print" style={{ marginTop: 10 }}>
+            {!editNota ? (
+              <button
+                onClick={() => setEditNota(true)}
+                style={{ background: "none", border: `1px solid ${border}`, borderRadius: 9, padding: "7px 12px", fontSize: 13, color: pk.note ? textPrimary : textSecondary, cursor: "pointer", textAlign: "left" }}
+              >
+                {pk.note ? `📝 ${pk.note}` : "📝 Aggiungi una nota (es. motivo di un prezzo particolare)"}
+              </button>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <input type="text" placeholder="es. sconto famiglia, prezzo concordato…" style={{ ...inputStyle, flex: 1, minWidth: 180 }} value={notaTmp} onChange={(e) => setNotaTmp(e.target.value)} />
+                <button
+                  onClick={() => {
+                    modificaPacchetto(pk.id, { note: notaTmp || null });
+                    setEditNota(false);
+                  }}
+                  style={{ ...primaryBtn, padding: "7px 14px", fontSize: 13 }}
+                >
+                  Salva
+                </button>
+                <button onClick={() => setEditNota(false)} style={{ ...ghostBtn, padding: "7px 14px", fontSize: 13 }}>Annulla</button>
+              </div>
+            )}
+          </div>
 
           <div className="no-print" style={{ marginTop: 14, maxWidth: 260 }}>
             <label style={labelStyle}>Portiere</label>
