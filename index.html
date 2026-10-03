@@ -2703,7 +2703,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 ["guanti", "🧰 Materiale", goldSoft, goldDim],
                 ["pacchetti", "📦 Pacchetti", sky, skyDim],
                 ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"],
-                ["appuntamenti-pacchetti", "🗓️ Appuntamenti pacchetti (PDF)", sky, skyDim],
+                ["appuntamenti-pacchetti", "🗓️ Riepilogo pacchetti attivi", sky, skyDim],
               ]],
               ["Amministrazione", [
                 ["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"],
@@ -4640,7 +4640,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
       <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
         {printStyle}
         <Menu />
-        <TopBar title="Appuntamenti pacchetti" />
+        <TopBar title="Riepilogo pacchetti attivi" />
         <div style={{ height: 18 }} />
 
         <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
@@ -4650,12 +4650,12 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             value={meseAppuntamenti}
             onChange={(e) => setMeseAppuntamenti(e.target.value)}
           />
-          <button onClick={() => handleShare(`Appuntamenti pacchetti — ${etichettaMese}`, "")} style={primaryBtn}>📤 Condividi / Salva immagine</button>
+          <button onClick={() => handleShare(`Riepilogo pacchetti attivi — ${etichettaMese}`, "")} style={primaryBtn}>📤 Condividi / Salva immagine</button>
           <button onClick={handlePrint} style={ghostBtn}>🖨️ Stampa / Esporta PDF</button>
         </div>
 
         <div id="print-area">
-        <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Appuntamenti pacchetti — {etichettaMese}</h1>
+        <h1 style={{ fontSize: 20, margin: "0 0 4px" }}>Riepilogo pacchetti attivi — {etichettaMese}</h1>
         <p style={{ fontSize: 13, color: textMuted, marginBottom: 18 }}>
           {appuntamenti.length} appuntamento/i in {giorniOrdinati.length} giorno/i diverso/i
         </p>
@@ -4673,7 +4673,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               <p key={i} style={{ margin: "4px 0", fontSize: 14, color: textPrimary }}>
                 {a.svolta ? "✅" : "⬜"} {a.orario ? `${a.orario} — ` : ""}{a.nome}
                 {a.speciale ? ` (⭐ ${a.durata} ${a.durata === 1 ? "ora" : "ore"})` : ""}
-                {" "}<span style={{ color: textMuted, fontSize: 12 }}>· {a.fatte} di {a.numeroSedute}</span>
+                {" "}<span style={{ color: textMuted, fontSize: 12 }}>· svolte {a.fatte} di {a.numeroSedute}{a.numeroSedute - a.fatte > 0 ? ` · mancanti ${a.numeroSedute - a.fatte}` : ""}</span>
               </p>
             ))}
           </div>
