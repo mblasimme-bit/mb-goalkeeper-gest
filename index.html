@@ -5885,6 +5885,102 @@ create policy "solo autenticati" on gestionale_kv
     : [];
   const hasAvvisi = insolutiList.length > 0 || certificatiInScadenza.length > 0 || pacchettiInEsaurimento.length > 0 || eventiImminenti.length > 0 || compleanniImminenti.length > 0;
 
+  // Stato di ogni portiere per la schermata elenco: pacchetto, ultima seduta, avvisi
+  const oggiPortieri = new Date().toISOString().slice(0, 10);
+  const idInsoluti = new Set(insolutiList.map((i) => String(i.portiereId)));
+  const idCertScad = new Set(certificatiInScadenza.map((c) => String(c.portiereId)));
+  const statoPortieri = {};
+  portieri.forEach((p) => {
+    const pid = String(p.id);
+    const suoiPk = pacchetti
+      .filter((pk) => String(pk.portiereId) === pid)
+      .map((pk) => ({ pk, fatte: new Set(pk.sedute || []).size }));
+    const perData = (a, b) => (b.pk.dataInizio || "").localeCompare(a.pk.dataInizio || "");
+    const attivi = suoiPk.filter((x) => x.fatte < (x.pk.numeroSedute || 0)).sort(perData);
+    const daRinn = suoiPk.filter((x) => x.pk.numeroSedute && x.fatte >= x.pk.numeroSedute && !x.pk.rinnovato).sort(perData);
+    const scelto = attivi[0] || daRinn[0] || null;
+    const date = [
+      ...entrate.filter((e) => String(e.portiereId) === pid).map((e) => e.data),
+      ...suoiPk.flatMap((x) => x.pk.sedute || []),
+    ].filter((d) => d && d <= oggiPortieri).sort();
+    const ultima = date.length ? date[date.length - 1] : null;
+    const giorni = ultima ? Math.floor((new Date(oggiPortieri) - new Date(ultima)) / 86400000) : null;
+    statoPortieri[pid] = {
+      conPacchetto: attivi.length > 0,
+      daRinnovare: attivi.length === 0 && daRinn.length > 0,
+      fatte: scelto ? scelto.fatte : 0,
+      tot: scelto ? scelto.pk.numeroSedute : 0,
+      inChiusura: attivi.length > 0 && attivi[0].pk.numeroSedute - attivi[0].fatte === 1,
+      insoluto: idInsoluti.has(pid),
+      certScad: idCertScad.has(pid),
+      ultima,
+      giorni,
+      inattivo: giorni === null || giorni > 30,
+    };
+  });
+  const tuttiStati = Object.values(statoPortieri);
+  const riepilogoPortieri = {
+    totale: portieri.length,
+    conPacchetto: tuttiStati.filter((s) => s.conPacchetto).length,
+    inChiusura: tuttiStati.filter((s) => s.inChiusura).length,
+    inattivi: tuttiStati.filter((s) => s.inattivo).length,
+  };
+
+  const renderRigaPortiere = (p) => {
+    const st = statoPortieri[String(p.id)] || {};
+    const avc = avatarColor(p.nome);
+    const fc = p.frequenza ? FREQ_COLOR[p.frequenza] : null;
+    let chip;
+    if (st.insoluto) chip = { t: "Insoluto", fg: coral, bg: coralDim };
+    else if (st.inChiusura) chip = { t: "In chiusura", fg: "#f59e0b", bg: "rgba(245,158,11,0.14)" };
+    else if (st.daRinnovare) chip = { t: "Da rinnovare", fg: coral, bg: coralDim };
+    else if (st.certScad) chip = { t: "Certificato", fg: "#f59e0b", bg: "rgba(245,158,11,0.14)" };
+    else if (st.inattivo) chip = { t: "Inattivo", fg: textMuted, bg: "rgba(172,169,152,0.14)" };
+    else chip = { t: "Attivo", fg: "#1f9d55", bg: "rgba(31,157,85,0.12)" };
+    const perc = st.tot ? Math.min(100, Math.round((st.fatte / st.tot) * 100)) : 0;
+    const coloreBarra = st.inChiusura || st.daRinnovare ? "#f59e0b" : "#1f9d55";
+    const testoUltima = st.ultima == null ? "nessuna seduta" : st.giorni === 0 ? "oggi" : st.giorni === 1 ? "ieri" : st.giorni <= 60 ? `${st.giorni} giorni fa` : formatData(st.ultima);
+    return (
+      <button
+        key={p.id}
+        onClick={() => setView({ page: "dettaglio", id: p.id })}
+        style={{ width: "100%", display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px 12px", padding: "12px 18px", border: "none", borderTop: `1px solid ${border}`, background: surface, textAlign: "left", cursor: "pointer" }}
+      >
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: avc.bg, color: avc.fg, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+          {initials(p.nome)}
+        </div>
+        <div style={{ minWidth: 0, flex: "1 1 150px" }}>
+          <p style={{ fontSize: 15, color: textPrimary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome}</p>
+          <p style={{ fontSize: 13, color: textMuted, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.squadra || "squadra non indicata"}</p>
+        </div>
+        <div style={{ flex: "0 0 96px" }}>
+          {st.tot ? (
+            <>
+              <p style={{ margin: 0, fontSize: 13, color: textPrimary, fontWeight: 600 }}>{st.fatte} di {st.tot}</p>
+              <div style={{ height: 4, borderRadius: 2, background: surface2, marginTop: 4 }}>
+                <div style={{ width: `${perc}%`, height: 4, borderRadius: 2, background: coloreBarra }} />
+              </div>
+            </>
+          ) : (
+            <p style={{ margin: 0, fontSize: 12, color: textMuted }}>nessun pacchetto</p>
+          )}
+        </div>
+        <div style={{ flex: "0 0 110px" }}>
+          <p style={{ margin: 0, fontSize: 12, color: textMuted }}>ultima: {testoUltima}</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100, color: chip.fg, background: chip.bg }}>{chip.t}</span>
+          {p.frequenza && (
+            <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100, textTransform: "capitalize", color: fc.fg, background: fc.bg }}>{p.frequenza}</span>
+          )}
+          {p.wa && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: whatsapp, background: whatsappDim, padding: "3px 8px", borderRadius: 6 }}>WA</span>
+          )}
+        </div>
+      </button>
+    );
+  };
+
   const OverviewCard = ({ icon, label, value, fg, bgc, onClick, masked, style }) => {
     const [revealed, setRevealed] = useState(false);
     const showMasked = masked && !revealed;
@@ -6438,6 +6534,22 @@ create policy "solo autenticati" on gestionale_kv
         )}
 
         {query.trim() === "" && !annoAperto && (
+          <div className="no-print" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 16 }}>
+            {[
+              { label: "Portieri", valore: riepilogoPortieri.totale, colore: textPrimary },
+              { label: "Con pacchetto attivo", valore: riepilogoPortieri.conPacchetto, colore: sky },
+              { label: "Pacchetti in chiusura", valore: riepilogoPortieri.inChiusura, colore: "#f59e0b" },
+              { label: "Inattivi da 30 giorni", valore: riepilogoPortieri.inattivi, colore: riepilogoPortieri.inattivi > 0 ? coral : textPrimary },
+            ].map((m) => (
+              <div key={m.label} style={{ background: surface2, border: `1px solid ${border}`, borderRadius: 12, padding: "12px 14px" }}>
+                <p style={{ margin: 0, fontSize: 12, color: textMuted, fontWeight: 600 }}>{m.label}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 22, fontWeight: 700, color: m.colore }}>{m.valore}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {query.trim() === "" && !annoAperto && (
           <div
             style={{
               display: "grid",
@@ -6470,6 +6582,22 @@ create policy "solo autenticati" on gestionale_kv
                 <p style={{ margin: "6px 0 0", fontSize: 12, fontWeight: 700, color: pitch, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {group.items.length} {group.items.length === 1 ? "portiere" : "portieri"}
                 </p>
+                {(() => {
+                  const inCh = group.items.filter((p) => (statoPortieri[String(p.id)] || {}).inChiusura).length;
+                  const ins = group.items.filter((p) => (statoPortieri[String(p.id)] || {}).insoluto).length;
+                  const cert = group.items.filter((p) => (statoPortieri[String(p.id)] || {}).certScad).length;
+                  const chip = (testo, fg, bgc) => (
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 100, color: fg, background: bgc }}>{testo}</span>
+                  );
+                  return (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 10 }}>
+                      {inCh > 0 && chip(`${inCh} in chiusura`, "#f59e0b", "rgba(245,158,11,0.14)")}
+                      {ins > 0 && chip(`${ins} ${ins === 1 ? "insoluto" : "insoluti"}`, coral, coralDim)}
+                      {cert > 0 && chip(`${cert} ${cert === 1 ? "certificato in scadenza" : "certificati in scadenza"}`, "#f59e0b", "rgba(245,158,11,0.14)")}
+                      {inCh === 0 && ins === 0 && cert === 0 && chip("tutto in regola", "#1f9d55", "rgba(31,157,85,0.12)")}
+                    </div>
+                  );
+                })()}
               </button>
             ))}
             {grouped.length === 0 && (
@@ -6495,35 +6623,7 @@ create policy "solo autenticati" on gestionale_kv
                   {annoAperto === "n.d." ? "n.d." : annoAperto}
                 </span>
               </div>
-              {(grouped.find((g) => g.anno === annoAperto)?.items || []).map((p) => {
-                const avc = avatarColor(p.nome);
-                const fc = p.frequenza ? FREQ_COLOR[p.frequenza] : null;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setView({ page: "dettaglio", id: p.id })}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 18px", border: "none", borderTop: `1px solid ${border}`, background: surface, textAlign: "left", cursor: "pointer" }}
-                  >
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: avc.bg, color: avc.fg, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-                      {initials(p.nome)}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: 15, color: textPrimary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome}</p>
-                      <p style={{ fontSize: 13, color: textMuted, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.squadra || "squadra non indicata"}</p>
-                    </div>
-                    {p.frequenza && (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100, flexShrink: 0, textTransform: "capitalize", color: fc.fg, background: fc.bg }}>
-                        {p.frequenza}
-                      </span>
-                    )}
-                    {p.wa && (
-                      <span style={{ fontSize: 11, fontWeight: 700, color: whatsapp, background: whatsappDim, padding: "3px 8px", borderRadius: 6, flexShrink: 0 }}>
-                        WA
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {(grouped.find((g) => g.anno === annoAperto)?.items || []).map((p) => renderRigaPortiere(p))}
             </div>
           </>
         )}
@@ -6537,35 +6637,7 @@ create policy "solo autenticati" on gestionale_kv
                 </span>
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", marginLeft: 8 }}>{group.items.length}</span>
               </div>
-              {group.items.map((p) => {
-                const avc = avatarColor(p.nome);
-                const fc = p.frequenza ? FREQ_COLOR[p.frequenza] : null;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setView({ page: "dettaglio", id: p.id })}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 18px", border: "none", borderTop: `1px solid ${border}`, background: surface, textAlign: "left", cursor: "pointer" }}
-                  >
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: avc.bg, color: avc.fg, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
-                      {initials(p.nome)}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ fontSize: 15, color: textPrimary, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.nome}</p>
-                      <p style={{ fontSize: 13, color: textMuted, margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.squadra || "squadra non indicata"}</p>
-                    </div>
-                    {p.frequenza && (
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100, flexShrink: 0, textTransform: "capitalize", color: fc.fg, background: fc.bg }}>
-                        {p.frequenza}
-                      </span>
-                    )}
-                    {p.wa && (
-                      <span style={{ fontSize: 11, fontWeight: 700, color: whatsapp, background: whatsappDim, padding: "3px 8px", borderRadius: 6, flexShrink: 0 }}>
-                        WA
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+              {group.items.map((p) => renderRigaPortiere(p))}
             </div>
           ))}
         {query.trim() !== "" && grouped.length === 0 && (
