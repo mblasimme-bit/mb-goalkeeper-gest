@@ -387,6 +387,22 @@ const SPESA_COLOR = {
 const MESI = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 const TIPI_SEDUTA = ["Singola esclusiva", "Gruppo 2/3", "Gruppo misto", "Atletica", "Analisi video", "Analisi partita in presenza"];
 
+// Data "di oggi" nell'ora locale (non in UTC): dopo mezzanotte in Italia l'UTC è ancora indietro di un giorno.
+function dataLocaleISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function oggiISO() {
+  return dataLocaleISO(new Date());
+}
+// Aggiunge giorni a una data AAAA-MM-GG senza errori di un giorno al cambio dell'ora legale.
+function aggiungiGiorni(dataISO, n) {
+  const d = new Date(`${dataISO}T12:00:00Z`);
+  if (isNaN(d.getTime())) return dataISO;
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+
 function meseLabel(key) {
   if (key === "n.d.") return "Data non indicata";
   const [y, m] = key.split("-");
@@ -403,8 +419,8 @@ function ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm) {
     if (!tot) return [];
     const acconto = Number(pk.acconto) || 0;
     const voci = [];
-    if (acconto > 0 && pk.dataAcconto) {
-      voci.push({ data: pk.dataAcconto, importo: Math.min(acconto, tot), fonte: "Pacchetto", dettaglio: `${pk.nome} · acconto`, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamentoAcconto || pk.metodoPagamento, portiereId: pk.portiereId, parte: "acconto" });
+    if (acconto > 0) {
+      voci.push({ data: pk.dataAcconto || pk.dataInizio, importo: Math.min(acconto, tot), fonte: "Pacchetto", dettaglio: `${pk.nome} · acconto`, sourceType: "pacchetto", sourceId: pk.id, metodoPagamento: pk.metodoPagamentoAcconto || pk.metodoPagamento, portiereId: pk.portiereId, parte: "acconto" });
     }
     if (eDavveroPagato(pk.pagato)) {
       const saldo = tot - acconto;
@@ -422,8 +438,8 @@ function ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm) {
     const acconto = Number(e.acconto) || 0;
     const dettaglioBase = [e.tipoSeduta, e.note].filter(Boolean).join(" · ") || "voce importata";
     const voci = [];
-    if (acconto > 0 && e.dataAcconto) {
-      voci.push({ data: e.dataAcconto, importo: Math.min(acconto, tot), fonte: e.fonte || "Manuale", dettaglio: `${dettaglioBase} · acconto`, sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamentoAcconto || e.metodoPagamento, parte: "acconto" });
+    if (acconto > 0) {
+      voci.push({ data: e.dataAcconto || e.data, importo: Math.min(acconto, tot), fonte: e.fonte || "Manuale", dettaglio: `${dettaglioBase} · acconto`, sourceType: "manuale", sourceId: e.id, note: e.note, portiereId: e.portiereId, metodoPagamento: e.metodoPagamentoAcconto || e.metodoPagamento, parte: "acconto" });
     }
     if (eDavveroPagato(e.pagato)) {
       const saldo = tot - acconto;
@@ -498,12 +514,12 @@ function ricavaInsoluti(pacchetti, entrate, portieri) {
     const p = portieri.find((pp) => String(pp.id) === String(id));
     return p ? p.nome : "—";
   };
-  const oggi = new Date().toISOString().slice(0, 10);
+  const oggi = oggiISO();
   const daPacchetti = (pacchetti || [])
-    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0) > 0.009 && (pk.dataScadenzaSaldo || pk.dataInizio) <= oggi)
+    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0) > 0.009 && (pk.dataScadenzaSaldo || pk.dataInizio || "") < oggi)
     .map((pk) => ({ tipo: "pacchetto", id: pk.id, portiereId: pk.portiereId, nome: nomePortiere(pk.portiereId), importo: (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0), data: pk.dataScadenzaSaldo || pk.dataInizio, dettaglio: `Pacchetto da ${pk.numeroSedute} sedute${pk.acconto ? ` · acconto già versato €${Number(pk.acconto).toFixed(2)}` : ""}` }));
   const daSedute = (entrate || [])
-    .filter((e) => eNonPagato(e.pagato) && (Number(e.importo) || 0) - (Number(e.acconto) || 0) > 0.009 && e.data <= oggi)
+    .filter((e) => eNonPagato(e.pagato) && (Number(e.importo) || 0) - (Number(e.acconto) || 0) > 0.009 && (e.data || "") < oggi)
     .map((e) => ({ tipo: "seduta", id: e.id, portiereId: e.portiereId, nome: nomePortiere(e.portiereId), importo: (Number(e.importo) || 0) - (Number(e.acconto) || 0), data: e.data, dettaglio: (e.note || "Seduta singola") + (e.acconto ? ` · acconto già versato €${Number(e.acconto).toFixed(2)}` : "") }));
   return [...daPacchetti, ...daSedute].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
 }
@@ -513,12 +529,12 @@ function ricavaProssimiIncassi(pacchetti, entrate, portieri) {
     const p = portieri.find((pp) => String(pp.id) === String(id));
     return p ? p.nome : "—";
   };
-  const oggi = new Date().toISOString().slice(0, 10);
+  const oggi = oggiISO();
   const daPacchetti = (pacchetti || [])
-    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0) > 0.009 && (pk.dataScadenzaSaldo || pk.dataInizio) > oggi)
+    .filter((pk) => pk.importoTotale && eNonPagato(pk.pagato) && (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0) > 0.009 && (pk.dataScadenzaSaldo || pk.dataInizio || "") >= oggi)
     .map((pk) => ({ tipo: "pacchetto", id: pk.id, portiereId: pk.portiereId, nome: nomePortiere(pk.portiereId), importo: (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0), data: pk.dataScadenzaSaldo || pk.dataInizio, dettaglio: `Pacchetto da ${pk.numeroSedute} sedute${pk.acconto ? ` · acconto già versato €${Number(pk.acconto).toFixed(2)}` : ""}` }));
   const daSedute = (entrate || [])
-    .filter((e) => eNonPagato(e.pagato) && (Number(e.importo) || 0) - (Number(e.acconto) || 0) > 0.009 && e.data > oggi)
+    .filter((e) => eNonPagato(e.pagato) && (Number(e.importo) || 0) - (Number(e.acconto) || 0) > 0.009 && (e.data || "") >= oggi)
     .map((e) => ({ tipo: "seduta", id: e.id, portiereId: e.portiereId, nome: nomePortiere(e.portiereId), importo: (Number(e.importo) || 0) - (Number(e.acconto) || 0), data: e.data, dettaglio: (e.note || "Seduta singola") + (e.acconto ? ` · acconto già versato €${Number(e.acconto).toFixed(2)}` : "") }));
   return [...daPacchetti, ...daSedute].sort((a, b) => (a.data || "").localeCompare(b.data || ""));
 }
@@ -541,7 +557,7 @@ function raggruppaPerMese(voci, campoImporto) {
 
 // Incassi del mese e dell'anno correnti, calcolati dal vivo da materiale + pacchetti + entrate manuali
 function calcolaIncassiMeseAnno(guanti, pacchetti, entrate, eventi, sponsorComm) {
-  const oggi = new Date().toISOString();
+  const oggi = oggiISO();
   const meseKey = oggi.slice(0, 7);
   const annoKey = oggi.slice(0, 4);
   const voci = ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm);
@@ -1197,7 +1213,7 @@ function GestionalePortieri() {
   const [showFiltroFreq, setShowFiltroFreq] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [notaVeloceHome, setNotaVeloceHome] = useState("");
-  const [meseAppuntamenti, setMeseAppuntamenti] = useState(new Date().toISOString().slice(0, 7));
+  const [meseAppuntamenti, setMeseAppuntamenti] = useState(oggiISO().slice(0, 7));
   const [showRicerca, setShowRicerca] = useState(false);
   const [queryRicerca, setQueryRicerca] = useState("");
   const [dbConfig, setDbConfig] = useState(null);
@@ -1236,7 +1252,7 @@ function GestionalePortieri() {
   const [verificaPortiereScelto, setVerificaPortiereScelto] = useState({}); // { [id]: portiereId } selezione in corso
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [showQuickSeduta, setShowQuickSeduta] = useState(false);
-  const [quickForm, setQuickForm] = useState({ portiereId: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
+  const [quickForm, setQuickForm] = useState({ portiereId: "", importo: "", data: oggiISO(), note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
   const [quickJustSaved, setQuickJustSaved] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const confirmAction = (message, onConfirm) => {
@@ -1251,7 +1267,7 @@ function GestionalePortieri() {
   const insolutiTotale = insolutiList.reduce((s, i) => s + i.importo, 0);
   const [showPagamentoForm, setShowPagamentoForm] = useState(false);
   const [pagamentoJustSaved, setPagamentoJustSaved] = useState(false);
-  const [pagamentoForm, setPagamentoForm] = useState({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva", acconto: "", dataAcconto: "" });
+  const [pagamentoForm, setPagamentoForm] = useState({ data: oggiISO(), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva", acconto: "", dataAcconto: "" });
   const printRef = useRef(null);
 
   const SUPABASE_TABLE = "gestionale_kv";
@@ -1927,7 +1943,7 @@ function GestionalePortieri() {
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const dataOggi = new Date().toISOString().slice(0, 10);
+    const dataOggi = oggiISO();
     a.href = url;
     a.download = `backup-gestionale-${dataOggi}.json`;
     document.body.appendChild(a);
@@ -2240,7 +2256,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
   const approvaVerifica = (ver, portiereId) => {
     const portiere = portieri.find((p) => p.id === portiereId);
     if (!portiere) return;
-    const dataOggi = new Date().toISOString().slice(0, 10);
+    const dataOggi = oggiISO();
     const misure = [];
     if (ver.altezza) misure.push(`altezza ${ver.altezza} cm`);
     if (ver.peso) misure.push(`peso ${ver.peso} kg`);
@@ -2358,7 +2374,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
       fonte: "Seduta singola",
       tipoSeduta: quickForm.tipoSeduta || "Singola esclusiva",
     });
-    setQuickForm({ portiereId: "", importo: settings.prezzoDefaultSeduta || "", data: new Date().toISOString().slice(0, 10), note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
+    setQuickForm({ portiereId: "", importo: settings.prezzoDefaultSeduta || "", data: oggiISO(), note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva" });
     setQuickJustSaved(true);
     setTimeout(() => setQuickJustSaved(false), 1800);
   };
@@ -2756,6 +2772,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 </div>
               </div>
             ))}
+        <p style={{ margin: "14px 0 0", fontSize: 11, color: textMuted, textAlign: "center" }}>Versione 6 ott 2026 · controllo completo</p>
       </div>
       {showMenu && (
         <div id="mb-sidebar-backdrop" className="no-print" onClick={() => setShowMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.5)" }} />
@@ -2944,11 +2961,11 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     const venditePortiere = materialePortiere.filter((g) => g.tipo === "vendita");
     const entratePortiere = entrate.filter((e) => String(e.portiereId) === String(p.id));
     const storicoPagamenti = [
-      ...pacchettiPortiere.filter((pk) => pk.importoTotale).map((pk) => ({ id: `pk-${pk.id}`, data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale), fonte: "Pacchetto", metodoPagamento: pk.metodoPagamento, pagato: eDavveroPagato(pk.pagato) })),
+      ...pacchettiPortiere.filter((pk) => pk.importoTotale).map((pk) => ({ id: `pk-${pk.id}`, data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale), fonte: "Pacchetto", metodoPagamento: pk.metodoPagamento, pagato: eDavveroPagato(pk.pagato), acconto: Number(pk.acconto) || 0 })),
       ...venditePortiere.map((g) => ({ id: `mat-${g.id}`, data: g.data, importo: Number(g.importo) || 0, fonte: "Materiale", pagato: true })),
-      ...entratePortiere.map((e) => ({ id: `ent-${e.id}`, entrataId: e.id, data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Seduta singola", note: e.note, metodoPagamento: e.metodoPagamento, pagato: eDavveroPagato(e.pagato) })),
+      ...entratePortiere.map((e) => ({ id: `ent-${e.id}`, entrataId: e.id, data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Seduta singola", note: e.note, metodoPagamento: e.metodoPagamento, pagato: eDavveroPagato(e.pagato), acconto: Number(e.acconto) || 0 })),
     ].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
-    const totalePagamenti = storicoPagamenti.filter((v) => v.pagato).reduce((s, v) => s + v.importo, 0);
+    const totalePagamenti = storicoPagamenti.reduce((s, v) => s + (v.pagato ? v.importo : Math.min(v.acconto || 0, v.importo)), 0);
 
     const TABS = [
       ["ragazzo", "🪪 Dati ragazzo"],
@@ -3130,7 +3147,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                   <input
                     type="checkbox"
                     checked={!!p.consensoPrivacy}
-                    onChange={(e) => updatePortiere(p.id, { consensoPrivacy: e.target.checked, consensoData: e.target.checked ? new Date().toISOString().slice(0, 10) : null })}
+                    onChange={(e) => updatePortiere(p.id, { consensoPrivacy: e.target.checked, consensoData: e.target.checked ? oggiISO() : null })}
                     style={{ width: 16, height: 16, accentColor: gold }}
                   />
                 </label>
@@ -3335,7 +3352,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
                     <div>
                       <label style={labelStyle}>Acconto (facoltativo)</label>
-                      <input style={inputStyle} type="number" step="0.01" placeholder="es. 10" value={pagamentoForm.acconto} onChange={(e) => setPagamentoForm((f) => ({ ...f, acconto: e.target.value, dataAcconto: e.target.value && !f.dataAcconto ? new Date().toISOString().slice(0, 10) : f.dataAcconto }))} />
+                      <input style={inputStyle} type="number" step="0.01" placeholder="es. 10" value={pagamentoForm.acconto} onChange={(e) => setPagamentoForm((f) => ({ ...f, acconto: e.target.value, dataAcconto: e.target.value && !f.dataAcconto ? oggiISO() : f.dataAcconto }))} />
                     </div>
                     <div>
                       <label style={labelStyle}>Data acconto</label>
@@ -3350,8 +3367,8 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                     <button
                       onClick={() => {
                         if (!pagamentoForm.data || !pagamentoForm.importo) return;
-                        aggiungiEntrata({ portiereId: p.id, data: pagamentoForm.data, importo: Number(pagamentoForm.importo), note: pagamentoForm.note, metodoPagamento: pagamentoForm.metodoPagamento || null, pagato: pagamentoForm.pagato, fonte: "Seduta singola", tipoSeduta: pagamentoForm.tipoSeduta || "Singola esclusiva", acconto: pagamentoForm.acconto ? Number(pagamentoForm.acconto) : null, dataAcconto: pagamentoForm.acconto ? (pagamentoForm.dataAcconto || new Date().toISOString().slice(0, 10)) : null });
-                        setPagamentoForm({ data: new Date().toISOString().slice(0, 10), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva", acconto: "", dataAcconto: "" });
+                        aggiungiEntrata({ portiereId: p.id, data: pagamentoForm.data, importo: Number(pagamentoForm.importo), note: pagamentoForm.note, metodoPagamento: pagamentoForm.metodoPagamento || null, pagato: pagamentoForm.pagato, fonte: "Seduta singola", tipoSeduta: pagamentoForm.tipoSeduta || "Singola esclusiva", acconto: pagamentoForm.acconto ? Number(pagamentoForm.acconto) : null, dataAcconto: pagamentoForm.acconto ? (pagamentoForm.dataAcconto || oggiISO()) : null });
+                        setPagamentoForm({ data: oggiISO(), importo: "", note: "", metodoPagamento: "", pagato: true, tipoSeduta: "Singola esclusiva", acconto: "", dataAcconto: "" });
                         setPagamentoJustSaved(true);
                         setTimeout(() => setPagamentoJustSaved(false), 2200);
                       }}
@@ -3381,7 +3398,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                     {v.pagato ? (
                       <span style={{ fontSize: 13, fontWeight: 700, color: "#1f9d55" }}>+€{v.importo.toFixed(2)}</span>
                     ) : (
-                      <span style={{ fontSize: 12, fontWeight: 700, color: coral }}>⚠️ INSOLUTO · €{v.importo.toFixed(2)}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: coral }}>⚠️ INSOLUTO · €{(v.importo - (v.acconto || 0)).toFixed(2)}{v.acconto ? ` (acconto €${v.acconto.toFixed(2)} versato)` : ""}</span>
                     )}
                     {v.pagato && (
                       <button
@@ -3455,16 +3472,19 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
         const pp = portieri.find((x) => String(x.id) === String(g.portiereId));
         return { data: g.data, importo: Number(g.importo) || 0, causale: `Materiale${pp ? " — " + pp.nome : ""}`, metodoPagamento: g.metodoPagamento || null, movimento: "incasso" };
       });
-    const entrateManuali = entrate.map((e) => {
-      const pp = e.portiereId != null ? portieri.find((x) => String(x.id) === String(e.portiereId)) : null;
-      return { data: e.data, importo: Number(e.importo) || 0, causale: `${e.fonte || "Seduta"}${pp ? " — " + pp.nome : ""}${e.note ? " · " + e.note : ""}`, metodoPagamento: e.metodoPagamento || null, movimento: "incasso" };
-    });
-    const incassiPacchetti = pacchetti
-      .filter((pk) => pk.importoTotale && eDavveroPagato(pk.pagato) && pk.dataPagamento)
-      .map((pk) => ({ data: pk.dataPagamento, importo: Number(pk.importoTotale) || 0, causale: `Pacchetto — ${pk.nome}`, metodoPagamento: pk.metodoPagamento || null, movimento: "incasso" }));
+    const incassiDaRicavo = ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm)
+      .filter((v) => v.sourceType !== "materiale")
+      .map((v) => {
+        const pp = v.portiereId != null && v.portiereId !== "" ? portieri.find((x) => String(x.id) === String(v.portiereId)) : null;
+        const causale =
+          v.sourceType === "manuale"
+            ? `${v.fonte || "Seduta"}${pp ? " — " + pp.nome : ""}${v.dettaglio && v.dettaglio !== "voce importata" ? " · " + v.dettaglio : ""}`
+            : `${v.fonte} — ${v.dettaglio}`;
+        return { data: v.data, importo: Number(v.importo) || 0, causale, metodoPagamento: v.metodoPagamento || null, movimento: "incasso" };
+      });
     const uscite = spese.map((s) => ({ data: s.data, importo: Number(s.importo) || 0, causale: `${cap(s.categoria || "Spesa")}${s.note ? " · " + s.note : ""}`, metodoPagamento: s.metodoPagamento || null, movimento: "spesa" }));
 
-    let movimenti = [...venditePortieri, ...entrateManuali, ...incassiPacchetti, ...uscite];
+    let movimenti = [...venditePortieri, ...incassiDaRicavo, ...uscite];
 
     if (estrattoDataDa) movimenti = movimenti.filter((m) => m.data >= estrattoDataDa);
     if (estrattoDataA) movimenti = movimenti.filter((m) => m.data <= estrattoDataA);
@@ -3571,7 +3591,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               : "Tutto il periodo"}
             {estrattoMetodi.size > 0 ? ` · ${[...estrattoMetodi].join(", ")}` : ""}
           </p>
-          <p style={{ fontSize: 11, color: "#bbb", margin: "0 0 20px" }}>Generato il {formatData(new Date().toISOString().slice(0, 10))}</p>
+          <p style={{ fontSize: 11, color: "#bbb", margin: "0 0 20px" }}>Generato il {formatData(oggiISO())}</p>
 
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
@@ -3612,7 +3632,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
   }
 
   if (view.page === "classifica-presenze") {
-    const oggi = new Date().toISOString().slice(0, 10);
+    const oggi = oggiISO();
     const classifica = portieri.map((p) => {
       const dateEntrate = entrate.filter((e) => String(e.portiereId) === String(p.id)).map((e) => e.data);
       const dateSedutePacchetti = pacchetti
@@ -3904,11 +3924,11 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     const venditePortiere = guanti.filter((g) => String(g.portiereId) === String(p.id) && g.tipo === "vendita");
     const entratePortiere = entrate.filter((e) => String(e.portiereId) === String(p.id));
     const storicoPagamenti = [
-      ...pacchettiPortiere.filter((pk) => pk.importoTotale).map((pk) => ({ data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale), fonte: "Pacchetto", pagato: eDavveroPagato(pk.pagato) })),
+      ...pacchettiPortiere.filter((pk) => pk.importoTotale).map((pk) => ({ data: pk.dataPagamento || pk.dataInizio, importo: Number(pk.importoTotale), fonte: "Pacchetto", pagato: eDavveroPagato(pk.pagato), acconto: Number(pk.acconto) || 0 })),
       ...venditePortiere.map((g) => ({ data: g.data, importo: Number(g.importo) || 0, fonte: "Materiale", pagato: true })),
-      ...entratePortiere.map((e) => ({ data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Seduta singola", pagato: eDavveroPagato(e.pagato) })),
+      ...entratePortiere.map((e) => ({ data: e.data, importo: Number(e.importo) || 0, fonte: e.fonte || "Seduta singola", pagato: eDavveroPagato(e.pagato), acconto: Number(e.acconto) || 0 })),
     ].sort((a, b) => (b.data || "").localeCompare(a.data || ""));
-    const totalePagato = storicoPagamenti.filter((v) => v.pagato).reduce((s, v) => s + v.importo, 0);
+    const totalePagato = storicoPagamenti.reduce((s, v) => s + (v.pagato ? v.importo : Math.min(v.acconto || 0, v.importo)), 0);
 
     const SEZIONI = [
       ["anagrafica", "🪪 Dati anagrafici"],
@@ -3972,7 +3992,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             <p style={{ margin: 0, fontSize: 13, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700, color: "#333" }}>MB Goalkeeper Academy Gest</p>
           </div>
           <h1 style={{ fontSize: 22, textAlign: "center", margin: "0 0 4px" }}>Scheda portiere</h1>
-          <p style={{ fontSize: 13, textAlign: "center", color: "#888", margin: "0 0 24px" }}>{p.nome} · generata il {formatData(new Date().toISOString().slice(0, 10))}</p>
+          <p style={{ fontSize: 13, textAlign: "center", color: "#888", margin: "0 0 24px" }}>{p.nome} · generata il {formatData(oggiISO())}</p>
 
           {selezione.anagrafica !== false && (
             <div style={{ border: "1px solid #ddd", borderRadius: 10, padding: 20, marginBottom: 16 }}>
@@ -4068,7 +4088,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
               {storicoPagamenti.length === 0 && <p style={{ fontSize: 14, color: "#888", margin: 0 }}>Nessun pagamento registrato.</p>}
               {storicoPagamenti.map((v, i) => (
                 <p key={i} style={{ fontSize: 13, margin: "0 0 6px", color: "#555", display: "flex", justifyContent: "space-between" }}>
-                  <span>{formatData(v.data)} · {v.fonte}{!v.pagato ? " (insoluto)" : ""}</span>
+                  <span>{formatData(v.data)} · {v.fonte}{!v.pagato ? (v.acconto ? ` (insoluto, acconto €${v.acconto.toFixed(2)} versato)` : " (insoluto)") : ""}</span>
                   <strong style={{ color: v.pagato ? "#1f9d55" : "#c9522f" }}>€{v.importo.toFixed(2)}</strong>
                 </p>
               ))}
@@ -4506,7 +4526,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
           <div style={{ borderTop: "2px solid #333", margin: "18px 0 24px" }} />
           <p style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.04em", color: "#999", margin: "0 0 4px", fontWeight: 700 }}>{d.tipo}</p>
           <h1 style={{ fontSize: 22, margin: "0 0 6px" }}>{d.titolo}</h1>
-          <p style={{ fontSize: 12, color: "#999", margin: "0 0 24px" }}>{formatData(new Date().toISOString().slice(0, 10))}</p>
+          <p style={{ fontSize: 12, color: "#999", margin: "0 0 24px" }}>{formatData(oggiISO())}</p>
           <p style={{ fontSize: 15, color: "#222", whiteSpace: "pre-wrap", lineHeight: 1.7, margin: 0 }}>{d.contenuto || "—"}</p>
         </div>
       </div>
@@ -4550,7 +4570,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 <button
                   onClick={() => {
                     if (i.tipo === "pacchetto") {
-                      modificaPacchetto(i.id, { pagato: true, dataPagamento: new Date().toISOString().slice(0, 10) });
+                      modificaPacchetto(i.id, { pagato: true, dataPagamento: oggiISO() });
                     } else {
                       modificaEntrata(i.id, { pagato: true });
                     }
@@ -4579,7 +4599,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
           {prossimiIncassiList.length} voce/i non ancora saldate · totale €{prossimiTotale.toFixed(2)}
         </p>
         <p style={{ fontSize: 13, color: textMuted, marginBottom: 16 }}>
-          Pacchetti e sedute che hai già preparato in anticipo, con data futura — non sono insoluti, semplicemente non ancora arrivato il giorno del saldo. Appena li segni come pagati, spariscono automaticamente da qui.
+          Pacchetti e sedute che hai già preparato in anticipo, con data di oggi o futura. Non sono insoluti: lo diventano dal giorno dopo, se non vengono saldati. Appena li segni come pagati, spariscono automaticamente da qui.
         </p>
         {prossimiIncassiList.length === 0 && <p style={{ fontSize: 14, color: textMuted }}>Nessun incasso futuro in programma al momento.</p>}
         {prossimiIncassiList.map((i) => (
@@ -4593,7 +4613,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
             <button
               onClick={() => {
                 if (i.tipo === "pacchetto") {
-                  modificaPacchetto(i.id, { pagato: true, dataPagamento: new Date().toISOString().slice(0, 10) });
+                  modificaPacchetto(i.id, { pagato: true, dataPagamento: oggiISO() });
                 } else {
                   modificaEntrata(i.id, { pagato: true });
                 }
@@ -5809,41 +5829,52 @@ create policy "solo autenticati" on gestionale_kv
 
   const totalWA = portieri.filter((p) => p.wa).length;
   const pacchettiAttivi = pacchetti.filter((pk) => new Set(pk.sedute).size < pk.numeroSedute).length;
-  const oggiRecap = new Date().toISOString().slice(0, 10);
+  const oggiRecap = oggiISO();
   const transazioniOggi = (() => {
-    const venditeOggi = guanti
-      .filter((g) => g.tipo === "vendita" && g.data === oggiRecap)
-      .map((g) => {
-        const pp = portieri.find((x) => String(x.id) === String(g.portiereId));
-        return { causale: `Materiale${pp ? " — " + pp.nome : ""}`, importo: Number(g.importo) || 0, movimento: "incasso" };
+    const nomeP = (id) => {
+      const pp = id != null && id !== "" ? portieri.find((x) => String(x.id) === String(id)) : null;
+      return pp ? " — " + pp.nome : "";
+    };
+    // Acconto e saldo dello stesso pacchetto/seduta incassati nello stesso giorno: una riga sola, col totale.
+    const gruppiOggi = {};
+    ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm)
+      .filter((v) => v.data === oggiRecap)
+      .forEach((v) => {
+        const k = `${v.sourceType}-${v.sourceId}`;
+        if (!gruppiOggi[k]) gruppiOggi[k] = [];
+        gruppiOggi[k].push(v);
       });
-    const entrateOggi = entrate
-      .filter((e) => e.data === oggiRecap)
-      .map((e) => {
-        const pp = e.portiereId != null ? portieri.find((x) => String(x.id) === String(e.portiereId)) : null;
-        return { causale: `${e.fonte || "Seduta"}${pp ? " — " + pp.nome : ""}`, importo: Number(e.importo) || 0, movimento: "incasso" };
-      });
-    const pacchettiOggi = pacchetti
-      .filter((pk) => pk.importoTotale && pk.dataPagamento === oggiRecap && eDavveroPagato(pk.pagato))
-      .map((pk) => ({ causale: `Pacchetto — ${pk.nome}`, importo: Number(pk.importoTotale) || 0, movimento: "incasso" }));
-    const sponsorOggi = (sponsorComm || [])
-      .filter((s) => s.importo && s.data === oggiRecap)
-      .map((s) => ({ causale: `Sponsor — ${s.nome}`, importo: Number(s.importo) || 0, movimento: "incasso" }));
+    const incassiOggi = Object.values(gruppiOggi).map((gr) => {
+      const v = gr[0];
+      const parte = gr.length > 1 ? " (acconto + saldo)" : v.parte ? ` (${v.parte})` : "";
+      let causale;
+      if (v.sourceType === "manuale") causale = `${v.fonte || "Seduta"}${nomeP(v.portiereId)}${parte}`;
+      else if (v.sourceType === "pacchetto") causale = `Pacchetto${nomeP(v.portiereId)}${parte}`;
+      else causale = `${v.fonte} — ${v.dettaglio}`;
+      return { causale, importo: gr.reduce((sum, x) => sum + (Number(x.importo) || 0), 0), movimento: "incasso" };
+    });
+    // Righe identiche (stesso nome e stesso importo) da registrazioni diverse: segnalo il sospetto doppione
+    const viste = {};
+    incassiOggi.forEach((t) => {
+      const k = `${t.causale}|${t.importo.toFixed(2)}`;
+      if (viste[k]) t.doppione = true;
+      viste[k] = true;
+    });
     const speseOggi = spese
       .filter((s) => s.data === oggiRecap)
       .map((s) => ({ causale: cap(s.categoria || "Spesa"), importo: Number(s.importo) || 0, movimento: "spesa" }));
-    return [...entrateOggi, ...venditeOggi, ...pacchettiOggi, ...sponsorOggi, ...speseOggi];
+    return [...incassiOggi, ...speseOggi];
   })();
   const incassatoOggi = transazioniOggi.filter((t) => t.movimento === "incasso").reduce((s, t) => s + t.importo, 0);
   const spesoOggi = transazioniOggi.filter((t) => t.movimento === "spesa").reduce((s, t) => s + t.importo, 0);
   const speseTotale = spese.reduce((s, sp) => s + (Number(sp.importo) || 0), 0);
-  const meseCorrente = new Date().toISOString().slice(0, 7);
+  const meseCorrente = oggiISO().slice(0, 7);
   const incassiMeseCorrente = ricavaIncassi(guanti, pacchetti, entrate, eventi, sponsorComm)
     .filter((v) => v.data && v.data.slice(0, 7) === meseCorrente)
     .reduce((s, v) => s + v.importo, 0);
 
   // Avvisi: calcolati dal vivo in base alle impostazioni, mostrati come banner in home.
-  const oggiTs = new Date(new Date().toISOString().slice(0, 10)).getTime();
+  const oggiTs = new Date(oggiISO()).getTime();
   const giorniDa = (dataStr) => {
     if (!dataStr) return null;
     return Math.round((new Date(dataStr).getTime() - oggiTs) / 86400000);
@@ -5866,8 +5897,10 @@ create policy "solo autenticati" on gestionale_kv
     : [];
   const pacchettiInEsaurimento = settings.notifPacchettiEsauriti
     ? pacchetti.filter((pk) => {
-        const rimanenti = (pk.numeroSedute || 0) - (pk.sedute ? new Set(pk.sedute).size : 0);
-        return rimanenti > 0 && rimanenti <= settings.notifPacchettiSoglia;
+        const fatteDelPacchetto = pk.sedute ? new Set(pk.sedute).size : 0;
+        const rimanenti = (pk.numeroSedute || 0) - fatteDelPacchetto;
+        // "In scadenza" solo se il pacchetto è già iniziato: uno appena creato non è in scadenza
+        return fatteDelPacchetto > 0 && rimanenti > 0 && rimanenti <= settings.notifPacchettiSoglia;
       })
     : [];
   const eventiImminenti = settings.notifEventiImminenti
@@ -5886,7 +5919,7 @@ create policy "solo autenticati" on gestionale_kv
   const hasAvvisi = insolutiList.length > 0 || certificatiInScadenza.length > 0 || pacchettiInEsaurimento.length > 0 || eventiImminenti.length > 0 || compleanniImminenti.length > 0;
 
   // Stato di ogni portiere per la schermata elenco: pacchetto, ultima seduta, avvisi
-  const oggiPortieri = new Date().toISOString().slice(0, 10);
+  const oggiPortieri = oggiISO();
   const idInsoluti = new Set(insolutiList.map((i) => String(i.portiereId)));
   const idCertScad = new Set(certificatiInScadenza.map((c) => String(c.portiereId)));
   const statoPortieri = {};
@@ -5970,7 +6003,7 @@ create policy "solo autenticati" on gestionale_kv
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100, color: chip.fg, background: chip.bg }}>{chip.t}</span>
-          {p.frequenza && (
+          {p.frequenza && fc && (
             <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 100, textTransform: "capitalize", color: fc.fg, background: fc.bg }}>{p.frequenza}</span>
           )}
           {p.wa && (
@@ -6035,7 +6068,7 @@ create policy "solo autenticati" on gestionale_kv
         ) : (
           transazioniOggi.map((t, i) => (
             <div key={i} style={{ ...cardStyle, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p style={{ margin: 0, fontSize: 14, color: textPrimary }}>{t.causale}</p>
+              <p style={{ margin: 0, fontSize: 14, color: textPrimary }}>{t.causale}{t.doppione && <span style={{ marginLeft: 8, fontSize: 12, color: "#f59e0b", fontWeight: 600 }}>⚠️ stessa riga ripetuta: doppione?</span>}</p>
               <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: t.movimento === "spesa" ? coral : "#1f9d55" }}>
                 {t.movimento === "spesa" ? "-" : "+"}€{t.importo.toFixed(2)}
               </p>
@@ -6291,15 +6324,15 @@ create policy "solo autenticati" on gestionale_kv
           )}
 
           {(() => {
-            const oggiStr = new Date().toISOString().slice(0, 10);
+            const oggiStr = oggiISO();
             const d = new Date();
             const wd = (d.getDay() + 6) % 7; // lunedì = 0
             const lunedi = new Date(d);
             lunedi.setDate(d.getDate() - wd);
             const domenica = new Date(lunedi);
             domenica.setDate(lunedi.getDate() + 6);
-            const lunediStr = lunedi.toISOString().slice(0, 10);
-            const domenicaStr = domenica.toISOString().slice(0, 10);
+            const lunediStr = dataLocaleISO(lunedi);
+            const domenicaStr = dataLocaleISO(domenica);
             const seduteOggi = entrate.filter((e) => e.data === oggiStr).length;
             const seduteSettimana = entrate.filter((e) => e.data >= lunediStr && e.data <= domenicaStr).length;
             return (
@@ -7036,12 +7069,12 @@ function PaginaSpese({ spese, guanti, pacchetti, entrate, eventi, aggiungiSpesa,
 }
 
 function CalendarioSedute({ entrate, portieri, pacchetti, modificaEntrata, rimuoviEntrata, confirmAction, setView }) {
-  const [meseRef, setMeseRef] = useState(() => new Date().toISOString().slice(0, 7));
+  const [meseRef, setMeseRef] = useState(() => oggiISO().slice(0, 7));
   const [giornoSel, setGiornoSel] = useState(null);
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
-  const oggi = new Date().toISOString().slice(0, 10);
+  const oggi = oggiISO();
   const [annoStr, meseStr] = meseRef.split("-");
   const anno = Number(annoStr);
   const meseIdx = Number(meseStr) - 1;
@@ -7254,7 +7287,7 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
 
   const [query, setQuery] = useState("");
   const [categoriaAttiva, setCategoriaAttiva] = useState(null);
-  const [meseSelezionato, setMeseSelezionato] = useState(() => new Date().toISOString().slice(0, 7));
+  const [meseSelezionato, setMeseSelezionato] = useState(() => oggiISO().slice(0, 7));
   const [periodoDa, setPeriodoDa] = useState("");
   const [periodoA, setPeriodoA] = useState("");
   const qNorm = query.trim().toLowerCase();
@@ -7269,8 +7302,8 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
     lunedi.setDate(d.getDate() - wd);
     const domenica = new Date(lunedi);
     domenica.setDate(lunedi.getDate() + 6);
-    const lunediStr = lunedi.toISOString().slice(0, 10);
-    const domenicaStr = domenica.toISOString().slice(0, 10);
+    const lunediStr = dataLocaleISO(lunedi);
+    const domenicaStr = dataLocaleISO(domenica);
     return incassiVociAll
       .filter((v) => v.data && v.data >= lunediStr && v.data <= domenicaStr)
       .reduce((s, v) => s + v.importo, 0);
@@ -7347,10 +7380,12 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
     return `${MESI[mese - 1]} ${anno}`;
   })();
 
-  const catSedute = useMemo(() => sommaPerPeriodo(entrate.filter((e) => eDavveroPagato(e.pagato)).map((e) => ({ data: e.data, importo: e.importo }))), [entrate, meseSelezionato]);
-  const catPacchetti = useMemo(() => sommaPerPeriodo(pacchetti.filter((pk) => pk.importoTotale && eDavveroPagato(pk.pagato)).map((pk) => ({ data: pk.dataPagamento || pk.dataInizio, importo: pk.importoTotale }))), [pacchetti, meseSelezionato]);
-  const catMateriale = useMemo(() => sommaPerPeriodo(guanti.map((g) => ({ data: g.data, importo: g.importo }))), [guanti, meseSelezionato]);
-  const catEventiIncassi = useMemo(() => sommaPerPeriodo((eventi || []).filter((ev) => ev.incassoReale).map((ev) => ({ data: ev.dataInizio, importo: ev.incassoReale }))), [eventi, meseSelezionato]);
+  const sommaTipo = (tipo) => sommaPerPeriodo(incassiVociAll.filter((v) => v.sourceType === tipo).map((v) => ({ data: v.data, importo: v.importo })));
+  const catSedute = useMemo(() => sommaTipo("manuale"), [incassiVociAll, meseSelezionato]);
+  const catPacchetti = useMemo(() => sommaTipo("pacchetto"), [incassiVociAll, meseSelezionato]);
+  const catMateriale = useMemo(() => sommaTipo("materiale"), [incassiVociAll, meseSelezionato]);
+  const catEventiIncassi = useMemo(() => sommaTipo("evento-incasso"), [incassiVociAll, meseSelezionato]);
+  const catSponsor = useMemo(() => sommaTipo("sponsor"), [incassiVociAll, meseSelezionato]);
 
   const catSpesePerTipo = useMemo(
     () => OPTS.categoriaSpesa.map((cat) => ({ nome: cat, ...sommaPerPeriodo(spese.filter((s) => s.categoria === cat).map((s) => ({ data: s.data, importo: s.importo }))) })),
@@ -7363,6 +7398,7 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
     { nome: "Pacchetti", key: "pacchetto", ...catPacchetti, onClick: () => setCategoriaAttiva({ tipo: "incasso", key: "pacchetto", label: "Pacchetti" }) },
     { nome: "Materiale", key: "materiale", ...catMateriale, onClick: () => setCategoriaAttiva({ tipo: "incasso", key: "materiale", label: "Materiale" }) },
     { nome: "Eventi (incassi)", key: "evento-incasso", ...catEventiIncassi, onClick: () => setCategoriaAttiva({ tipo: "incasso", key: "evento-incasso", label: "Eventi (incassi)" }) },
+    { nome: "Sponsor", key: "sponsor", ...catSponsor, onClick: () => setCategoriaAttiva({ tipo: "incasso", key: "sponsor", label: "Sponsor" }) },
   ];
   const categorieUscite = [
     ...catSpesePerTipo.map((c) => ({
@@ -7601,8 +7637,8 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
               <button onClick={() => cambiaMeseRiepilogo(-1)} style={{ ...ghostBtn, padding: "4px 10px" }}>‹</button>
               <span style={{ fontSize: 13, color: textSecondary, minWidth: 110, textAlign: "center", textTransform: "capitalize" }}>{etichettaMeseRiepilogo}</span>
               <button onClick={() => cambiaMeseRiepilogo(1)} style={{ ...ghostBtn, padding: "4px 10px" }}>›</button>
-              {meseSelezionato !== new Date().toISOString().slice(0, 7) && (
-                <button onClick={() => setMeseSelezionato(new Date().toISOString().slice(0, 7))} style={{ ...ghostBtn, padding: "4px 10px", fontSize: 11 }}>Oggi</button>
+              {meseSelezionato !== oggiISO().slice(0, 7) && (
+                <button onClick={() => setMeseSelezionato(oggiISO().slice(0, 7))} style={{ ...ghostBtn, padding: "4px 10px", fontSize: 11 }}>Oggi</button>
               )}
             </div>
           </div>
@@ -7737,6 +7773,8 @@ function PaginaContabilita({ spese, guanti, pacchetti, entrate, eventi, sponsorC
                           </button>
                           {v.sourceType === "evento-incasso" ? (
                             <button className="no-print" onClick={() => setView({ page: "eventi" })} style={iconBtn} title="Modifica dalla pagina Eventi">✎</button>
+                          ) : v.sourceType === "sponsor" ? (
+                            <button className="no-print" onClick={() => setView({ page: "sponsor" })} style={iconBtn} title="Modifica dalla pagina Sponsor">✎</button>
                           ) : (
                             <>
                               <button className="no-print" onClick={() => startEditIncasso(v)} style={iconBtn}>✎</button>
@@ -7839,7 +7877,7 @@ function PaginaEventi({ eventi, aggiungiEvento, modificaEvento, rimuoviEvento, c
     setForm(vuoto);
   };
 
-  const oggi = new Date().toISOString().slice(0, 10);
+  const oggi = oggiISO();
   const ordinati = [...eventi].sort((a, b) => (a.dataInizio || "").localeCompare(b.dataInizio || ""));
   const prossimi = ordinati.filter((e) => e.dataInizio >= oggi);
   const passati = ordinati.filter((e) => e.dataInizio < oggi).reverse();
@@ -8088,16 +8126,16 @@ function PaginaSponsor({
 }) {
   const [tab, setTab] = useState("commerciali");
   const [showForm, setShowForm] = useState(false);
-  const [formComm, setFormComm] = useState({ nome: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "" });
+  const [formComm, setFormComm] = useState({ nome: "", importo: "", data: oggiISO(), note: "" });
   const [formTech, setFormTech] = useState({ azienda: "", note: "" });
-  const [formInv, setFormInv] = useState({ articolo: "", fornitore: "", modello: "", taglia: "", prezzo: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: new Date().toISOString().slice(0, 10) });
+  const [formInv, setFormInv] = useState({ articolo: "", fornitore: "", modello: "", taglia: "", prezzo: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: oggiISO() });
 
   const totComm = sponsorComm.reduce((s, x) => s + (Number(x.importo) || 0), 0);
 
   const submitComm = () => {
     if (!formComm.nome || !formComm.importo) return;
     aggiungiSponsorComm({ ...formComm, importo: Number(formComm.importo) });
-    setFormComm({ nome: "", importo: "", data: new Date().toISOString().slice(0, 10), note: "" });
+    setFormComm({ nome: "", importo: "", data: oggiISO(), note: "" });
     setShowForm(false);
   };
   const submitTech = () => {
@@ -8115,7 +8153,7 @@ function PaginaSponsor({
       sponsorTechId: formInv.sponsorTechId || null,
       assegnatoA: formInv.assegnatoA || null,
     });
-    setFormInv({ articolo: "", fornitore: "", modello: "", taglia: "", prezzo: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: new Date().toISOString().slice(0, 10) });
+    setFormInv({ articolo: "", fornitore: "", modello: "", taglia: "", prezzo: "", quantita: "1", sponsorTechId: "", assegnatoA: "", data: oggiISO() });
     setShowForm(false);
   };
 
@@ -8344,7 +8382,7 @@ function PaginaCertificati({ portieri, certificati, aggiungiCertificato, modific
     setForm(vuoto);
   };
 
-  const oggi = new Date().toISOString().slice(0, 10);
+  const oggi = oggiISO();
   const ordinati = [...certificati].sort((a, b) => (b.dataVisita || "").localeCompare(a.dataVisita || ""));
 
   const statoScadenza = (c) => {
@@ -8505,9 +8543,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
     const n = Math.min(10, Math.max(2, Number(numeroSedute) || 4));
     const out = [];
     for (let i = 0; i < n; i++) {
-      const base = new Date(dataInizio);
-      base.setDate(base.getDate() + i * 7);
-      out.push(base.toISOString().slice(0, 10));
+      out.push(aggiungiGiorni(dataInizio, i * 7));
     }
     return out;
   };
@@ -8542,9 +8578,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       if (pianificazioneEsistente[i]) {
         out.push(pianificazioneEsistente[i]);
       } else {
-        const base = new Date(dataInizio);
-        base.setDate(base.getDate() + i * 7);
-        out.push({ data: base.toISOString().slice(0, 10), durata: 1 });
+        out.push({ data: aggiungiGiorni(dataInizio, i * 7), durata: 1 });
       }
     }
     return out;
@@ -8587,7 +8621,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       importoTotale: formSpeciale.importoTotale ? Number(formSpeciale.importoTotale) : null,
       metodoPagamento: formSpeciale.metodoPagamento || null,
       pagato: formSpeciale.pagato,
-      dataPagamento: formSpeciale.pagato ? new Date().toISOString().slice(0, 10) : null,
+      dataPagamento: formSpeciale.pagato ? oggiISO() : null,
       note: formSpeciale.note || null,
     });
     setFormSpeciale({ portiereId: "", dataInizio: "", orario: "17:00", numeroSedute: "1", pianificazione: [], dataScadenzaSaldo: "", importoTotale: "", metodoPagamento: "", pagato: false, note: "" });
@@ -8605,9 +8639,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       if (dateEsistenti[i]) {
         out.push(dateEsistenti[i]);
       } else {
-        const base = new Date(dataInizio);
-        base.setDate(base.getDate() + i * 7);
-        out.push(base.toISOString().slice(0, 10));
+        out.push(aggiungiGiorni(dataInizio, i * 7));
       }
     }
     return out;
@@ -8642,9 +8674,9 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
       importoTotale: form.importoTotale ? Number(form.importoTotale) : null,
       metodoPagamento: form.metodoPagamento || null,
       pagato: form.pagato,
-      dataPagamento: form.pagato ? new Date().toISOString().slice(0, 10) : null,
+      dataPagamento: form.pagato ? oggiISO() : null,
       acconto: form.acconto ? Number(form.acconto) : null,
-      dataAcconto: form.acconto ? (form.dataAcconto || new Date().toISOString().slice(0, 10)) : null,
+      dataAcconto: form.acconto ? (form.dataAcconto || oggiISO()) : null,
       note: form.note || null,
     };
     const id = (rinnovoDa && rinnovoDa.idVecchio)
@@ -8842,7 +8874,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
               <div>
                 <label style={labelStyle}>Acconto ricevuto (facoltativo)</label>
-                <input style={inputStyle} type="number" step="0.01" placeholder="es. 20" value={form.acconto} onChange={(e) => setForm((f) => ({ ...f, acconto: e.target.value, dataAcconto: e.target.value && !f.dataAcconto ? new Date().toISOString().slice(0, 10) : f.dataAcconto }))} />
+                <input style={inputStyle} type="number" step="0.01" placeholder="es. 20" value={form.acconto} onChange={(e) => setForm((f) => ({ ...f, acconto: e.target.value, dataAcconto: e.target.value && !f.dataAcconto ? oggiISO() : f.dataAcconto }))} />
               </div>
               <div>
                 <label style={labelStyle}>Data acconto</label>
@@ -8952,7 +8984,7 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
   const insoluto = pk.importoTotale && eNonPagato(pk.pagato) && saldoResiduo > 0.009;
   const [editAcconto, setEditAcconto] = useState(false);
   const [accontoTmp, setAccontoTmp] = useState(pk.acconto || "");
-  const [dataAccontoTmp, setDataAccontoTmp] = useState(pk.dataAcconto || new Date().toISOString().slice(0, 10));
+  const [dataAccontoTmp, setDataAccontoTmp] = useState(pk.dataAcconto || oggiISO());
   const [editNota, setEditNota] = useState(false);
   const [notaTmp, setNotaTmp] = useState(pk.note || "");
 
@@ -8963,9 +8995,7 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
       const ultima = pianificazione.length ? pianificazione[pianificazione.length - 1].data : pk.dataInizio;
       const nuove = [];
       for (let i = 0; i < n; i++) {
-        const d = new Date(ultima);
-        d.setDate(d.getDate() + 7 * (i + 1));
-        nuove.push({ data: d.toISOString().slice(0, 10), durata: 1 });
+        nuove.push({ data: aggiungiGiorni(ultima, 7 * (i + 1)), durata: 1 });
       }
       modificaPacchetto(pk.id, {
         numeroSedute: pk.numeroSedute + n,
@@ -8976,9 +9006,7 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
       const base = datePrestabilite.length ? datePrestabilite[datePrestabilite.length - 1] : pk.dataInizio;
       const nuove = [];
       for (let i = 0; i < n; i++) {
-        const d = new Date(base);
-        d.setDate(d.getDate() + 7 * (i + 1));
-        nuove.push(d.toISOString().slice(0, 10));
+        nuove.push(aggiungiGiorni(base, 7 * (i + 1)));
       }
       modificaPacchetto(pk.id, {
         numeroSedute: pk.numeroSedute + n,
@@ -9017,7 +9045,7 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
 
   const togglePagato = () => {
     const nowPagato = eNonPagato(pk.pagato);
-    modificaPacchetto(pk.id, { pagato: nowPagato, dataPagamento: nowPagato ? new Date().toISOString().slice(0, 10) : null });
+    modificaPacchetto(pk.id, { pagato: nowPagato, dataPagamento: nowPagato ? oggiISO() : null });
   };
 
   const elimina = () => {
@@ -9160,15 +9188,14 @@ function PaginaPacchettoDettaglio({ pk, portieri, aggiungiSeduta, rimuoviSeduta,
                 onClick={() => {
                   const tutteLeDate = [...(datePrestabilite.length ? datePrestabilite : pk.sedute)].sort();
                   const ultima = tutteLeDate[tutteLeDate.length - 1] || pk.dataInizio;
-                  const prossima = new Date(ultima);
-                  prossima.setDate(prossima.getDate() + 7);
+                  const prossima = aggiungiGiorni(ultima, 7);
                   setView({
                     page: "pacchetti",
                     rinnovoDa: {
                       portiereId: pk.portiereId,
                       orario: pk.orario || "17:00",
                       numeroSedute: pk.numeroSedute,
-                      dataInizio: prossima.toISOString().slice(0, 10),
+                      dataInizio: prossima,
                       idVecchio: pk.id,
                     },
                   });
