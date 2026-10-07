@@ -2774,7 +2774,7 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                 </div>
               </div>
             ))}
-        <p style={{ margin: "14px 0 0", fontSize: 11, color: textMuted, textAlign: "center" }}>Versione 6 ott 2026 (C) · insoluti dal giorno</p>
+        <p style={{ margin: "14px 0 0", fontSize: 11, color: textMuted, textAlign: "center" }}>Versione 7 ott 2026 (F) · pacchetti a riquadri</p>
       </div>
       {showMenu && (
         <div id="mb-sidebar-backdrop" className="no-print" onClick={() => setShowMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 49, background: "rgba(0,0,0,0.5)" }} />
@@ -4627,13 +4627,13 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
                   target="_blank"
                   rel="noopener noreferrer"
                   title="Promemoria WhatsApp"
-                  style={{ ...btnPiccolo, color: whatsapp, borderColor: whatsapp, textDecoration: "none" }}
+                  style={{ ...btnPiccolo, color: whatsapp, border: `1px solid ${whatsapp}`, textDecoration: "none" }}
                 >
                   💬 Promemoria
                 </a>
               )}
               <button onClick={() => iniziaModificaVoce(i)} style={btnPiccolo}>✎ Modifica</button>
-              <button onClick={() => eliminaVoce(i)} style={{ ...btnPiccolo, color: coral, borderColor: coral }}>🗑 Elimina</button>
+              <button onClick={() => eliminaVoce(i)} style={{ ...btnPiccolo, color: coral, border: `1px solid ${coral}` }}>🗑 Elimina</button>
             </div>
           </>
         )}
@@ -9037,6 +9037,7 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
           </div>
         )}
 
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 12 }}>
         {[...pacchetti].sort((a, b) => (b.dataInizio || "").localeCompare(a.dataInizio || "")).map((pk) => {
           const fatte = new Set(pk.sedute).size;
           const completo = fatte >= pk.numeroSedute;
@@ -9049,54 +9050,58 @@ function PaginaPacchetti({ portieri, pacchetti, aggiungiPacchetto, rinnovaPacche
             : rimanenti === 1
             ? { bg: "rgba(245,158,11,0.12)", bd: "#f59e0b" }
             : null;
+          const perc = pk.numeroSedute ? Math.min(100, Math.round((fatte / pk.numeroSedute) * 100)) : 0;
+          const coloreBarra = coloreRiga ? coloreRiga.bd : completo ? pitch : sky;
 
           return (
             <div
               key={pk.id}
               style={{
                 ...cardStyle,
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                position: "relative", margin: 0, padding: 12, aspectRatio: "1 / 1", minWidth: 0,
+                display: "flex", flexDirection: "column",
                 ...(coloreRiga ? { background: coloreRiga.bg, border: `1px solid ${coloreRiga.bd}` } : {}),
               }}
             >
               <button
                 onClick={() => setView({ page: "pacchetto-dettaglio", id: pk.id })}
-                style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", padding: 0, flex: 1, minWidth: 0 }}
+                style={{ background: "none", border: "none", textAlign: "left", cursor: "pointer", padding: 0, flex: 1, minWidth: 0, width: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
               >
-                <p style={{ margin: 0, fontSize: 15, color: textPrimary, fontWeight: 600 }}>
-                  {pk.nome}
-                  {pk.tipo === "speciale" && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: lilla }}>⭐ Speciale</span>}
-                  {daRinnovare && <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 700, color: pitch }}>🔄 da rinnovare</span>}
-                  {pk.note && <span style={{ marginLeft: 8, fontSize: 11 }} title={pk.note}>📝</span>}
-                </p>
-                <p style={{ margin: "2px 0 0", fontSize: 12, color: textMuted }}>
-                  dal {formatData(pk.dataInizio)}{pk.importoTotale ? ` · €${Number(pk.importoTotale).toFixed(2)}` : ""}
-                </p>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: 0, paddingRight: 18, fontSize: 13, color: textPrimary, fontWeight: 700, lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    {pk.nome}
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 6px", marginTop: 3 }}>
+                    {pk.tipo === "speciale" && <span style={{ fontSize: 10, fontWeight: 700, color: lilla }}>⭐ Speciale</span>}
+                    {daRinnovare && <span style={{ fontSize: 10, fontWeight: 700, color: pitch }}>🔄 da rinnovare</span>}
+                    {pk.note && <span style={{ fontSize: 10 }} title={pk.note}>📝</span>}
+                  </div>
+                </div>
+                <div>
+                  <p style={{ margin: "0 0 5px", fontSize: 24, fontWeight: 700, lineHeight: 1, color: completo ? pitch : textPrimary }}>
+                    {fatte}<span style={{ fontSize: 14, fontWeight: 600, color: textMuted }}>/{pk.numeroSedute}</span>
+                  </p>
+                  <div style={{ height: 4, borderRadius: 2, background: surface2 }}>
+                    <div style={{ width: `${perc}%`, height: 4, borderRadius: 2, background: coloreBarra }} />
+                  </div>
+                  <p style={{ margin: "5px 0 0", fontSize: 10.5, color: textMuted, lineHeight: 1.3 }}>
+                    dal {formatData(pk.dataInizio)}{pk.importoTotale ? ` · €${Number(pk.importoTotale).toFixed(0)}` : ""}
+                  </p>
+                </div>
               </button>
-              <span
-                style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  padding: "4px 10px",
-                  borderRadius: 100,
-                  color: completo ? "#ffffff" : sky,
-                  background: completo ? pitch : skyDim,
-                  flexShrink: 0,
-                }}
-              >
-                {fatte}/{pk.numeroSedute}
-              </span>
               <button
+                aria-label="Elimina pacchetto"
                 onClick={() => {
                   confirmAction(`Eliminare il pacchetto di ${pk.nome}? L'azione non è reversibile.`, () => rimuoviPacchetto(pk.id));
                 }}
-                style={{ background: "none", border: "none", color: textMuted, fontSize: 18, cursor: "pointer", flexShrink: 0 }}
+                style={{ position: "absolute", top: 4, right: 4, background: "none", border: "none", color: textMuted, fontSize: 18, cursor: "pointer", padding: "2px 6px", lineHeight: 1 }}
               >
                 ×
               </button>
             </div>
           );
         })}
+        </div>
         {pacchetti.length === 0 && <p style={{ textAlign: "center", color: textSecondary, fontSize: 15, padding: "40px 0" }}>Nessun pacchetto creato.</p>}
       </div>
     </div>
