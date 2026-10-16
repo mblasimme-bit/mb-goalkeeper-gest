@@ -2292,10 +2292,21 @@ function GestionalePortieri() {
     setAuthError("");
     try {
       const data = await supabaseSignIn(cfg, email, password);
-      // NOTA: il controllo del codice a 6 cifre è temporaneamente disattivato (12/09) perché
-      // l'app authenticator non aveva salvato correttamente la voce corrispondente, lasciando
-      // l'utente bloccato fuori. Il login torna a richiedere solo email e password finché non
-      // viene riattivato con calma e testato meglio.
+      // Verifica in due passaggi: se esiste un fattore TOTP confermato, la sessione NON viene
+      // salvata finché non arriva il codice giusto. Se non riesco a leggere i fattori, non entro
+      // (meglio riprovare che lasciare la porta aperta).
+      let fattori;
+      try {
+        fattori = await mfaListFactors(cfg, data.access_token);
+      } catch (e2) {
+        throw new Error("Non riesco a controllare la verifica in due passaggi. Riprova tra un momento.");
+      }
+      const totp = (fattori || []).find((f) => f.factor_type === "totp" && f.status === "verified");
+      if (totp) {
+        setMfaPending({ factorId: totp.id, challengeId: null, tempSession: data, email });
+        setMfaCode("");
+        return;
+      }
       await persistSession(data, email);
       setAuthScreen(null);
     } catch (e) {
@@ -2310,7 +2321,9 @@ function GestionalePortieri() {
     setAuthBusy(true);
     setAuthError("");
     try {
-      const verificato = await mfaVerify(dbConfig, mfaPending.tempSession.access_token, mfaPending.factorId, mfaPending.challengeId, mfaCode.trim());
+      // La richiesta del codice si crea al momento dell'invio, così non scade mentre lo cerchi.
+      const ch = await mfaChallenge(dbConfig, mfaPending.tempSession.access_token, mfaPending.factorId);
+      const verificato = await mfaVerify(dbConfig, mfaPending.tempSession.access_token, mfaPending.factorId, ch.id, mfaCode.trim());
       await persistSession(verificato, mfaPending.email);
       setMfaPending(null);
       setMfaCode("");
