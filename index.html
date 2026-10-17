@@ -1716,17 +1716,19 @@ function ModuloRichiesta() {
   const annoCorrente = new Date().getFullYear();
   const anni = [];
   for (let a = annoCorrente - 5; a >= annoCorrente - 30; a--) anni.push(a);
-  const [form, setForm] = useState({ nome_portiere: "", anno: "", squadra: "", chi_scrive: "", telefono: "", email: "", messaggio: "", sito: "" });
+  const [form, setForm] = useState({ nome: "", cognome: "", anno: "", contatto: "", sito: "" });
   const [consenso, setConsenso] = useState(false);
   const [stato, setStato] = useState("idle");
   const [errore, setErrore] = useState("");
   const campo = (patch) => setForm((f) => ({ ...f, ...patch }));
 
-  const cifre = form.telefono.replace(/\D/g, "");
+  const contatto = form.contatto.trim();
+  const eMail = contatto.includes("@");
+  const contattoValido = eMail ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contatto) : contatto.replace(/\D/g, "").length >= 6;
   const mancanti = [];
-  if (!form.nome_portiere.trim()) mancanti.push("nome del portiere");
-  if (!form.chi_scrive.trim()) mancanti.push("chi ci scrive");
-  if (cifre.length < 6) mancanti.push("un telefono");
+  if (!form.nome.trim()) mancanti.push("nome");
+  if (!form.cognome.trim()) mancanti.push("cognome");
+  if (!contattoValido) mancanti.push("un telefono o un'email valida");
   if (!consenso) mancanti.push("il consenso");
   const pronto = mancanti.length === 0 && stato !== "inviando";
 
@@ -1747,13 +1749,10 @@ function ModuloRichiesta() {
         },
         body: JSON.stringify([{
           tipo: "informazioni",
-          nome_portiere: form.nome_portiere.trim(),
+          nome_portiere: (form.nome.trim() + " " + form.cognome.trim()).trim(),
           anno_nascita: form.anno ? Number(form.anno) : null,
-          squadra: form.squadra.trim() || null,
-          chi_scrive: form.chi_scrive.trim(),
-          telefono: form.telefono.trim(),
-          email: form.email.trim() || null,
-          messaggio: form.messaggio.trim() || null,
+          telefono: eMail ? null : contatto,
+          email: eMail ? contatto : null,
           consenso: true,
         }]),
       });
@@ -1768,10 +1767,8 @@ function ModuloRichiesta() {
   const font = "-apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"SF Pro Text\", system-ui, sans-serif";
   const pagina = { minHeight: "100vh", background: "#0b0b0c", backgroundImage: "radial-gradient(ellipse 900px 500px at 50% -5%, rgba(212,175,106,0.16), transparent 65%)", color: "#f5f5f7", fontFamily: font };
   const card = { background: "#18181a", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 18, padding: 16, marginBottom: 14 };
-  const titoletto = { margin: "26px 0 8px", fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase", color: "#a1a1aa", fontWeight: 600 };
   const campoStile = { boxSizing: "border-box", width: "100%", height: 48, borderRadius: 12, padding: "0 14px", background: "#101012", border: "1px solid rgba(255,255,255,0.16)", color: "#f5f5f7", fontSize: 16, fontFamily: font };
   const etichetta = { display: "block", fontSize: 12, color: "#a1a1aa", margin: "12px 0 4px" };
-  const chip = (on) => ({ minHeight: 44, padding: "0 16px", borderRadius: 999, cursor: "pointer", fontSize: 15, fontWeight: 600, fontFamily: font, border: `1px solid ${on ? "#d4af6a" : "rgba(255,255,255,0.16)"}`, background: on ? "rgba(212,175,106,0.18)" : "#101012", color: on ? "#e9d19f" : "#d4d4d8" });
 
   if (stato === "inviato") {
     return (
@@ -1794,46 +1791,28 @@ function ModuloRichiesta() {
         <div style={{ textAlign: "center", marginBottom: 6 }}>
           <img src={LOGO_HOME} alt="MB Goalkeeper Training" style={{ width: 150, height: "auto" }} />
         </div>
-        <h1 style={{ fontSize: 28, lineHeight: 1.15, textAlign: "center", margin: "6px 0 6px" }}>Modulo di informazioni</h1>
-        <p style={{ fontSize: 15, textAlign: "center", color: "#a1a1aa", margin: "0 0 4px", lineHeight: 1.5 }}>
-          Lasciami i tuoi dati: ti ricontatto io personalmente. Ci vuole un minuto.
+        <h1 style={{ fontSize: 28, lineHeight: 1.15, textAlign: "center", margin: "6px 0 6px" }}>Vuoi essere ricontattato?</h1>
+        <p style={{ fontSize: 15, textAlign: "center", color: "#a1a1aa", margin: "0 0 18px", lineHeight: 1.5 }}>
+          Lasciami i tuoi dati e ti ricontatto io personalmente.
         </p>
 
-        <p style={titoletto}>Il portiere</p>
         <div style={card}>
-          <label style={{ ...etichetta, marginTop: 0 }} htmlFor="r-nome">Nome e cognome del portiere *</label>
-          <input id="r-nome" style={campoStile} value={form.nome_portiere} onChange={(e) => campo({ nome_portiere: e.target.value })} autoComplete="off" />
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 3fr)", gap: 10 }}>
-            <div>
-              <label style={etichetta} htmlFor="r-anno">Anno di nascita</label>
-              <select id="r-anno" style={campoStile} value={form.anno} onChange={(e) => campo({ anno: e.target.value })}>
-                <option value="">—</option>
-                {anni.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={etichetta} htmlFor="r-squadra">Squadra in cui gioca</label>
-              <input id="r-squadra" style={campoStile} value={form.squadra} onChange={(e) => campo({ squadra: e.target.value })} autoComplete="off" />
-            </div>
-          </div>
+          <label style={{ ...etichetta, marginTop: 0 }} htmlFor="r-nome">Nome *</label>
+          <input id="r-nome" style={campoStile} value={form.nome} onChange={(e) => campo({ nome: e.target.value })} autoComplete="off" />
+          <label style={etichetta} htmlFor="r-cognome">Cognome *</label>
+          <input id="r-cognome" style={campoStile} value={form.cognome} onChange={(e) => campo({ cognome: e.target.value })} autoComplete="off" />
+          <label style={etichetta} htmlFor="r-anno">Anno di nascita</label>
+          <select id="r-anno" style={campoStile} value={form.anno} onChange={(e) => campo({ anno: e.target.value })}>
+            <option value="">—</option>
+            {anni.map((a) => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <label style={etichetta} htmlFor="r-contatto">Telefono o email per ricontattarti *</label>
+          <input id="r-contatto" inputMode="text" style={campoStile} value={form.contatto} onChange={(e) => campo({ contatto: e.target.value })} autoComplete="off" autoCapitalize="off" />
         </div>
-
-        <p style={titoletto}>Come ti ricontatto</p>
-        <div style={card}>
-          <label style={{ ...etichetta, marginTop: 0 }} htmlFor="r-chi">Chi mi scrive * <span style={{ color: "#71717a" }}>(il portiere o un genitore)</span></label>
-          <input id="r-chi" style={campoStile} placeholder="es. Mario Rossi, papà di Luca" value={form.chi_scrive} onChange={(e) => campo({ chi_scrive: e.target.value })} autoComplete="off" />
-          <label style={etichetta} htmlFor="r-tel">Telefono (meglio se WhatsApp) *</label>
-          <input id="r-tel" type="tel" inputMode="tel" style={campoStile} value={form.telefono} onChange={(e) => campo({ telefono: e.target.value })} autoComplete="tel" />
-          <label style={etichetta} htmlFor="r-mail">Email <span style={{ color: "#71717a" }}>(facoltativa)</span></label>
-          <input id="r-mail" type="email" inputMode="email" style={campoStile} value={form.email} onChange={(e) => campo({ email: e.target.value })} autoComplete="email" />
-        </div>
-
-        <p style={titoletto}><label htmlFor="r-msg">Cosa vuoi sapere? (facoltativo)</label></p>
-        <textarea id="r-msg" rows={3} placeholder="Cosa vuoi sapere? Per esempio: orari, costi, come funzionano gli allenamenti..." style={{ ...campoStile, height: "auto", padding: "12px 14px", lineHeight: 1.5, resize: "vertical" }} value={form.messaggio} onChange={(e) => campo({ messaggio: e.target.value })} />
 
         <input type="text" name="sito" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.sito} onChange={(e) => campo({ sito: e.target.value })} style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
 
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, margin: "26px 0 0", fontSize: 13, color: "#c9c9d1", lineHeight: 1.5, cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 10, margin: "20px 0 0", fontSize: 13, color: "#c9c9d1", lineHeight: 1.5, cursor: "pointer" }}>
           <input type="checkbox" checked={consenso} onChange={(e) => setConsenso(e.target.checked)} style={{ marginTop: 3, width: 20, height: 20, flex: "none" }} />
           <span>Acconsento al trattamento dei dati inseriti per essere ricontattato da MB Goalkeeper Academy. Se il portiere è minorenne, la richiesta la compila un genitore. *</span>
         </label>
@@ -1842,7 +1821,7 @@ function ModuloRichiesta() {
 
         <div style={{ position: "sticky", bottom: 0, margin: "22px -16px 0", padding: "12px 16px 22px", background: "linear-gradient(180deg, rgba(11,11,12,0), #0b0b0c 38%)" }}>
           <button type="submit" disabled={!pronto} style={{ width: "100%", height: 56, borderRadius: 16, border: "none", fontSize: 17, fontWeight: 800, fontFamily: font, background: pronto ? "#d4af6a" : "#3a3a3e", color: pronto ? "#1a1408" : "#8a8a92", cursor: pronto ? "pointer" : "not-allowed" }}>
-            {stato === "inviando" ? "Invio in corso..." : "Invia la richiesta"}
+            {stato === "inviando" ? "Invio in corso..." : "Invia"}
           </button>
           {!pronto && mancanti.length > 0 && stato !== "inviando" && (
             <p style={{ margin: "8px 0 0", fontSize: 12, color: "#8a8a92", textAlign: "center" }}>Per inviare serve: {mancanti.join(", ")}</p>
@@ -2390,6 +2369,7 @@ function GestionalePortieri() {
       }
       await persistSession(data, email);
       setAuthScreen(null);
+      setAuthPassword("");
       setLoading(true);
       setTentativoCaricamento((n) => n + 1);
     } catch (e) {
@@ -2411,6 +2391,7 @@ function GestionalePortieri() {
       setMfaPending(null);
       setMfaCode("");
       setAuthScreen(null);
+      setAuthPassword("");
       setLoading(true);
       setTentativoCaricamento((n) => n + 1);
     } catch (e) {
@@ -2499,8 +2480,13 @@ function GestionalePortieri() {
     setCifraStato(null);
     setCifraFrase("");
     setCifraFrase2("");
+    setAuthEmail("");
+    setAuthPassword("");
+    setMfaCode("");
     setSession(null);
     setAuthScreen("login");
+    // Ricarico la pagina: così non resta nulla in memoria (dati, frase, password, codici).
+    try { window.location.reload(); } catch (e) {}
   };
 
   // --- Cifratura: copia di sicurezza, attivazione, sblocco ---
