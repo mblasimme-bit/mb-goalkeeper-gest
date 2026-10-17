@@ -211,6 +211,48 @@ const ACCENT_PRESETS = {
 
 const SETTINGS_KEY = "impostazioni-v1";
 
+// --- Cifratura dei dati sul database (AES-GCM 256) ---------------------------------------------
+// I dati vengono cifrati nel browser PRIMA di essere inviati a Supabase, con una chiave ricavata
+// dalla frase segreta (PBKDF2-SHA256, 600.000 giri). La frase e la chiave restano solo in memoria
+// su questo dispositivo: non vengono mai inviate né salvate. Chi guardasse il database (anche con
+// accesso completo all'account Supabase) vedrebbe solo testo cifrato.
+const CRYPTO_META_KEY = "cifratura-meta-v1";
+const CRYPTO_ITER = 600000;
+const CRYPTO_STATE = { key: null, attiva: false };
+const cryptoB64 = (buf) => {
+  const b = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(s);
+};
+const cryptoUnb64 = (str) => {
+  const s = atob(str);
+  const b = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+  return b;
+};
+const cryptoDerive = async (frase, saltB64, iter) => {
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(frase).normalize("NFKC")), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: cryptoUnb64(saltB64), iterations: iter, hash: "SHA-256" },
+    base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+  );
+};
+const cryptoEnc = async (key, valore) => {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(valore)));
+  return { _enc: 1, iv: cryptoB64(iv), ct: cryptoB64(ct) };
+};
+const cryptoDec = async (key, w) => {
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: cryptoUnb64(w.iv) }, key, cryptoUnb64(w.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+};
+// Copia di emergenza sul dispositivo: con la cifratura attiva non si scrive mai nulla in chiaro.
+const salvaLocale = (k, v) => {
+  if (CRYPTO_STATE.attiva) return;
+  try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+};
+
 const DEFAULT_SETTINGS = {
   academyName: "MB Goalkeeper Training",
   coachName: "",
@@ -2013,6 +2055,14 @@ function GestionalePortieri() {
   const [mfaEnrollCode, setMfaEnrollCode] = useState("");
   const [mfaBusy, setMfaBusy] = useState(false);
   const [mfaErrore, setMfaErrore] = useState("");
+  const [cifraStato, setCifraStato] = useState(null); // null | "crea" | "sblocca"
+  const [cifraMeta, setCifraMeta] = useState(null);
+  const [cifraFrase, setCifraFrase] = useState("");
+  const [cifraFrase2, setCifraFrase2] = useState("");
+  const [cifraCarta, setCifraCarta] = useState(false);
+  const [cifraBackup, setCifraBackup] = useState(0);
+  const [cifraBusy, setCifraBusy] = useState(false);
+  const [cifraErrore, setCifraErrore] = useState("");
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoErrore, setLogoErrore] = useState("");
   const [authSetupStatus, setAuthSetupStatus] = useState("idle");
@@ -2075,14 +2125,14 @@ function GestionalePortieri() {
     Authorization: `Bearer ${token || cfg.anon_key}`,
   });
 
-  const supabaseSelect = async (cfg, key, token) => {
+  const supabaseSelectRaw = async (cfg, key, token) => {
     const url = `${cfg.project_url}/rest/v1/${SUPABASE_TABLE}?key=eq.${encodeURIComponent(key)}&select=value`;
     const res = await fetchConTimeout(url, { headers: authHeaders(cfg, token) });
     if (!res.ok) throw new Error("Supabase select " + res.status);
     return res.json();
   };
 
-  const supabaseUpsert = async (cfg, key, value, token) => {
+  const supabaseUpsertRaw = async (cfg, key, value, token) => {
     const url = `${cfg.project_url}/rest/v1/${SUPABASE_TABLE}`;
     const res = await fetchConTimeout(url, {
       method: "POST",
@@ -2092,8 +2142,39 @@ function GestionalePortieri() {
         Prefer: "resolution=merge-duplicates,return=minimal",
       },
       body: JSON.stringify([{ key, value, updated_at: new Date().toISOString() }]),
-    });
+    }, 20000);
     if (!res.ok) throw new Error("Supabase upsert " + res.status);
+  };
+
+  // Lettura: se il valore è cifrato lo decifro con la chiave in memoria; se la chiave manca,
+  // errore (mai dati finti). I valori ancora in chiaro (prima della migrazione) passano invariati.
+  const supabaseSelect = async (cfg, key, token) => {
+    const rows = await supabaseSelectRaw(cfg, key, token);
+    if (key === CRYPTO_META_KEY || !rows) return rows;
+    return Promise.all(rows.map(async (r) => {
+      if (r && r.value && r.value._enc === 1) {
+        if (!CRYPTO_STATE.key) throw new Error("Dati cifrati: serve la frase segreta.");
+        return { ...r, value: await cryptoDec(CRYPTO_STATE.key, r.value) };
+      }
+      return r;
+    }));
+  };
+
+  // Scrittura: con la cifratura attiva cifro SEMPRE; se manca la chiave rifiuto di scrivere
+  // (non deve mai finire nulla in chiaro sul database).
+  const supabaseUpsert = async (cfg, key, value, token) => {
+    let v = value;
+    if (key !== CRYPTO_META_KEY && CRYPTO_STATE.attiva) {
+      if (!CRYPTO_STATE.key) throw new Error("Dati cifrati: serve la frase segreta.");
+      v = await cryptoEnc(CRYPTO_STATE.key, value);
+    }
+    return supabaseUpsertRaw(cfg, key, v, token);
+  };
+
+  const supabaseListKeys = async (cfg, token) => {
+    const res = await fetchConTimeout(`${cfg.project_url}/rest/v1/${SUPABASE_TABLE}?select=key`, { headers: authHeaders(cfg, token) });
+    if (!res.ok) throw new Error("Supabase elenco " + res.status);
+    return (await res.json()).map((r) => r.key).filter((k) => k !== CRYPTO_META_KEY);
   };
 
   // --- Iscrizioni pubbliche in attesa di revisione ---
@@ -2309,6 +2390,8 @@ function GestionalePortieri() {
       }
       await persistSession(data, email);
       setAuthScreen(null);
+      setLoading(true);
+      setTentativoCaricamento((n) => n + 1);
     } catch (e) {
       setAuthError(e.message);
     } finally {
@@ -2328,6 +2411,8 @@ function GestionalePortieri() {
       setMfaPending(null);
       setMfaCode("");
       setAuthScreen(null);
+      setLoading(true);
+      setTentativoCaricamento((n) => n + 1);
     } catch (e) {
       setAuthError(e.message);
     } finally {
@@ -2409,8 +2494,121 @@ function GestionalePortieri() {
 
   const doLogout = async () => {
     await sessionStorageDelete();
+    CRYPTO_STATE.key = null;
+    CRYPTO_STATE.attiva = false;
+    setCifraStato(null);
+    setCifraFrase("");
+    setCifraFrase2("");
     setSession(null);
     setAuthScreen("login");
+  };
+
+  // --- Cifratura: copia di sicurezza, attivazione, sblocco ---
+  // Cifra le chiavi che sul database risultano ancora in chiaro, verificando ogni volta che
+  // rileggendole si ottenga esattamente lo stesso contenuto; se qualcosa non torna, rimette il
+  // valore originale in chiaro e si ferma (nessun dato viene mai perso).
+  const cifraChiaviInChiaro = async (cfg, token) => {
+    const chiavi = await supabaseListKeys(cfg, token);
+    for (const k of chiavi) {
+      const rows = await supabaseSelectRaw(cfg, k, token);
+      if (!rows || !rows.length) continue;
+      const v = rows[0].value;
+      if (v && v._enc === 1) continue;
+      await supabaseUpsert(cfg, k, v, token);
+      const controllo = await supabaseSelect(cfg, k, token);
+      if (!controllo.length || JSON.stringify(controllo[0].value) !== JSON.stringify(v)) {
+        await supabaseUpsertRaw(cfg, k, v, token);
+        throw new Error("Controllo fallito sui dati (" + k + "): ripristinati in chiaro, nulla è andato perso.");
+      }
+    }
+  };
+
+  const scaricaBackupChiaro = async () => {
+    if (cifraBusy) return;
+    setCifraBusy(true);
+    setCifraErrore("");
+    try {
+      const token = session && session.access_token;
+      const chiavi = await supabaseListKeys(dbConfig, token);
+      const dati = {};
+      for (const k of chiavi) {
+        const rows = await supabaseSelect(dbConfig, k, token);
+        if (rows && rows.length) dati[k] = rows[0].value;
+      }
+      const n = Object.keys(dati).length;
+      if (n === 0) throw new Error("Non trovo dati da salvare.");
+      const blob = new Blob([JSON.stringify({ tipo: "backup-gestionale", creato: new Date().toISOString(), dati }, null, 1)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "backup-gestionale-" + oggiISO() + ".json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setCifraBackup(n);
+    } catch (e) {
+      setCifraErrore("Copia di sicurezza non riuscita: " + e.message);
+    } finally {
+      setCifraBusy(false);
+    }
+  };
+
+  const attivaCifratura = async () => {
+    if (cifraBusy) return;
+    setCifraErrore("");
+    if (cifraFrase.length < 12) { setCifraErrore("La frase deve avere almeno 12 caratteri."); return; }
+    if (cifraFrase !== cifraFrase2) { setCifraErrore("Le due frasi non coincidono."); return; }
+    if (!cifraBackup) { setCifraErrore("Prima scarica la copia di sicurezza (passo 1)."); return; }
+    if (!cifraCarta) { setCifraErrore("Conferma di aver scritto la frase su carta."); return; }
+    setCifraBusy(true);
+    try {
+      const token = session && session.access_token;
+      const salt = cryptoB64(crypto.getRandomValues(new Uint8Array(16)));
+      const key = await cryptoDerive(cifraFrase, salt, CRYPTO_ITER);
+      const check = await cryptoEnc(key, { ok: "mb-academy" });
+      await supabaseUpsertRaw(dbConfig, CRYPTO_META_KEY, { v: 1, salt, iter: CRYPTO_ITER, check }, token);
+      CRYPTO_STATE.key = key;
+      CRYPTO_STATE.attiva = true;
+      setCifraMeta({ v: 1, salt, iter: CRYPTO_ITER, check });
+      await cifraChiaviInChiaro(dbConfig, token);
+      setCifraStato(null);
+      setCifraFrase("");
+      setCifraFrase2("");
+      setCifraCarta(false);
+      setLoading(true);
+      setTentativoCaricamento((n) => n + 1);
+    } catch (e) {
+      setCifraErrore(e.message);
+    } finally {
+      setCifraBusy(false);
+    }
+  };
+
+  const sbloccaCifratura = async () => {
+    if (cifraBusy || !cifraMeta || !cifraFrase) return;
+    setCifraBusy(true);
+    setCifraErrore("");
+    try {
+      const key = await cryptoDerive(cifraFrase, cifraMeta.salt, cifraMeta.iter || CRYPTO_ITER);
+      let ok = false;
+      try {
+        const chk = await cryptoDec(key, cifraMeta.check);
+        ok = !!(chk && chk.ok === "mb-academy");
+      } catch (e) { ok = false; }
+      if (!ok) throw new Error("Frase non corretta.");
+      CRYPTO_STATE.key = key;
+      CRYPTO_STATE.attiva = true;
+      try { await cifraChiaviInChiaro(dbConfig, session && session.access_token); } catch (e2) { console.warn(e2); }
+      setCifraStato(null);
+      setCifraFrase("");
+      setLoading(true);
+      setTentativoCaricamento((n) => n + 1);
+    } catch (e) {
+      setCifraErrore(e.message);
+    } finally {
+      setCifraBusy(false);
+    }
   };
 
 
@@ -2496,11 +2694,11 @@ function GestionalePortieri() {
           } catch (e2) {
             // Fallito anche il tentativo con token rinnovato: proseguo con il fallback sotto,
             // ma segnalo l'errore per davvero invece di nasconderlo.
-            try { localStorage.setItem(key, JSON.stringify(valoreDaSalvare)); } catch (e3) {}
+            salvaLocale(key, valoreDaSalvare);
             throw e2;
           }
         }
-        try { localStorage.setItem(key, JSON.stringify(valoreDaSalvare)); } catch (e3) {}
+        salvaLocale(key, valoreDaSalvare);
         throw e;
       }
     }
@@ -2508,7 +2706,7 @@ function GestionalePortieri() {
       await window.storage.set(key, JSON.stringify(value), true);
       return value;
     } catch (e) {
-      try { localStorage.setItem(key, JSON.stringify(value)); } catch (e2) {}
+      salvaLocale(key, value);
       throw e;
     }
   };
@@ -2597,6 +2795,37 @@ function GestionalePortieri() {
       // la lettura fallisce va bene usare i dati di partenza — non c'è nient'altro da mostrare.
       // Ma se stiamo già mostrando dati veri (un ricaricamento), un fallimento non deve MAI
       // sostituirli silenziosamente: meglio un errore chiaro che dati sbagliati che sembrano giusti.
+      // Cifratura dei dati: finché la frase segreta non è stata inserita (o la cifratura creata)
+      // non leggo né scrivo nulla. Se non riesco a controllare lo stato, mi fermo (mai in chiaro).
+      if (cfg && cfg.auth_enabled && token && !CRYPTO_STATE.key) {
+        let meta = null;
+        try {
+          const rowsMeta = await supabaseSelectRaw(cfg, CRYPTO_META_KEY, token);
+          if (rowsMeta && rowsMeta.length) meta = rowsMeta[0].value;
+        } catch (e) {
+          if (!cancelled && !finito) {
+            finito = true;
+            clearTimeout(watchdog);
+            setLoadError("Impossibile controllare la cifratura dei dati (problema di connessione). Nulla è stato toccato. Riprova.");
+            setLoading(false);
+          }
+          return;
+        }
+        if (cancelled || finito) return;
+        finito = true;
+        clearTimeout(watchdog);
+        if (meta) {
+          CRYPTO_STATE.attiva = true;
+          setCifraMeta(meta);
+          setCifraStato("sblocca");
+        } else {
+          CRYPTO_STATE.attiva = false;
+          setCifraStato("crea");
+        }
+        setLoading(false);
+        return;
+      }
+
       let d;
       try {
         d = await caricaDati(cfg, token);
@@ -2641,6 +2870,7 @@ function GestionalePortieri() {
   const [refreshing, setRefreshing] = useState(false);
   const aggiornaDati = async () => {
     if (refreshing) return;
+    if (CRYPTO_STATE.attiva && !CRYPTO_STATE.key) return;
     setRefreshing(true);
     try {
       const token = session && session.access_token;
@@ -2671,6 +2901,27 @@ function GestionalePortieri() {
       setRefreshing(false);
     }
   };
+
+  // Blocco automatico: se l'app resta nascosta (altra scheda/app, schermo bloccato) per più di
+  // 10 minuti, la chiave di cifratura viene dimenticata e serve di nuovo la frase segreta.
+  useEffect(() => {
+    let nascostoDalle = null;
+    const onVis = () => {
+      if (document.hidden) {
+        nascostoDalle = Date.now();
+        return;
+      }
+      if (nascostoDalle && CRYPTO_STATE.attiva && CRYPTO_STATE.key && Date.now() - nascostoDalle > 10 * 60 * 1000) {
+        CRYPTO_STATE.key = null;
+        setCifraFrase("");
+        setCifraErrore("");
+        setCifraStato("sblocca");
+      }
+      nascostoDalle = null;
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
 
   // Se l'app resta in background (schermo bloccato, altra app aperta, scheda nascosta) per più
   // di 2 minuti e poi torna visibile, aggiorno automaticamente i dati prima che l'utente possa
@@ -3520,6 +3771,84 @@ grant select, insert, update, delete on gestionale_kv to anon, authenticated;`;
     return (
       <div style={{ background: bg, minHeight: "100%", padding: 24, textAlign: "center", color: textSecondary, fontFamily: "-apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"SF Pro Text\", system-ui, sans-serif" }}>
         Caricamento...
+      </div>
+    );
+  }
+
+  if (session && (cifraStato === "crea" || cifraStato === "sblocca")) {
+    const wrap = { background: bg, minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "-apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"SF Pro Text\", system-ui, sans-serif" };
+    if (cifraStato === "sblocca") {
+      const submitSblocca = (e) => { if (e && e.preventDefault) e.preventDefault(); sbloccaCifratura(); };
+      return (
+        <div style={wrap}>
+          <form onSubmit={submitSblocca} style={{ ...cardStyle, maxWidth: 380, width: "100%" }}>
+            <p style={{ fontSize: 18, fontWeight: 800, color: textPrimary, marginBottom: 4 }}>🔐 Sblocca i dati</p>
+            <p style={{ fontSize: 13, color: textMuted, marginBottom: 16 }}>
+              I tuoi dati sono cifrati. Inserisci la frase segreta: resta solo su questo dispositivo e non viene mai inviata.
+            </p>
+            <label style={labelStyle}>Frase segreta</label>
+            <input
+              autoFocus
+              style={{ ...inputStyle, marginBottom: 14 }}
+              type="password"
+              name="frase-segreta"
+              autoComplete="off"
+              value={cifraFrase}
+              onChange={(e) => setCifraFrase(e.target.value)}
+            />
+            {cifraErrore && <p style={{ color: coral, fontSize: 13, marginBottom: 10 }}>{cifraErrore}</p>}
+            <button type="submit" disabled={cifraBusy || !cifraFrase} style={{ ...primaryBtn, width: "100%", opacity: cifraBusy || !cifraFrase ? 0.5 : 1 }}>
+              {cifraBusy ? "Sblocco..." : "Sblocca"}
+            </button>
+            <button type="button" onClick={doLogout} style={{ ...ghostBtn, width: "100%", marginTop: 10 }}>Esci</button>
+          </form>
+        </div>
+      );
+    }
+    const submitCrea = (e) => { if (e && e.preventDefault) e.preventDefault(); attivaCifratura(); };
+    return (
+      <div style={wrap}>
+        <form onSubmit={submitCrea} style={{ ...cardStyle, maxWidth: 420, width: "100%" }}>
+          <p style={{ fontSize: 18, fontWeight: 800, color: textPrimary, marginBottom: 4 }}>🔐 Cifra i tuoi dati</p>
+          <p style={{ fontSize: 13, color: textMuted, marginBottom: 14 }}>
+            I dati verranno cifrati nel tuo dispositivo prima di essere salvati: sul database resterà solo testo illeggibile. La frase segreta non viene mai inviata a nessuno. <b>Se la dimentichi, i dati non si possono recuperare.</b>
+          </p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: textPrimary, marginBottom: 6 }}>1. Copia di sicurezza</p>
+          <button type="button" onClick={scaricaBackupChiaro} disabled={cifraBusy} style={{ ...ghostBtn, width: "100%", marginBottom: 6, opacity: cifraBusy ? 0.6 : 1 }}>
+            {cifraBackup ? "Copia scaricata (" + cifraBackup + " elenchi) · riscarica" : "Scarica la copia di sicurezza"}
+          </button>
+          <p style={{ fontSize: 11, color: textMuted, marginBottom: 14 }}>
+            Il file contiene tutti i dati in chiaro: tienilo in un posto tuo e protetto, mai su WhatsApp o in mail.
+          </p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: textPrimary, marginBottom: 6 }}>2. Scegli la frase segreta (almeno 12 caratteri)</p>
+          <input
+            style={{ ...inputStyle, marginBottom: 8 }}
+            type="password"
+            name="nuova-frase"
+            autoComplete="new-password"
+            placeholder="Frase segreta"
+            value={cifraFrase}
+            onChange={(e) => setCifraFrase(e.target.value)}
+          />
+          <input
+            style={{ ...inputStyle, marginBottom: 12 }}
+            type="password"
+            name="nuova-frase-2"
+            autoComplete="new-password"
+            placeholder="Ripeti la frase"
+            value={cifraFrase2}
+            onChange={(e) => setCifraFrase2(e.target.value)}
+          />
+          <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, color: textSecondary, marginBottom: 14, cursor: "pointer" }}>
+            <input type="checkbox" checked={cifraCarta} onChange={(e) => setCifraCarta(e.target.checked)} style={{ marginTop: 2 }} />
+            <span>Ho scritto la frase su carta e la conservo in un posto sicuro.</span>
+          </label>
+          {cifraErrore && <p style={{ color: coral, fontSize: 13, marginBottom: 10 }}>{cifraErrore}</p>}
+          <button type="submit" disabled={cifraBusy} style={{ ...primaryBtn, width: "100%", opacity: cifraBusy ? 0.6 : 1 }}>
+            {cifraBusy ? "Cifro i dati... non chiudere la pagina" : "Attiva la cifratura"}
+          </button>
+          <button type="button" onClick={doLogout} disabled={cifraBusy} style={{ ...ghostBtn, width: "100%", marginTop: 10 }}>Esci</button>
+        </form>
       </div>
     );
   }
