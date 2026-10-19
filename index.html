@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-rRKVA95T3kFcUysqweFrWt5B7GTe7kD3Z4vpqWFrwU0=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-dj48hfdNu+StksMmD89mb1jh+oS3F9VrkhO5SPBAEK0=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -1266,6 +1266,7 @@ const sectionLabelStyle = {
   margin: "0 0 10px"
 };
 const ICONE_MENU = {
+  "allenamento-mirato": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/>",
   "richieste": "<path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"/>",
   "gare": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 7.5l4 3-1.5 4.8h-5L8 10.5z\"/><path d=\"M12 7.5V2.5M16 10.5l4.8-1.6M14.5 15.3l3 4.1M9.5 15.3l-3 4.1M8 10.5L3.2 8.9\"/>",
   "lista": "<path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/>",
@@ -3579,6 +3580,133 @@ function ModuloRichiesta() {
     }
   }, "Per inviare serve: ", mancanti.join(", ")))));
 }
+
+// --- Allenamento mirato: dalle valutazioni delle partite alle criticità da allenare ---
+const SPUNTI_AREA = {
+  parata: {
+    spunto: "Prese a terra e a mezza altezza con rialzo veloce; tuffi su tiri angolati da distanza ravvicinata.",
+    cat: "Tuffi · Presa e tecnica di base"
+  },
+  basse: {
+    spunto: "Uscite sui palloni filtranti scegliendo il tempo; 1 contro 1 partendo da posizioni diverse.",
+    cat: "Uscite basse · 1 contro 1"
+  },
+  alte: {
+    spunto: "Prese alte con un uomo che disturba; cross da entrambi i lati con la chiamata \"mia!\".",
+    cat: "Uscite alte e cross"
+  },
+  pos_off: {
+    spunto: "Posizione rispetto alla linea difensiva quando la squadra attacca; letture sui lanci lunghi avversari.",
+    cat: "Situazionale"
+  },
+  pos_dif: {
+    spunto: "Spostamenti sulla linea della palla; posizione sul primo palo nei tiri da posizione defilata.",
+    cat: "Situazionale"
+  },
+  piedi: {
+    spunto: "Ricezione orientata sotto pressione; passaggi corti e rinvii precisi con entrambi i piedi.",
+    cat: "Gioco con i piedi"
+  },
+  comunicazione: {
+    spunto: "Esercizi con 2-3 difensori in cui deve guidare la linea e chiamare ogni pallone.",
+    cat: "Situazionale"
+  },
+  testa: {
+    spunto: "Esercizi a punteggio con errore e ripartenza immediata; sottolineare ad alta voce le cose fatte bene.",
+    cat: "Rapidità e reattività"
+  }
+};
+function normNome(s) {
+  return String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+}
+function gareDelPortiere(p, pending) {
+  const approvate = (p.gare || []).map(g => ({
+    ...g,
+    inAttesa: false
+  }));
+  const inAttesa = (pending || []).filter(g => g.portiere_id && String(g.portiere_id) === String(p.id) || !g.portiere_id && normNome([g.nome, g.cognome].filter(Boolean).join(" ")) === normNome(p.nome)).map(g => {
+    const {
+      _mig,
+      ...voti
+    } = g.voti || {};
+    return {
+      id: "att-" + g.id,
+      data: g.data_gara || String(g.creato_il || "").slice(0, 10),
+      tipo: g.tipo_gara || "",
+      avversario: g.avversario || "",
+      risultato: g.risultato || "",
+      minuti: g.minuti,
+      voti,
+      miglioramenti: _mig || {},
+      lavorare: g.lavorare || [],
+      racconto: g.racconto || "",
+      commento: "",
+      inAttesa: true
+    };
+  });
+  return [...approvate, ...inAttesa].sort((a, b) => String(b.data || "").localeCompare(String(a.data || "")));
+}
+function analisiCriticita(gare) {
+  const recenti = gare.slice(0, 5);
+  const aree = AREE_GARA.map(([k, nome,, corto]) => {
+    const voti = gare.map(g => Number((g.voti || {})[k])).filter(n => n >= 1 && n <= VOTO_MAX);
+    const ultimo = voti.length ? voti[0] : null;
+    const ultimi3 = voti.slice(0, 3);
+    const media3 = ultimi3.length ? ultimi3.reduce((a, b) => a + b, 0) / ultimi3.length : null;
+    const chiede = gare.slice(0, 2).some(g => (g.lavorare || []).includes(k));
+    const migNo = gare.length > 0 && (gare[0].miglioramenti || {})[k] === "no";
+    const migSi = gare.length > 0 && (gare[0].miglioramenti || {})[k] === "si";
+    const punteggio = (ultimo != null ? (VOTO_MAX - ultimo) * 2 : 0) + (media3 != null && ultimi3.length >= 2 ? VOTO_MAX - media3 : 0) + (chiede ? 2.5 : 0) + (migNo ? 1 : 0);
+    const motivi = [];
+    if (ultimo === 1) motivi.push("Ultima partita: " + ETICHETTE_VOTO[1].toLowerCase());
+    if (media3 != null && ultimi3.length >= 2 && media3 <= 1.7) motivi.push("Media ultime " + ultimi3.length + ": " + fmtMedia(media3) + " su 4");
+    if (chiede) motivi.push("Lo chiede lui");
+    if (migNo) motivi.push("Non vede miglioramenti");
+    const storico = recenti.map(g => Number((g.voti || {})[k]) || null).reverse();
+    return {
+      chiave: k,
+      nome,
+      corto,
+      ultimo,
+      media3,
+      chiede,
+      migSi,
+      punteggio,
+      motivi,
+      storico
+    };
+  });
+  const criticita = aree.filter(a => a.motivi.length > 0).sort((a, b) => b.punteggio - a.punteggio).slice(0, 3);
+  const forti = aree.filter(a => a.ultimo != null && a.ultimo >= 3 && !criticita.includes(a)).sort((a, b) => b.ultimo + (b.media3 || 0) - (a.ultimo + (a.media3 || 0))).slice(0, 3);
+  return {
+    aree,
+    criticita,
+    forti
+  };
+}
+function PalliniVoto({
+  storico
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      gap: 4,
+      alignItems: "center"
+    },
+    "aria-label": "Ultime partite, dalla più vecchia alla più recente"
+  }, storico.map((v, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    title: v ? ETICHETTE_VOTO[v] : "non valutata",
+    style: {
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      background: v ? COLORI_VOTO[v] : "transparent",
+      border: v ? "none" : "1.5px dashed rgba(150,150,160,0.6)",
+      display: "inline-block"
+    }
+  })));
+}
 function SezionePartite({
   gare,
   onElimina,
@@ -4005,6 +4133,9 @@ function GestionalePortieri() {
   const [verificheLoading, setVerificheLoading] = useState(false);
   const [verificaPortiereScelto, setVerificaPortiereScelto] = useState({}); // { [id]: portiereId } selezione in corso
   const [garePending, setGarePending] = useState([]);
+  const [amSel, setAmSel] = useState([]);
+  const [amNota, setAmNota] = useState("");
+  const [amCerca, setAmCerca] = useState("");
   const [gareLoading, setGareLoading] = useState(false);
   const [gareMancante, setGareMancante] = useState(false);
   const [garaPortiereScelto, setGaraPortiereScelto] = useState({});
@@ -6376,7 +6507,7 @@ function GestionalePortieri() {
       flexDirection: "column",
       overflowY: "auto"
     }
-  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
     key: gruppo,
     style: {
       marginBottom: 14
@@ -7265,7 +7396,21 @@ function GestionalePortieri() {
       minHeight: 110
     })), /*#__PURE__*/React.createElement("p", {
       style: sectionLabelStyle
-    }, "⚽ Partite"), /*#__PURE__*/React.createElement(SezionePartite, {
+    }, "⚽ Partite"), gareDelPortiere(p, garePending).length > 0 && /*#__PURE__*/React.createElement("button", {
+      className: "no-print",
+      onClick: () => {
+        setAmSel([]);
+        setAmNota("");
+        setView({
+          page: "allenamento-mirato",
+          id: p.id
+        });
+      },
+      style: {
+        ...primaryBtn,
+        marginBottom: 12
+      }
+    }, "🎯 Apri la scheda per l'allenamento mirato"), /*#__PURE__*/React.createElement(SezionePartite, {
       gare: p.gare || [],
       cfg: dbConfig,
       token: session && session.access_token,
@@ -10014,6 +10159,511 @@ Matteo Blasimme · MB Goalkeeper Academy`;
         }
       }, "Archivia")));
     }));
+  }
+  if (view.page === "allenamento-mirato") {
+    const conGare = portieri.map(p => ({
+      p,
+      gare: gareDelPortiere(p, garePending)
+    })).filter(x => x.gare.length > 0).sort((a, b) => String(b.gare[0].data || "").localeCompare(String(a.gare[0].data || "")));
+    const pSel = view.id != null ? portieri.find(x => String(x.id) === String(view.id)) : null;
+    if (!pSel) {
+      const q = normNome(amCerca);
+      const elenco = conGare.filter(x => !q || normNome(x.p.nome).includes(q) || normNome(x.p.squadra).includes(q));
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          padding: 20,
+          maxWidth: 820,
+          margin: "0 auto"
+        }
+      }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
+        title: "Allenamento mirato"
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: 14
+        }
+      }), /*#__PURE__*/React.createElement("p", {
+        style: {
+          fontSize: 14,
+          color: textSecondary,
+          margin: "0 0 12px",
+          lineHeight: 1.5
+        }
+      }, "Scegli il portiere che alleni oggi: vedi subito le sue criticità, ricavate dalle valutazioni delle partite (anche quelle ancora da approvare)."), /*#__PURE__*/React.createElement("input", {
+        style: {
+          ...inputStyle,
+          marginBottom: 14
+        },
+        type: "search",
+        placeholder: "Cerca per nome o squadra",
+        value: amCerca,
+        onChange: e => setAmCerca(e.target.value)
+      }), elenco.length === 0 && /*#__PURE__*/React.createElement("div", {
+        style: cardStyle
+      }, /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0,
+          fontSize: 14,
+          color: textMuted
+        }
+      }, conGare.length === 0 ? "Ancora nessuna valutazione di gara. Quando i portieri compilano il modulo, li trovi qui." : "Nessun portiere trovato.")), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          flexDirection: "column",
+          gap: 10
+        }
+      }, elenco.map(({
+        p,
+        gare
+      }) => {
+        const an = analisiCriticita(gare);
+        const ult = gare[0];
+        return /*#__PURE__*/React.createElement("button", {
+          key: p.id,
+          onClick: () => {
+            setAmSel([]);
+            setAmNota("");
+            setView({
+              page: "allenamento-mirato",
+              id: p.id
+            });
+          },
+          style: {
+            ...cardStyle,
+            textAlign: "left",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+            width: "100%"
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 10,
+            alignItems: "baseline",
+            flexWrap: "wrap"
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 17,
+            fontWeight: 800,
+            color: textPrimary
+          }
+        }, p.nome), /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 12,
+            color: textMuted
+          }
+        }, "Ultima partita ", formatData(ult.data), ult.inAttesa ? " · da approvare" : "", " · ", gare.length, " ", gare.length === 1 ? "valutazione" : "valutazioni")), /*#__PURE__*/React.createElement("span", {
+          style: {
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap"
+          }
+        }, an.criticita.length ? an.criticita.map(c => /*#__PURE__*/React.createElement("span", {
+          key: c.chiave,
+          style: {
+            fontSize: 12.5,
+            fontWeight: 700,
+            color: coral,
+            background: coralDim,
+            borderRadius: 999,
+            padding: "4px 10px"
+          }
+        }, "🎯 ", c.corto)) : /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: 12.5,
+            color: textMuted
+          }
+        }, "Nessuna criticità evidente: si può lavorare sul mantenimento.")));
+      })));
+    }
+    const gare = gareDelPortiere(pSel, garePending);
+    const an = analisiCriticita(gare);
+    const ult = gare[0];
+    const storicoAll = [...(pSel.allenamentiMirati || [])].sort((a, b) => String(b.data).localeCompare(String(a.data))).slice(0, 4);
+    const salvaAllenamento = () => {
+      if (amSel.length === 0 && !amNota.trim()) return;
+      const oggi = oggiISO();
+      const nomi = AREE_GARA.filter(a => amSel.includes(a[0])).map(a => a[3]);
+      const voce = {
+        id: generaId(),
+        data: oggi,
+        aree: [...amSel],
+        nota: amNota.trim()
+      };
+      const riga = `🎯 ${formatData(oggi)} · Allenamento mirato${nomi.length ? ": " + nomi.join(", ") : ""}${voce.nota ? " — " + voce.nota : ""}`;
+      updatePortiere(pSel.id, {
+        allenamentiMirati: [...(pSel.allenamentiMirati || []), voce],
+        storicoProgressi: (pSel.storicoProgressi ? pSel.storicoProgressi + "\n\n" : "") + riga
+      });
+      setAmSel([]);
+      setAmNota("");
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: bg,
+        minHeight: "100%"
+      }
+    }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement("div", {
+      className: "no-print",
+      style: {
+        maxWidth: 820,
+        margin: "0 auto",
+        padding: "14px 20px 0",
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+        alignItems: "center"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "allenamento-mirato"
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "← Tutti i portieri"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "dettaglio",
+        id: pSel.id,
+        tab: "tecnici"
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Scheda completa"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        flex: 1
+      }
+    }), /*#__PURE__*/React.createElement("button", {
+      onClick: handlePrint,
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "🖨️ Stampa"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => handleShare(`Allenamento mirato ${pSel.nome}`, `Allenamento mirato · ${pSel.nome}`),
+      style: {
+        ...primaryBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "📤 Condividi / Salva immagine")), /*#__PURE__*/React.createElement("div", {
+      id: "print-area",
+      style: {
+        maxWidth: 820,
+        margin: "0 auto",
+        padding: "14px 20px 40px"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12,
+        fontWeight: 700,
+        color: textMuted,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em"
+      }
+    }, "Allenamento mirato · ", formatData(oggiISO())), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "4px 0 2px",
+        fontSize: 28,
+        fontWeight: 800,
+        color: textPrimary,
+        lineHeight: 1.15
+      }
+    }, pSel.nome), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13.5,
+        color: textSecondary
+      }
+    }, [pSel.squadra, pSel.anno ? "classe " + pSel.anno : null].filter(Boolean).join(" · "), ult ? ` · ultima partita ${formatData(ult.data)}${ult.avversario ? " vs " + ult.avversario : ""}${ult.risultato ? " (" + ult.risultato + ")" : ""}${ult.inAttesa ? " · da approvare" : ""}` : "")), /*#__PURE__*/React.createElement("p", {
+      style: {
+        ...sectionLabelStyle,
+        color: coral
+      }
+    }, "🎯 Su cosa lavorare oggi"), an.criticita.length === 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 14,
+        color: textSecondary
+      }
+    }, "Dalle ultime partite non emergono criticità: lavoro di mantenimento sulle aree che preferisci.")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        marginBottom: 16
+      }
+    }, an.criticita.map((c, i) => /*#__PURE__*/React.createElement("div", {
+      key: c.chiave,
+      style: {
+        ...cardStyle,
+        borderLeft: `5px solid ${coral}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 10,
+        alignItems: "baseline",
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 19,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, i + 1, ". ", c.nome), /*#__PURE__*/React.createElement(PalliniVoto, {
+      storico: c.storico
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        flexWrap: "wrap",
+        margin: "8px 0"
+      }
+    }, c.motivi.map(m => /*#__PURE__*/React.createElement("span", {
+      key: m,
+      style: {
+        fontSize: 12.5,
+        fontWeight: 600,
+        color: m === "Lo chiede lui" ? goldSoft : coral,
+        background: m === "Lo chiede lui" ? goldDim : coralDim,
+        borderRadius: 999,
+        padding: "4px 10px"
+      }
+    }, m))), SPUNTI_AREA[c.chiave] && /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 14,
+        color: textSecondary,
+        lineHeight: 1.5
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: textPrimary
+      }
+    }, "Spunto:"), " ", SPUNTI_AREA[c.chiave].spunto, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "block",
+        fontSize: 12.5,
+        color: textMuted,
+        marginTop: 4
+      }
+    }, "Esercizi su Digital Training: ", SPUNTI_AREA[c.chiave].cat))))), ult && (ult.racconto || ult.commento) && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      style: sectionLabelStyle
+    }, "💬 Le sue parole sull'ultima partita"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginBottom: 16
+      }
+    }, ult.racconto && /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 15,
+        color: textPrimary,
+        lineHeight: 1.55,
+        whiteSpace: "pre-wrap",
+        fontStyle: "italic"
+      }
+    }, "“", ult.racconto, "”"), ult.audioPath && /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: ult.racconto ? "8px 0 0" : 0,
+        fontSize: 13,
+        color: textMuted
+      }
+    }, "🎙️ C'è anche un vocale: lo ascolti dalla scheda completa."), ult.commento && /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "10px 0 0",
+        fontSize: 14,
+        color: textSecondary,
+        lineHeight: 1.5
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: textPrimary
+      }
+    }, "Il tuo commento:"), " ", ult.commento))), an.forti.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      style: {
+        ...sectionLabelStyle,
+        color: "#3fae6a"
+      }
+    }, "💪 Su cosa si sente forte"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginBottom: 16,
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap"
+      }
+    }, an.forti.map(f => /*#__PURE__*/React.createElement("span", {
+      key: f.chiave,
+      style: {
+        fontSize: 13.5,
+        fontWeight: 600,
+        color: "#3fae6a",
+        background: "rgba(63,174,106,0.12)",
+        borderRadius: 999,
+        padding: "5px 12px"
+      }
+    }, f.nome)))), /*#__PURE__*/React.createElement("p", {
+      style: sectionLabelStyle
+    }, "📊 Tutte le aree · ultime ", Math.min(gare.length, 5), " partite"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginBottom: 16
+      }
+    }, an.aree.map(a => /*#__PURE__*/React.createElement("div", {
+      key: a.chiave,
+      style: {
+        display: "grid",
+        gridTemplateColumns: "minmax(0,1fr) auto auto",
+        gap: 12,
+        alignItems: "center",
+        padding: "7px 0",
+        borderBottom: `1px solid ${border}`
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 14,
+        color: textPrimary,
+        minWidth: 0
+      }
+    }, a.nome, a.chiede ? /*#__PURE__*/React.createElement("em", {
+      style: {
+        fontStyle: "normal",
+        color: goldSoft,
+        fontSize: 12
+      }
+    }, " · lo chiede") : null), /*#__PURE__*/React.createElement(PalliniVoto, {
+      storico: a.storico
+    }), /*#__PURE__*/React.createElement("b", {
+      style: {
+        fontSize: 13,
+        color: a.ultimo ? COLORI_VOTO[a.ultimo] : textMuted,
+        minWidth: 34,
+        textAlign: "right",
+        fontVariantNumeric: "tabular-nums"
+      }
+    }, a.media3 != null ? fmtMedia(a.media3) : "–"))), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "10px 0 0",
+        fontSize: 12,
+        color: textMuted,
+        lineHeight: 1.5
+      }
+    }, "Pallini dalla partita più vecchia alla più recente: ", [1, 2, 3, 4].map(v => /*#__PURE__*/React.createElement("span", {
+      key: v,
+      style: {
+        whiteSpace: "nowrap"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-block",
+        width: 9,
+        height: 9,
+        borderRadius: "50%",
+        background: COLORI_VOTO[v],
+        margin: "0 4px 0 8px"
+      }
+    }), ETICHETTE_VOTO[v].toLowerCase())), ". Il numero è la media delle ultime 3, su 4.")), /*#__PURE__*/React.createElement("p", {
+      className: "no-print",
+      style: sectionLabelStyle
+    }, "✅ Allenamento di oggi"), /*#__PURE__*/React.createElement("div", {
+      className: "no-print",
+      style: {
+        ...cardStyle,
+        marginBottom: 16
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 8px",
+        fontSize: 13,
+        color: textSecondary
+      }
+    }, "Su cosa avete lavorato?"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        flexWrap: "wrap",
+        marginBottom: 10
+      }
+    }, AREE_GARA.map(a => {
+      const on = amSel.includes(a[0]);
+      return /*#__PURE__*/React.createElement("button", {
+        key: a[0],
+        onClick: () => setAmSel(s => on ? s.filter(x => x !== a[0]) : [...s, a[0]]),
+        style: {
+          ...ghostBtn,
+          fontSize: 13,
+          padding: "6px 11px",
+          borderColor: on ? gold : undefined,
+          color: on ? goldSoft : undefined,
+          background: on ? goldDim : undefined
+        }
+      }, on ? "✓ " : "", a[3]);
+    })), /*#__PURE__*/React.createElement("textarea", {
+      style: {
+        ...inputStyle,
+        minHeight: 70,
+        marginBottom: 10
+      },
+      placeholder: "Com'è andata? (facoltativo)",
+      value: amNota,
+      onChange: e => setAmNota(e.target.value)
+    }), /*#__PURE__*/React.createElement("button", {
+      onClick: salvaAllenamento,
+      disabled: amSel.length === 0 && !amNota.trim(),
+      style: {
+        ...primaryBtn,
+        opacity: amSel.length === 0 && !amNota.trim() ? 0.5 : 1
+      }
+    }, "Salva nello storico del portiere"), storicoAll.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 6px",
+        fontSize: 12,
+        fontWeight: 700,
+        color: textMuted,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em"
+      }
+    }, "Ultimi allenamenti mirati"), storicoAll.map(s => /*#__PURE__*/React.createElement("p", {
+      key: s.id,
+      style: {
+        margin: "3px 0",
+        fontSize: 13,
+        color: textSecondary
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: textPrimary
+      }
+    }, formatData(s.data)), " · ", AREE_GARA.filter(a => (s.aree || []).includes(a[0])).map(a => a[3]).join(", ") || "—", s.nota ? " — " + s.nota : ""))))));
   }
   if (view.page === "gare") {
     const base = typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
