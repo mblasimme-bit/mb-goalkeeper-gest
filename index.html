@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-dj48hfdNu+StksMmD89mb1jh+oS3F9VrkhO5SPBAEK0=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-goqgolzb2aBBQr3mDheOT/2Gbxdw/GPIaaPLiVETI6o=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -25,7 +25,7 @@
     background-attachment: scroll;
     min-height: 100%;
   }
-  body { margin: 0; min-height: 100vh; }
+  body { margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif; }
   * { box-sizing: border-box; }
   html[data-tema="chiaro"] .logo-home-scuro { display: none !important; }
   html:not([data-tema="chiaro"]) .logo-home-chiaro { display: none !important; }
@@ -12080,7 +12080,7 @@ Matteo`;
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: 20,
-        maxWidth: 820,
+        maxWidth: 1500,
         margin: "0 auto"
       }
     }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
@@ -12089,14 +12089,21 @@ Matteo`;
       style: {
         height: 18
       }
-    }), /*#__PURE__*/React.createElement(CalendarioSedute, {
-      entrate: entrate,
+    }), /*#__PURE__*/React.createElement(CalendarioCompleto, {
       portieri: portieri,
       pacchetti: pacchetti,
+      entrate: entrate,
+      eventi: eventi,
+      certificati: certificati,
+      aggiungiSeduta: aggiungiSeduta,
+      rimuoviSeduta: rimuoviSeduta,
       modificaEntrata: modificaEntrata,
       rimuoviEntrata: rimuoviEntrata,
+      aggiungiEvento: aggiungiEvento,
+      aggiungiEntrata: aggiungiEntrata,
       confirmAction: confirmAction,
-      setView: setView
+      setView: setView,
+      settings: settings
     }));
   }
   if (view.page === "database") {
@@ -16028,6 +16035,1233 @@ function PaginaSpese({
       fontWeight: 700
     }
   }, "⚠️ Non salvato, controlla la connessione e riprova"))));
+}
+
+// --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
+const CAL_TIPI = {
+  programmata: {
+    nome: "Sedute da fare",
+    col: "#1d6fa5"
+  },
+  svolta: {
+    nome: "Sedute svolte",
+    col: "#1f9d55"
+  },
+  assenza: {
+    nome: "Assenze",
+    col: "#c9522f"
+  },
+  incasso: {
+    nome: "Sedute singole e incassi",
+    col: "#0e9f96"
+  },
+  evento: {
+    nome: "Eventi",
+    col: "#8562b0"
+  },
+  scadenza: {
+    nome: "Scadenze saldi e certificati",
+    col: "#d9822b"
+  },
+  compleanno: {
+    nome: "Compleanni",
+    col: "#d6457a"
+  }
+};
+const CAL_GG = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+const CAL_GG_LUNGHI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
+const calData = s => {
+  const [y, m, d] = String(s).split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+const calIso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const calPiu = (d, n) => {
+  const x = new Date(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+const calLun = d => calPiu(d, -((d.getDay() + 6) % 7));
+const calMin = hhmm => {
+  const m = /^(\d{1,2}):(\d{2})/.exec(hhmm || "");
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+};
+const calHHMM = min => String(Math.floor(min / 60)).padStart(2, "0") + ":" + String(min % 60).padStart(2, "0");
+function CalendarioCompleto({
+  portieri,
+  pacchetti,
+  entrate,
+  eventi,
+  certificati,
+  aggiungiSeduta,
+  rimuoviSeduta,
+  modificaEntrata,
+  rimuoviEntrata,
+  aggiungiEvento,
+  aggiungiEntrata,
+  confirmAction,
+  setView,
+  settings
+}) {
+  const stretto = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+  const [vista, setVista] = useState(stretto ? "elenco" : "mese");
+  const [rif, setRif] = useState(() => oggiISO());
+  const [sel, setSel] = useState(null);
+  const [nascosti, setNascosti] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("cal-nascosti") || "[]");
+    } catch (e) {
+      return [];
+    }
+  });
+  const [nuovo, setNuovo] = useState(null);
+  const [giornoSel, setGiornoSel] = useState(oggiISO());
+  const oggi = oggiISO();
+  const nomeP = id => {
+    const p = portieri.find(x => String(x.id) === String(id));
+    return p ? p.nome : null;
+  };
+  const toggleTipo = t => setNascosti(n => {
+    const v = n.includes(t) ? n.filter(x => x !== t) : [...n, t];
+    try {
+      localStorage.setItem("cal-nascosti", JSON.stringify(v));
+    } catch (e) {}
+    return v;
+  });
+
+  // Tutte le voci del calendario (calcolate una volta sola)
+  const voci = useMemo(() => {
+    const out = [];
+    const durataStd = 60;
+    (pacchetti || []).forEach(pk => {
+      const chi = nomeP(pk.portiereId) || pk.nome || "Pacchetto";
+      const svolte = new Set(pk.sedute || []);
+      const assenze = new Map((pk.assenze || []).map(a => [a.data, a]));
+      const slot = pk.tipo === "speciale" ? (pk.pianificazione || []).filter(x => x.data).map(x => ({
+        data: x.data,
+        ora: x.orario || null,
+        dur: x.durata ? Number(x.durata) * 60 : durataStd
+      })) : (pk.datePrestabilite || []).filter(Boolean).map(d => ({
+        data: d,
+        ora: pk.orario || null,
+        dur: durataStd
+      }));
+      const dateSlot = new Set(slot.map(s => s.data));
+      slot.forEach((s, i) => {
+        const tipo = svolte.has(s.data) ? "svolta" : assenze.has(s.data) ? "assenza" : "programmata";
+        const a = assenze.get(s.data);
+        out.push({
+          id: `pk-${pk.id}-${i}`,
+          tipo,
+          data: s.data,
+          ora: s.ora,
+          dur: s.dur,
+          titolo: chi,
+          sotto: (pk.tipo === "speciale" ? "Pacchetto speciale" : `Pacchetto ${svolte.size}/${pk.numeroSedute || "?"}`) + (a ? ` · assenza ${a.tipo === "recuperata" ? "recuperata" : a.tipo === "persa" ? "persa" : ""}` : ""),
+          daSegnare: tipo === "programmata" && s.data < oggi,
+          pk
+        });
+      });
+      [...svolte].filter(d => !dateSlot.has(d)).forEach(d => out.push({
+        id: `pkx-${pk.id}-${d}`,
+        tipo: "svolta",
+        data: d,
+        ora: null,
+        titolo: chi,
+        sotto: "Seduta del pacchetto",
+        pk
+      }));
+      if (pk.dataScadenzaSaldo && pk.importoTotale && eNonPagato(pk.pagato)) {
+        const resto = (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0);
+        if (resto > 0.009) out.push({
+          id: `saldo-${pk.id}`,
+          tipo: "scadenza",
+          data: pk.dataScadenzaSaldo,
+          ora: null,
+          titolo: `Saldo ${chi}`,
+          sotto: `€${resto.toFixed(2)} da incassare`,
+          pk
+        });
+      }
+    });
+    (entrate || []).forEach(e => {
+      if (!e.data) return;
+      out.push({
+        id: `ent-${e.id}`,
+        tipo: "incasso",
+        data: e.data,
+        ora: null,
+        titolo: `${nomeP(e.portiereId) || e.note || "Seduta"}`,
+        sotto: `€${Number(e.importo || 0).toFixed(2)}${e.tipoSeduta ? " · " + e.tipoSeduta : e.fonte ? " · " + e.fonte : ""}${eDavveroPagato(e.pagato) ? "" : " · da incassare"}`,
+        ent: e
+      });
+    });
+    (eventi || []).forEach(ev => {
+      if (!ev.dataInizio) return;
+      const fine = ev.dataFine && ev.dataFine > ev.dataInizio ? ev.dataFine : ev.dataInizio;
+      for (let d = calData(ev.dataInizio), k = 0; calIso(d) <= fine && k < 60; d = calPiu(d, 1), k++) {
+        const primo = k === 0,
+          iso = calIso(d),
+          ultimo = iso === fine;
+        const ini = primo ? calMin(ev.oraInizio) : null,
+          fin = ultimo ? calMin(ev.oraFine) : null;
+        out.push({
+          id: `ev-${ev.id}-${k}`,
+          tipo: "evento",
+          data: iso,
+          ora: ini != null && fine === ev.dataInizio ? ev.oraInizio : null,
+          dur: ini != null && fin != null && fin > ini ? fin - ini : 90,
+          titolo: ev.titolo || "Evento",
+          sotto: [ev.oraInizio && primo ? ev.oraInizio : "", ev.luogo || ""].filter(Boolean).join(" · "),
+          ev
+        });
+      }
+    });
+    (certificati || []).forEach(c => {
+      if (!c.dataScadenza) return;
+      out.push({
+        id: `cert-${c.id}`,
+        tipo: "scadenza",
+        data: c.dataScadenza,
+        ora: null,
+        titolo: `Certificato ${nomeP(c.portiereId) || ""}`.trim(),
+        sotto: c.tipo ? `Scade: ${c.tipo}` : "Certificato medico in scadenza",
+        cert: c
+      });
+    });
+    const annoRif = calData(rif).getFullYear();
+    (portieri || []).forEach(p => {
+      if (!p.dataNascita) return;
+      const md = String(p.dataNascita).slice(5, 10);
+      if (md.length !== 5) return;
+      [annoRif - 1, annoRif, annoRif + 1].forEach(y => out.push({
+        id: `bd-${p.id}-${y}`,
+        tipo: "compleanno",
+        data: `${y}-${md}`,
+        ora: null,
+        titolo: `🎂 ${p.nome}`,
+        sotto: `Compie ${y - Number(String(p.dataNascita).slice(0, 4))} anni`,
+        p
+      }));
+    });
+    return out;
+  }, [pacchetti, entrate, eventi, certificati, portieri, rif, oggi]);
+  const perGiorno = useMemo(() => {
+    const m = {};
+    voci.forEach(v => {
+      if (nascosti.includes(v.tipo)) return;
+      (m[v.data] = m[v.data] || []).push(v);
+    });
+    Object.values(m).forEach(l => l.sort((a, b) => (a.ora ? 0 : -1) - (b.ora ? 0 : -1) || String(a.ora || "").localeCompare(String(b.ora || "")) || a.titolo.localeCompare(b.titolo)));
+    return m;
+  }, [voci, nascosti]);
+  const dRif = calData(rif);
+  const sposta = dir => {
+    if (vista === "mese") setRif(calIso(new Date(dRif.getFullYear(), dRif.getMonth() + dir, 1)));else if (vista === "settimana") setRif(calIso(calPiu(dRif, 7 * dir)));else if (vista === "giorno") {
+      const n = calIso(calPiu(dRif, dir));
+      setRif(n);
+      setGiornoSel(n);
+    } else setRif(calIso(calPiu(dRif, 14 * dir)));
+    setSel(null);
+  };
+  const titolo = vista === "mese" ? `${MESI[dRif.getMonth()]} ${dRif.getFullYear()}` : vista === "settimana" ? (() => {
+    const a = calLun(dRif),
+      b = calPiu(a, 6);
+    return `${a.getDate()} ${a.getMonth() !== b.getMonth() ? MESI[a.getMonth()].slice(0, 3).toLowerCase() + " " : ""}– ${b.getDate()} ${MESI[b.getMonth()].toLowerCase()} ${b.getFullYear()}`;
+  })() : vista === "giorno" ? `${CAL_GG_LUNGHI[(dRif.getDay() + 6) % 7]} ${dRif.getDate()} ${MESI[dRif.getMonth()].toLowerCase()} ${dRif.getFullYear()}` : `Dal ${dRif.getDate()} ${MESI[dRif.getMonth()].toLowerCase()}`;
+  const chip = (v, compatto) => {
+    const c = CAL_TIPI[v.tipo].col;
+    return /*#__PURE__*/React.createElement("button", {
+      key: v.id,
+      onClick: e => {
+        e.stopPropagation();
+        setSel(v);
+      },
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 5,
+        width: "100%",
+        minWidth: 0,
+        textAlign: "left",
+        border: "none",
+        cursor: "pointer",
+        borderRadius: 6,
+        padding: compatto ? "1px 5px" : "5px 8px",
+        fontSize: compatto ? 11 : 13,
+        lineHeight: 1.3,
+        color: textPrimary,
+        background: v.ora ? "transparent" : c + "26",
+        outline: sel && sel.id === v.id ? `2px solid ${c}` : "none"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 7,
+        height: 7,
+        borderRadius: "50%",
+        background: c,
+        flex: "none",
+        opacity: v.tipo === "programmata" && v.daSegnare ? 0.45 : 1
+      }
+    }), v.ora && /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: textMuted,
+        flex: "none",
+        fontVariantNumeric: "tabular-nums"
+      }
+    }, v.ora), /*#__PURE__*/React.createElement("span", {
+      style: {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        textDecoration: v.tipo === "assenza" ? "line-through" : "none"
+      }
+    }, v.titolo));
+  };
+
+  // --- vista mese ---
+  const vistaMese = () => {
+    const primo = new Date(dRif.getFullYear(), dRif.getMonth(), 1),
+      inizio = calLun(primo);
+    const celle = Array.from({
+      length: 42
+    }, (_, i) => calPiu(inizio, i));
+    const max = stretto ? 2 : 3;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(7, minmax(0,1fr))",
+        border: `1px solid ${border}`,
+        borderRadius: 14,
+        overflow: "hidden",
+        background: surface
+      }
+    }, CAL_GG.map(g => /*#__PURE__*/React.createElement("div", {
+      key: g,
+      style: {
+        padding: "8px 6px",
+        fontSize: 12,
+        fontWeight: 700,
+        color: textMuted,
+        textAlign: "right",
+        borderBottom: `1px solid ${border}`,
+        background: surface2
+      }
+    }, stretto ? g[0] : g)), celle.map(d => {
+      const iso = calIso(d),
+        fuori = d.getMonth() !== dRif.getMonth(),
+        lista = perGiorno[iso] || [],
+        isOggi = iso === oggi,
+        isSel = iso === giornoSel;
+      return /*#__PURE__*/React.createElement("div", {
+        key: iso,
+        onClick: () => setGiornoSel(iso),
+        onDoubleClick: () => {
+          setRif(iso);
+          setGiornoSel(iso);
+          setVista("giorno");
+        },
+        style: {
+          minHeight: stretto ? 64 : 112,
+          padding: 4,
+          borderRight: `1px solid ${border}`,
+          borderBottom: `1px solid ${border}`,
+          cursor: "pointer",
+          background: isSel ? goldDim : "transparent",
+          opacity: fuori ? 0.45 : 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          alignSelf: "flex-end",
+          fontSize: 13,
+          fontWeight: isOggi ? 800 : 500,
+          width: 26,
+          height: 26,
+          lineHeight: "26px",
+          textAlign: "center",
+          borderRadius: "50%",
+          background: isOggi ? coral : "transparent",
+          color: isOggi ? "#fff" : textPrimary
+        }
+      }, d.getDate()), stretto ? /*#__PURE__*/React.createElement("span", {
+        style: {
+          display: "flex",
+          gap: 3,
+          flexWrap: "wrap",
+          justifyContent: "center"
+        }
+      }, lista.slice(0, 6).map(v => /*#__PURE__*/React.createElement("span", {
+        key: v.id,
+        style: {
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          background: CAL_TIPI[v.tipo].col
+        }
+      }))) : /*#__PURE__*/React.createElement(React.Fragment, null, lista.slice(0, max).map(v => chip(v, true)), lista.length > max && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 11,
+          color: textMuted,
+          paddingLeft: 5
+        }
+      }, "+", lista.length - max, " altri")));
+    }));
+  };
+
+  // --- vista settimana / giorno (griglia oraria) ---
+  const ORA_DA = 7,
+    ORA_A = 23,
+    H = stretto ? 44 : 52;
+  const vistaOre = giorni => {
+    const colonne = giorni.map(d => {
+      const iso = calIso(d),
+        lista = perGiorno[iso] || [];
+      const tutto = lista.filter(v => !v.ora),
+        orari = lista.filter(v => v.ora).map(v => ({
+          v,
+          ini: calMin(v.ora),
+          fin: calMin(v.ora) + (v.dur || 60)
+        })).sort((a, b) => a.ini - b.ini);
+      const corsie = [];
+      orari.forEach(o => {
+        let k = corsie.findIndex(fine => fine <= o.ini);
+        if (k < 0) {
+          k = corsie.length;
+          corsie.push(0);
+        }
+        corsie[k] = o.fin;
+        o.k = k;
+      });
+      orari.forEach(o => {
+        o.n = Math.max(1, ...orari.filter(x => x.ini < o.fin && x.fin > o.ini).map(x => x.k + 1));
+      });
+      return {
+        d,
+        iso,
+        tutto,
+        orari
+      };
+    });
+    const oraAdesso = new Date(),
+      minAdesso = oraAdesso.getHours() * 60 + oraAdesso.getMinutes();
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        border: `1px solid ${border}`,
+        borderRadius: 14,
+        overflow: "hidden",
+        background: surface
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: `52px repeat(${giorni.length}, minmax(0,1fr))`,
+        background: surface2,
+        borderBottom: `1px solid ${border}`
+      }
+    }, /*#__PURE__*/React.createElement("div", null), colonne.map(c => /*#__PURE__*/React.createElement("div", {
+      key: c.iso,
+      onClick: () => {
+        setRif(c.iso);
+        setGiornoSel(c.iso);
+        setVista("giorno");
+      },
+      style: {
+        padding: "8px 4px",
+        textAlign: "center",
+        cursor: "pointer",
+        borderLeft: `1px solid ${border}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: textMuted,
+        fontWeight: 700
+      }
+    }, CAL_GG[(c.d.getDay() + 6) % 7]), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 20,
+        fontWeight: 800,
+        color: c.iso === oggi ? coral : textPrimary
+      }
+    }, c.d.getDate())))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: `52px repeat(${giorni.length}, minmax(0,1fr))`,
+        borderBottom: `1px solid ${border}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 10.5,
+        color: textMuted,
+        padding: "6px 4px",
+        textAlign: "right"
+      }
+    }, "tutto il giorno"), colonne.map(c => /*#__PURE__*/React.createElement("div", {
+      key: c.iso,
+      style: {
+        borderLeft: `1px solid ${border}`,
+        padding: 3,
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        minWidth: 0
+      }
+    }, c.tutto.map(v => chip(v, true))))), /*#__PURE__*/React.createElement("div", {
+      ref: el => {
+        if (el && el.dataset.chiave !== vista + rif) {
+          el.dataset.chiave = vista + rif;
+          const prime = colonne.flatMap(c => c.orari.map(o => o.ini));
+          const h = prime.length ? Math.min(...prime) / 60 - 1 : 14;
+          el.scrollTop = Math.max(0, (h - ORA_DA) * H);
+        }
+      },
+      style: {
+        maxHeight: stretto ? 520 : 640,
+        overflowY: "auto"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: `52px repeat(${giorni.length}, minmax(0,1fr))`,
+        position: "relative"
+      }
+    }, /*#__PURE__*/React.createElement("div", null, Array.from({
+      length: ORA_A - ORA_DA
+    }, (_, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: {
+        height: H,
+        fontSize: 11,
+        color: textMuted,
+        textAlign: "right",
+        paddingRight: 6,
+        transform: "translateY(-7px)"
+      }
+    }, i === 0 ? "" : `${String(ORA_DA + i).padStart(2, "0")}:00`))), colonne.map(c => /*#__PURE__*/React.createElement("div", {
+      key: c.iso,
+      onClick: e => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const min = ORA_DA * 60 + Math.floor((e.clientY - r.top) / H * 2) * 30;
+        setNuovo({
+          tipo: "evento",
+          data: c.iso,
+          ora: calHHMM(min),
+          fine: calHHMM(min + 60),
+          titolo: "",
+          portiereId: "",
+          importo: settings.prezzoDefaultSeduta || ""
+        });
+      },
+      style: {
+        position: "relative",
+        borderLeft: `1px solid ${border}`,
+        height: H * (ORA_A - ORA_DA),
+        cursor: "copy",
+        backgroundImage: `repeating-linear-gradient(to bottom, ${border} 0, ${border} 1px, transparent 1px, transparent ${H}px)`
+      }
+    }, c.iso === oggi && minAdesso >= ORA_DA * 60 && minAdesso < ORA_A * 60 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        top: (minAdesso - ORA_DA * 60) / 60 * H,
+        height: 2,
+        background: coral,
+        zIndex: 3
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        position: "absolute",
+        left: -4,
+        top: -4,
+        width: 10,
+        height: 10,
+        borderRadius: "50%",
+        background: coral
+      }
+    })), c.orari.map(o => {
+      const col = CAL_TIPI[o.v.tipo].col,
+        top = Math.max(0, (o.ini - ORA_DA * 60) / 60 * H),
+        alt = Math.max(22, (o.fin - o.ini) / 60 * H - 2);
+      return /*#__PURE__*/React.createElement("button", {
+        key: o.v.id,
+        onClick: e => {
+          e.stopPropagation();
+          setSel(o.v);
+        },
+        style: {
+          position: "absolute",
+          top,
+          height: alt,
+          left: `calc(${o.k / o.n * 100}% + 2px)`,
+          width: `calc(${100 / o.n}% - 4px)`,
+          background: col + "2E",
+          borderLeft: `3px solid ${col}`,
+          border: "none",
+          borderRadius: 6,
+          padding: "3px 6px",
+          textAlign: "left",
+          overflow: "hidden",
+          cursor: "pointer",
+          color: textPrimary,
+          zIndex: 2,
+          outline: sel && sel.id === o.v.id ? `2px solid ${col}` : "none",
+          opacity: o.v.daSegnare ? 0.6 : 1
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 12,
+          fontWeight: 700,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          textDecoration: o.v.tipo === "assenza" ? "line-through" : "none"
+        }
+      }, o.v.titolo), alt > 34 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: 11,
+          color: textSecondary,
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis"
+        }
+      }, o.v.ora, " · ", o.v.sotto));
+    }))))));
+  };
+
+  // --- vista elenco ---
+  const vistaElenco = () => {
+    const giorni = Array.from({
+      length: 21
+    }, (_, i) => calPiu(dRif, i)).map(d => ({
+      d,
+      iso: calIso(d),
+      lista: perGiorno[calIso(d)] || []
+    })).filter(g => g.lista.length);
+    if (!giorni.length) return /*#__PURE__*/React.createElement("div", {
+      style: cardStyle
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        color: textMuted,
+        fontSize: 14
+      }
+    }, "Niente in programma nelle prossime tre settimane."));
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 10
+      }
+    }, giorni.map(g => /*#__PURE__*/React.createElement("div", {
+      key: g.iso,
+      style: {
+        ...cardStyle,
+        padding: 12
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 6px",
+        fontSize: 14,
+        fontWeight: 800,
+        color: g.iso === oggi ? coral : textPrimary
+      }
+    }, g.iso === oggi ? "Oggi · " : "", CAL_GG_LUNGHI[(g.d.getDay() + 6) % 7], " ", g.d.getDate(), " ", MESI[g.d.getMonth()].toLowerCase()), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2
+      }
+    }, g.lista.map(v => chip(v, false))))));
+  };
+
+  // --- pannello del giorno e dettaglio ---
+  const pannelloGiorno = () => {
+    const lista = perGiorno[giornoSel] || [],
+      d = calData(giornoSel);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 2px",
+        fontSize: 12,
+        color: textMuted,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em"
+      }
+    }, giornoSel === oggi ? "Oggi" : CAL_GG_LUNGHI[(d.getDay() + 6) % 7]), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 10px",
+        fontSize: 20,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, d.getDate(), " ", MESI[d.getMonth()].toLowerCase()), lista.length === 0 ? /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13,
+        color: textMuted
+      }
+    }, "Nessun impegno.") : /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 2
+      }
+    }, lista.map(v => chip(v, false))), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setNuovo({
+        tipo: "evento",
+        data: giornoSel,
+        ora: "",
+        fine: "",
+        titolo: "",
+        portiereId: "",
+        importo: settings.prezzoDefaultSeduta || ""
+      }),
+      style: {
+        ...ghostBtn,
+        marginTop: 12,
+        width: "100%"
+      }
+    }, "+ Aggiungi in questo giorno"));
+  };
+  const dettaglio = () => {
+    if (!sel) return null;
+    const v = voci.find(x => x.id === sel.id) || sel,
+      c = CAL_TIPI[v.tipo];
+    const idxSeduta = v.pk ? (v.pk.sedute || []).indexOf(v.data) : -1;
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        borderTop: `4px solid ${c.col}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12,
+        fontWeight: 700,
+        color: c.col,
+        textTransform: "uppercase",
+        letterSpacing: "0.05em"
+      }
+    }, c.nome, v.daSegnare ? " · da segnare" : ""), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setSel(null),
+      "aria-label": "Chiudi",
+      style: {
+        background: "none",
+        border: "none",
+        color: textMuted,
+        fontSize: 18,
+        cursor: "pointer",
+        lineHeight: 1
+      }
+    }, "×")), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "6px 0 2px",
+        fontSize: 19,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, v.titolo), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 10px",
+        fontSize: 13.5,
+        color: textSecondary
+      }
+    }, formatData(v.data), v.ora ? ` · ore ${v.ora}` : "", v.sotto ? ` · ${v.sotto}` : ""), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap"
+      }
+    }, v.pk && v.tipo === "programmata" && /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        aggiungiSeduta(v.pk.id, v.data);
+      },
+      style: {
+        ...primaryBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "✓ Segna svolta"), v.pk && v.tipo === "svolta" && idxSeduta >= 0 && /*#__PURE__*/React.createElement("button", {
+      onClick: () => confirmAction("Togliere questa seduta dalle svolte?", () => rimuoviSeduta(v.pk.id, idxSeduta)),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Annulla svolta"), v.pk && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "pacchetto-dettaglio",
+        id: v.pk.id
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Apri pacchetto", v.tipo === "programmata" ? " (assenze)" : ""), v.ent && !eDavveroPagato(v.ent.pagato) && /*#__PURE__*/React.createElement("button", {
+      onClick: () => modificaEntrata(v.ent.id, {
+        pagato: true
+      }),
+      style: {
+        ...primaryBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "€ Segna incassata"), v.ent && /*#__PURE__*/React.createElement("button", {
+      onClick: () => confirmAction("Eliminare questa seduta registrata?", () => {
+        rimuoviEntrata(v.ent.id);
+        setSel(null);
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px",
+        color: coral
+      }
+    }, "Elimina"), v.ev && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "eventi"
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Apri eventi"), v.cert && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "certificati"
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Apri certificati"), (v.p || v.pk && v.pk.portiereId != null || v.ent && v.ent.portiereId != null || v.cert && v.cert.portiereId != null) && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "dettaglio",
+        id: v.p ? v.p.id : v.pk ? v.pk.portiereId : v.ent ? v.ent.portiereId : v.cert.portiereId
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Scheda portiere")));
+  };
+  const formNuovo = () => {
+    if (!nuovo) return null;
+    const f = nuovo,
+      set = p => setNuovo(x => ({
+        ...x,
+        ...p
+      }));
+    const ok = f.data && (f.tipo === "evento" ? f.titolo.trim() : f.portiereId && f.importo !== "");
+    const salva = () => {
+      if (!ok) return;
+      if (f.tipo === "evento") aggiungiEvento({
+        titolo: f.titolo.trim(),
+        tipo: "interno",
+        dataInizio: f.data,
+        oraInizio: f.ora || "",
+        dataFine: f.data,
+        oraFine: f.fine || "",
+        luogo: f.luogo || "",
+        preventivoSpesa: "",
+        preventivoIncasso: "",
+        incassoReale: "",
+        speseReale: "",
+        materialeDaPortare: "",
+        materialeDaRichiedere: "",
+        note: ""
+      });else aggiungiEntrata({
+        portiereId: Number(f.portiereId),
+        importo: Number(f.importo) || 0,
+        data: f.data,
+        note: f.titolo || "",
+        metodoPagamento: null,
+        pagato: !!f.pagato,
+        fonte: "Seduta singola",
+        tipoSeduta: "Singola esclusiva"
+      });
+      setRif(f.data);
+      setGiornoSel(f.data);
+      setNuovo(null);
+    };
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        borderTop: `4px solid ${gold}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between"
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 16,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, "Nuovo"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setNuovo(null),
+      "aria-label": "Chiudi",
+      style: {
+        background: "none",
+        border: "none",
+        color: textMuted,
+        fontSize: 18,
+        cursor: "pointer"
+      }
+    }, "×")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        margin: "10px 0"
+      }
+    }, [["evento", "Evento / appuntamento"], ["seduta", "Seduta singola"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+      key: k,
+      onClick: () => set({
+        tipo: k
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "6px 10px",
+        borderColor: f.tipo === k ? gold : undefined,
+        color: f.tipo === k ? goldSoft : undefined
+      }
+    }, l))), f.tipo === "seduta" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Portiere"), /*#__PURE__*/React.createElement(SelettorePortiere, {
+      portieri: portieri,
+      value: f.portiereId,
+      onChange: v => set({
+        portiereId: v
+      }),
+      style: {
+        marginBottom: 10
+      }
+    })), /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, f.tipo === "evento" ? "Titolo" : "Nota (facoltativa)"), /*#__PURE__*/React.createElement("input", {
+      style: {
+        ...inputStyle,
+        marginBottom: 10
+      },
+      type: "text",
+      value: f.titolo,
+      placeholder: f.tipo === "evento" ? "Es. Riunione con il socio" : "Es. Lavoro sulle uscite",
+      onChange: e => set({
+        titolo: e.target.value
+      })
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: f.tipo === "evento" ? "1.4fr 1fr 1fr" : "1.4fr 1fr",
+        gap: 8,
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Data"), /*#__PURE__*/React.createElement("input", {
+      style: inputStyle,
+      type: "date",
+      value: f.data,
+      onChange: e => set({
+        data: e.target.value
+      })
+    })), f.tipo === "evento" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Dalle"), /*#__PURE__*/React.createElement("input", {
+      style: inputStyle,
+      type: "time",
+      value: f.ora,
+      onChange: e => set({
+        ora: e.target.value
+      })
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Alle"), /*#__PURE__*/React.createElement("input", {
+      style: inputStyle,
+      type: "time",
+      value: f.fine,
+      onChange: e => set({
+        fine: e.target.value
+      })
+    }))) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Importo €"), /*#__PURE__*/React.createElement("input", {
+      style: inputStyle,
+      type: "number",
+      step: "0.01",
+      value: f.importo,
+      onChange: e => set({
+        importo: e.target.value
+      })
+    }))), f.tipo === "evento" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Luogo (facoltativo)"), /*#__PURE__*/React.createElement("input", {
+      style: {
+        ...inputStyle,
+        marginBottom: 10
+      },
+      type: "text",
+      value: f.luogo || "",
+      onChange: e => set({
+        luogo: e.target.value
+      })
+    })), f.tipo === "seduta" && /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "flex",
+        gap: 8,
+        alignItems: "center",
+        fontSize: 13,
+        color: textSecondary,
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: !!f.pagato,
+      onChange: e => set({
+        pagato: e.target.checked
+      })
+    }), " Già pagata"), /*#__PURE__*/React.createElement("button", {
+      onClick: salva,
+      disabled: !ok,
+      style: {
+        ...primaryBtn,
+        width: "100%",
+        opacity: ok ? 1 : 0.5
+      }
+    }, "Salva"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "8px 0 0",
+        fontSize: 12,
+        color: textMuted
+      }
+    }, "Le sedute dei pacchetti si programmano dalla pagina Pacchetti: qui compaiono da sole."));
+  };
+  const settimana = Array.from({
+    length: 7
+  }, (_, i) => calPiu(calLun(dRif), i));
+  const contaMese = (() => {
+    const m = dRif.getMonth(),
+      y = dRif.getFullYear();
+    let fatte = 0,
+      prog = 0,
+      inc = 0;
+    voci.forEach(v => {
+      const d = calData(v.data);
+      if (d.getMonth() !== m || d.getFullYear() !== y) return;
+      if (v.tipo === "svolta") fatte++;
+      if (v.tipo === "programmata") prog++;
+      if (v.tipo === "incasso") inc += Number(v.ent.importo) || 0;
+    });
+    return {
+      fatte,
+      prog,
+      inc
+    };
+  })();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "no-print"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setRif(oggi);
+      setGiornoSel(oggi);
+      setSel(null);
+    },
+    style: {
+      ...ghostBtn,
+      padding: "7px 14px",
+      fontSize: 14
+    }
+  }, "Oggi"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => sposta(-1),
+    "aria-label": "Precedente",
+    style: {
+      ...ghostBtn,
+      padding: "7px 13px",
+      fontSize: 16
+    }
+  }, "‹"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => sposta(1),
+    "aria-label": "Successivo",
+    style: {
+      ...ghostBtn,
+      padding: "7px 13px",
+      fontSize: 16
+    }
+  }, "›"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 6px",
+      fontSize: stretto ? 18 : 24,
+      fontWeight: 800,
+      color: textPrimary,
+      flex: "1 1 auto"
+    }
+  }, titolo), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      background: surface2,
+      border: `1px solid ${border}`,
+      borderRadius: 10,
+      padding: 3,
+      gap: 2
+    }
+  }, [["giorno", "Giorno"], ["settimana", "Settimana"], ["mese", "Mese"], ["elenco", "Elenco"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => {
+      setVista(k);
+      setSel(null);
+      if (k === "giorno") setRif(giornoSel);
+    },
+    style: {
+      border: "none",
+      borderRadius: 8,
+      padding: "6px 12px",
+      fontSize: 13,
+      fontWeight: 700,
+      cursor: "pointer",
+      background: vista === k ? surface : "transparent",
+      color: vista === k ? textPrimary : textMuted,
+      boxShadow: vista === k ? "0 1px 3px rgba(0,0,0,.25)" : "none"
+    }
+  }, l))), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setNuovo({
+      tipo: "evento",
+      data: giornoSel || oggi,
+      ora: "",
+      fine: "",
+      titolo: "",
+      portiereId: "",
+      importo: settings.prezzoDefaultSeduta || ""
+    }),
+    style: {
+      ...primaryBtn,
+      padding: "7px 14px",
+      fontSize: 14
+    }
+  }, "+ Nuovo")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap",
+      marginBottom: 12
+    }
+  }, Object.entries(CAL_TIPI).map(([k, t]) => {
+    const on = !nascosti.includes(k);
+    return /*#__PURE__*/React.createElement("button", {
+      key: k,
+      onClick: () => toggleTipo(k),
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        border: `1px solid ${border}`,
+        background: on ? surface : "transparent",
+        color: on ? textPrimary : textMuted,
+        borderRadius: 999,
+        padding: "5px 11px",
+        fontSize: 12.5,
+        cursor: "pointer",
+        opacity: on ? 1 : 0.6
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: 9,
+        height: 9,
+        borderRadius: "50%",
+        background: on ? t.col : "transparent",
+        border: `2px solid ${t.col}`
+      }
+    }), t.nome);
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: stretto ? "minmax(0,1fr)" : "minmax(0,1fr) 300px",
+      gap: 14,
+      alignItems: "start"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, vista === "mese" && vistaMese(), vista === "settimana" && vistaOre(settimana), vista === "giorno" && vistaOre([dRif]), vista === "elenco" && vistaElenco()), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+      minWidth: 0
+    }
+  }, formNuovo(), dettaglio(), vista === "mese" && pannelloGiorno(), /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 8px",
+      fontSize: 12,
+      color: textMuted,
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: "0.05em"
+    }
+  }, MESI[dRif.getMonth()], " in breve"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0",
+      fontSize: 14,
+      color: textSecondary
+    }
+  }, "Sedute svolte: ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, contaMese.fatte)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0",
+      fontSize: 14,
+      color: textSecondary
+    }
+  }, "Sedute ancora da fare: ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, contaMese.prog)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0",
+      fontSize: 14,
+      color: textSecondary
+    }
+  }, "Sedute singole: ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, "€", contaMese.inc.toFixed(0)))))));
 }
 function CalendarioSedute({
   entrate,
