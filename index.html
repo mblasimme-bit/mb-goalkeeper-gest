@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-goqgolzb2aBBQr3mDheOT/2Gbxdw/GPIaaPLiVETI6o=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-zMh2x0vLZ9681ZOsnKvM4AO2XdIbJHYZfYBeBLOoiRQ=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -16189,7 +16189,8 @@ function CalendarioCompleto({
         id: `ent-${e.id}`,
         tipo: "incasso",
         data: e.data,
-        ora: null,
+        ora: e.orario || null,
+        dur: durataStd,
         titolo: `${nomeP(e.portiereId) || e.note || "Seduta"}`,
         sotto: `€${Number(e.importo || 0).toFixed(2)}${e.tipoSeduta ? " · " + e.tipoSeduta : e.fonte ? " · " + e.fonte : ""}${eDavveroPagato(e.pagato) ? "" : " · da incassare"}`,
         ent: e
@@ -16821,7 +16822,27 @@ function CalendarioCompleto({
         fontSize: 13,
         padding: "7px 12px"
       }
-    }, "€ Segna incassata"), v.ent && /*#__PURE__*/React.createElement("button", {
+    }, "€ Segna incassata"), v.ent && /*#__PURE__*/React.createElement("label", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        fontSize: 13,
+        color: textSecondary
+      }
+    }, "Ora ", /*#__PURE__*/React.createElement("input", {
+      type: "time",
+      value: v.ent.orario || "",
+      onChange: e => modificaEntrata(v.ent.id, {
+        orario: e.target.value || null
+      }),
+      style: {
+        ...inputStyle,
+        width: 110,
+        padding: "6px 8px",
+        fontSize: 13
+      }
+    })), v.ent && /*#__PURE__*/React.createElement("button", {
       onClick: () => confirmAction("Eliminare questa seduta registrata?", () => {
         rimuoviEntrata(v.ent.id);
         setSel(null);
@@ -16891,6 +16912,7 @@ function CalendarioCompleto({
         portiereId: Number(f.portiereId),
         importo: Number(f.importo) || 0,
         data: f.data,
+        orario: f.ora || null,
         note: f.titolo || "",
         metodoPagamento: null,
         pagato: !!f.pagato,
@@ -16973,7 +16995,7 @@ function CalendarioCompleto({
     }), /*#__PURE__*/React.createElement("div", {
       style: {
         display: "grid",
-        gridTemplateColumns: f.tipo === "evento" ? "1.4fr 1fr 1fr" : "1.4fr 1fr",
+        gridTemplateColumns: "1.4fr 1fr 1fr",
         gap: 8,
         marginBottom: 10
       }
@@ -17004,7 +17026,16 @@ function CalendarioCompleto({
       onChange: e => set({
         fine: e.target.value
       })
-    }))) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    }))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: labelStyle
+    }, "Ora"), /*#__PURE__*/React.createElement("input", {
+      style: inputStyle,
+      type: "time",
+      value: f.ora,
+      onChange: e => set({
+        ora: e.target.value
+      })
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
       style: labelStyle
     }, "Importo €"), /*#__PURE__*/React.createElement("input", {
       style: inputStyle,
@@ -17014,7 +17045,7 @@ function CalendarioCompleto({
       onChange: e => set({
         importo: e.target.value
       })
-    }))), f.tipo === "evento" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+    })))), f.tipo === "evento" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
       style: labelStyle
     }, "Luogo (facoltativo)"), /*#__PURE__*/React.createElement("input", {
       style: {
