@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-9Sy7dAhCN29CBCNxdbdSBlD+DS2s8Xscy5AS1BOr6GY=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-T49oiBFHrZlJHPOYiId/Hxt7UdtNUn0hJBcgxAqdRKo=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -1072,6 +1072,45 @@ function ridimensionaImmagine(file, maxLato) {
 // Prova a indovinare a quale portiere si riferisce un testo libero (es. la nota di una vecchia
 // entrata), cercando se una parola del suo nome compare nel testo. Se trova più di un candidato
 // possibile, non si sbilancia e non suggerisce nulla (meglio niente che un suggerimento sbagliato).
+// Ricollega entrate: testo "pulito" per confrontare note e nomi (minuscolo, senza accenti, senza numeri)
+function rcNorm(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z\s]/g, " ").replace(/\s+/g, " ").trim();
+}
+// Suggerimento più furbo: conta quante parole del nome compaiono nella nota.
+// "sicuro" = nome e cognome entrambi presenti e nessun altro portiere con lo stesso punteggio.
+function rcSuggerisci(testo, portieri) {
+  const t = " " + rcNorm(testo) + " ";
+  if (t.trim().length < 3) return null;
+  let migliori = [],
+    top = 0;
+  portieri.forEach(p => {
+    const parole = rcNorm(p.nome).split(" ").filter(w => w.length > 2);
+    if (!parole.length) return;
+    const trovate = parole.filter(w => t.includes(" " + w + " ")).length;
+    if (!trovate) return;
+    const punti = trovate * 10 + (trovate === parole.length ? 5 : 0);
+    if (punti > top) {
+      top = punti;
+      migliori = [{
+        p,
+        trovate,
+        tutte: trovate === parole.length && parole.length >= 2
+      }];
+    } else if (punti === top) migliori.push({
+      p,
+      trovate,
+      tutte: trovate === parole.length && parole.length >= 2
+    });
+  });
+  if (migliori.length === 1) return {
+    p: migliori[0].p,
+    sicuro: migliori[0].tutte
+  };
+  if (migliori.length >= 2 && migliori.length <= 5) return {
+    candidati: migliori.map(m => m.p)
+  };
+  return null;
+}
 function suggerisciPortiere(testo, portieri) {
   if (!testo) return null;
   const testoLower = testo.toLowerCase();
@@ -4149,6 +4188,9 @@ function GestionalePortieri() {
   const [garaCommento, setGaraCommento] = useState({});
   const [garaCopiato, setGaraCopiato] = useState("");
   const [richiestePending, setRichiestePending] = useState([]);
+  const [rcCerca, setRcCerca] = useState("");
+  const [rcAperti, setRcAperti] = useState([]);
+  const [rcUltima, setRcUltima] = useState(null);
   const [richiesteLoading, setRichiesteLoading] = useState(false);
   const [richiesteMancante, setRichiesteMancante] = useState(false);
   const [richiesteCopiato, setRichiesteCopiato] = useState("");
@@ -4166,14 +4208,16 @@ function GestionalePortieri() {
   const [quickJustSaved, setQuickJustSaved] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const [serveMfa, setServeMfa] = useState(false);
-  const confirmAction = (message, onConfirm) => {
-    if (!settings.confirmBeforeDelete) {
+  const confirmAction = (message, onConfirm, etichetta) => {
+    // etichetta: testo del pulsante quando non si tratta di eliminare (es. "Sposta", "Collega")
+    if (!settings.confirmBeforeDelete && !etichetta) {
       onConfirm();
       return;
     }
     setConfirmDialog({
       message,
-      onConfirm
+      onConfirm,
+      etichetta
     });
   };
   const insolutiList = portieri && pacchetti && entrate ? ricavaInsoluti(pacchetti, entrate, portieri) : [];
@@ -6749,8 +6793,8 @@ function GestionalePortieri() {
     },
     style: {
       flex: 1,
-      background: coral,
-      color: "#fff",
+      background: confirmDialog.etichetta ? gold : coral,
+      color: confirmDialog.etichetta ? "#1a1a1a" : "#fff",
       border: "none",
       borderRadius: 9,
       padding: "10px 0",
@@ -6758,7 +6802,7 @@ function GestionalePortieri() {
       fontWeight: 700,
       cursor: "pointer"
     }
-  }, "Elimina"))))), document.body);
+  }, confirmDialog.etichetta || "Elimina"))))), document.body);
   const TopBar = ({
     title
   }) => /*#__PURE__*/React.createElement("div", {
@@ -8854,11 +8898,92 @@ function GestionalePortieri() {
     }, "Mancano: ", mancanti.join(", ")))));
   }
   if (view.page === "collega-entrate") {
-    const entrateOrfane = entrate.filter(e => e.portiereId === null || e.portiereId === undefined || e.portiereId === "").sort((a, b) => (b.data || "").localeCompare(a.data || ""));
+    const orfane = entrate.filter(e => (e.portiereId === null || e.portiereId === undefined || e.portiereId === "") && !e.senzaPortiere);
+    const generiche = entrate.filter(e => (e.portiereId === null || e.portiereId === undefined || e.portiereId === "") && e.senzaPortiere);
+    // raggruppo per nota "pulita": stessa nota = stesso cliente, si collega tutto insieme
+    const gruppiMap = new Map();
+    orfane.forEach(e => {
+      const k = rcNorm(e.note) || "__vuota__";
+      const g = gruppiMap.get(k) || {
+        k,
+        voci: [],
+        totale: 0
+      };
+      g.voci.push(e);
+      g.totale += Number(e.importo) || 0;
+      gruppiMap.set(k, g);
+    });
+    const gruppi = [...gruppiMap.values()].map(g => {
+      g.voci.sort((a, b) => String(a.data || "").localeCompare(String(b.data || "")));
+      const contaNote = {};
+      g.voci.forEach(e => {
+        const n = (e.note || "").trim();
+        contaNote[n] = (contaNote[n] || 0) + 1;
+      });
+      g.nota = Object.entries(contaNote).sort((a, b) => b[1] - a[1])[0][0];
+      const sg = g.k === "__vuota__" ? null : rcSuggerisci(`${g.nota} ${g.voci[0].fonte || ""}`, portieri);
+      g.sugg = sg && sg.p ? sg : null;
+      g.candidati = sg && sg.candidati ? sg.candidati : null;
+      return g;
+    }).filter(g => {
+      const q = rcNorm(rcCerca);
+      return !q || rcNorm(g.nota).includes(q) || g.sugg && rcNorm(g.sugg.p.nome).includes(q);
+    }).sort((a, b) => (b.sugg ? b.sugg.sicuro ? 2 : 1 : 0) - (a.sugg ? a.sugg.sicuro ? 2 : 1 : 0) || b.totale - a.totale);
+    const sicuri = gruppi.filter(g => g.sugg && g.sugg.sicuro);
+    const totOrfane = orfane.reduce((s, e) => s + (Number(e.importo) || 0), 0);
+    const applica = (ids, patch, descr) => {
+      const set = new Set(ids);
+      const prima = entrate.filter(e => set.has(e.id)).map(e => ({
+        id: e.id,
+        portiereId: e.portiereId ?? null,
+        senzaPortiere: !!e.senzaPortiere
+      }));
+      persist(ENTRATE_KEY, entrate.map(e => set.has(e.id) ? {
+        ...e,
+        ...(typeof patch === "function" ? patch(e) : patch)
+      } : e), setEntrate);
+      setRcUltima({
+        prima,
+        descr
+      });
+    };
+    const annulla = () => {
+      if (!rcUltima) return;
+      const m = new Map(rcUltima.prima.map(x => [x.id, x]));
+      persist(ENTRATE_KEY, entrate.map(e => {
+        const x = m.get(e.id);
+        if (!x) return e;
+        const n = {
+          ...e,
+          portiereId: x.portiereId
+        };
+        if (x.senzaPortiere) n.senzaPortiere = true;else delete n.senzaPortiere;
+        return n;
+      }), setEntrate);
+      setRcUltima(null);
+    };
+    const collegaGruppo = (g, pid) => applica(g.voci.map(e => e.id), {
+      portiereId: String(pid),
+      senzaPortiere: undefined
+    }, `${g.voci.length} ${g.voci.length === 1 ? "incasso collegato" : "incassi collegati"} a ${(portieri.find(p => String(p.id) === String(pid)) || {}).nome || "portiere"}`);
+    const generico = g => applica(g.voci.map(e => e.id), {
+      senzaPortiere: true
+    }, `${g.voci.length} ${g.voci.length === 1 ? "incasso segnato" : "incassi segnati"} come "non di un portiere"`);
+    const confermaSicuri = () => {
+      const mappa = new Map();
+      sicuri.forEach(g => g.voci.forEach(e => mappa.set(e.id, String(g.sugg.p.id))));
+      confirmAction(`Collegare ${mappa.size} incassi (${sicuri.length} gruppi) ai portieri suggeriti? Il nome e il cognome nella nota corrispondono esattamente.`, () => applica([...mappa.keys()], e => ({
+        portiereId: mappa.get(e.id)
+      }), `${mappa.size} incassi collegati in automatico`), "Collega");
+    };
+    const euroR = n => "€" + (Math.round((Number(n) || 0) * 100) / 100).toLocaleString("it-IT", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
     return /*#__PURE__*/React.createElement("div", {
       style: {
         padding: 20,
-        maxWidth: 700,
+        maxWidth: 760,
         margin: "0 auto"
       }
     }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
@@ -8871,77 +8996,247 @@ function GestionalePortieri() {
       className: "no-print",
       style: {
         ...cardStyle,
-        marginBottom: 16
+        marginBottom: 14
       }
     }, /*#__PURE__*/React.createElement("p", {
       style: {
         margin: 0,
+        fontSize: 14,
+        color: textSecondary,
+        lineHeight: 1.5
+      }
+    }, "Incassi del passato (soprattutto da ", /*#__PURE__*/React.createElement("strong", null, "Money Pro"), ") senza un portiere collegato. ", /*#__PURE__*/React.createElement("strong", null, "Nei conti ci sono già"), " (bilancio, forfettario, Analisi → Soldi); collegarli serve perché finiscano nella storia del portiere e nelle analisi dei clienti. Sono raggruppati per nota: la stessa nota si collega tutta in un colpo."), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "10px 0 0",
+        fontSize: 15,
+        fontWeight: 800,
+        color: orfane.length ? coral : "#1f9d55"
+      }
+    }, orfane.length === 0 ? "✅ Tutto collegato!" : `${orfane.length} incassi da sistemare · ${euroR(totOrfane)} · ${gruppiMap.size} gruppi`), sicuri.length > 0 && /*#__PURE__*/React.createElement("button", {
+      onClick: confermaSicuri,
+      style: {
+        ...primaryBtn,
+        width: "100%",
+        marginTop: 12
+      }
+    }, "✅ Collega i ", sicuri.reduce((s, g) => s + g.voci.length, 0), " incassi con nome e cognome sicuri (", sicuri.length, " gruppi)"), rcUltima && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 10,
+        marginTop: 12,
+        padding: "9px 12px",
+        borderRadius: 10,
+        background: surface2
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
         fontSize: 13,
         color: textSecondary
       }
-    }, "Qui trovi le entrate registrate in passato ", /*#__PURE__*/React.createElement("strong", null, "senza un portiere collegato"), " (spesso arrivate da migrazioni dati, con il nome solo nella nota). Leggi la nota e assegna il portiere giusto — una volta fatto, contano correttamente ovunque nel gestionale, inclusa la Classifica presenze."), /*#__PURE__*/React.createElement("p", {
+    }, "Fatto: ", rcUltima.descr, "."), /*#__PURE__*/React.createElement("button", {
+      onClick: annulla,
       style: {
-        margin: "8px 0 0",
+        ...ghostBtn,
         fontSize: 13,
-        fontWeight: 700,
-        color: entrateOrfane.length > 0 ? coral : "#1f9d55"
+        padding: "6px 12px"
       }
-    }, entrateOrfane.length === 0 ? "✅ Nessuna entrata orfana, tutto collegato!" : `${entrateOrfane.length} entrate da ricollegare`)), entrateOrfane.map(e => {
-      const suggerito = suggerisciPortiere(`${e.note || ""} ${e.fonte || ""}`, portieri);
+    }, "↩︎ Annulla")), orfane.length > 0 && /*#__PURE__*/React.createElement("input", {
+      style: {
+        ...inputStyle,
+        marginTop: 12
+      },
+      type: "search",
+      placeholder: "Cerca nella nota o nel nome",
+      value: rcCerca,
+      onChange: e => setRcCerca(e.target.value)
+    })), gruppi.map(g => {
+      const aperto = rcAperti.includes(g.k);
+      const da = g.voci[0].data,
+        a = g.voci[g.voci.length - 1].data;
       return /*#__PURE__*/React.createElement("div", {
-        key: e.id,
-        style: cardStyle
+        key: g.k,
+        style: {
+          ...cardStyle,
+          marginBottom: 10
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 10,
+          alignItems: "baseline",
+          flexWrap: "wrap"
+        }
       }, /*#__PURE__*/React.createElement("p", {
         style: {
           margin: 0,
-          fontSize: 15,
-          fontWeight: 600,
-          color: textPrimary
+          fontSize: 15.5,
+          fontWeight: 700,
+          color: textPrimary,
+          minWidth: 0,
+          wordBreak: "break-word"
         }
-      }, formatData(e.data), " · €", Number(e.importo || 0).toFixed(2)), /*#__PURE__*/React.createElement("p", {
+      }, g.k === "__vuota__" ? "(nessuna nota)" : g.nota), /*#__PURE__*/React.createElement("span", {
         style: {
-          margin: "4px 0 10px",
-          fontSize: 13,
-          color: textSecondary
+          fontSize: 14,
+          fontWeight: 800,
+          color: textPrimary,
+          whiteSpace: "nowrap"
         }
-      }, e.fonte ? `${e.fonte} — ` : "", e.note || "(nessuna nota)"), suggerito && /*#__PURE__*/React.createElement("button", {
-        onClick: () => modificaEntrata(e.id, {
-          portiereId: String(suggerito.id)
-        }),
+      }, euroR(g.totale))), /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: "3px 0 10px",
+          fontSize: 12.5,
+          color: textMuted
+        }
+      }, g.voci.length, " ", g.voci.length === 1 ? "incasso" : "incassi", " · ", da === a ? formatData(da) : `dal ${formatData(da)} al ${formatData(a)}`, g.voci[0].fonte ? ` · ${g.voci[0].fonte}` : ""), g.sugg && /*#__PURE__*/React.createElement("button", {
+        onClick: () => collegaGruppo(g, g.sugg.p.id),
         style: {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: 8,
           width: "100%",
           background: whatsappDim,
           border: `1px solid ${whatsapp}`,
           borderRadius: 9,
           padding: "10px 12px",
           marginBottom: 10,
-          cursor: "pointer"
+          cursor: "pointer",
+          textAlign: "left"
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 13.5,
+          color: whatsapp,
+          fontWeight: 700
+        }
+      }, "💡 ", g.sugg.sicuro ? "È" : "Forse è", " ", g.sugg.p.nome, g.sugg.p.squadra ? ` (${g.sugg.p.squadra})` : ""), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 12.5,
+          color: whatsapp,
+          fontWeight: 800,
+          whiteSpace: "nowrap"
+        }
+      }, "✅ Collega ", g.voci.length > 1 ? "tutti" : "")), g.candidati && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginBottom: 10
+        }
+      }, /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: "0 0 6px",
+          fontSize: 12.5,
+          color: textSecondary
+        }
+      }, "💡 Potrebbe essere uno di questi:"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          gap: 6,
+          flexWrap: "wrap"
+        }
+      }, g.candidati.map(p => /*#__PURE__*/React.createElement("button", {
+        key: p.id,
+        onClick: () => collegaGruppo(g, p.id),
+        style: {
+          ...ghostBtn,
+          fontSize: 13,
+          padding: "7px 11px",
+          borderColor: whatsapp,
+          color: whatsapp
+        }
+      }, p.nome, p.squadra ? ` · ${p.squadra}` : "", p.anno ? ` · ${p.anno}` : "")))), /*#__PURE__*/React.createElement("label", {
+        style: labelStyle
+      }, g.sugg || g.candidati ? "Oppure scegli un altro portiere" : "Di quale portiere sono?"), /*#__PURE__*/React.createElement(SelettorePortiere, {
+        portieri: portieri,
+        value: "",
+        onChange: v => v && collegaGruppo(g, v),
+        placeholder: "Scegli il portiere…"
+      }), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          marginTop: 10
+        }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: () => generico(g),
+        style: {
+          ...ghostBtn,
+          fontSize: 12.5,
+          padding: "6px 11px"
+        },
+        title: "Es. pagamenti di società, camp, corsi: restano nei conti ma non vengono più chiesti qui"
+      }, "Non è di un portiere"), g.voci.length > 1 && /*#__PURE__*/React.createElement("button", {
+        onClick: () => setRcAperti(x => aperto ? x.filter(k => k !== g.k) : [...x, g.k]),
+        style: {
+          ...ghostBtn,
+          fontSize: 12.5,
+          padding: "6px 11px"
+        }
+      }, aperto ? "Nascondi i singoli" : `Vedi i ${g.voci.length} singoli`)), aperto && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 10,
+          borderTop: `1px solid ${border}`,
+          paddingTop: 8
+        }
+      }, g.voci.map(e => /*#__PURE__*/React.createElement("div", {
+        key: e.id,
+        style: {
+          display: "grid",
+          gridTemplateColumns: "110px 80px 1fr",
+          gap: 8,
+          alignItems: "center",
+          padding: "5px 0"
         }
       }, /*#__PURE__*/React.createElement("span", {
         style: {
           fontSize: 13,
-          color: whatsapp,
-          fontWeight: 600
+          color: textSecondary
         }
-      }, "💡 Forse: ", suggerito.nome), /*#__PURE__*/React.createElement("span", {
+      }, formatData(e.data)), /*#__PURE__*/React.createElement("span", {
         style: {
-          fontSize: 12,
-          color: whatsapp,
+          fontSize: 13,
+          color: textPrimary,
           fontWeight: 700
         }
-      }, "✅ Conferma")), /*#__PURE__*/React.createElement("label", {
-        style: labelStyle
-      }, suggerito ? "Oppure scegli manualmente" : "Assegna al portiere"), /*#__PURE__*/React.createElement(SelettorePortiere, {
+      }, euroR(e.importo)), /*#__PURE__*/React.createElement(SelettorePortiere, {
         portieri: portieri,
-        value: e.portiereId || "",
-        onChange: v => modificaEntrata(e.id, {
-          portiereId: v
-        })
-      }));
-    }));
+        value: "",
+        onChange: v => v && applica([e.id], {
+          portiereId: String(v)
+        }, "1 incasso collegato"),
+        placeholder: "Solo questo a…"
+      })))));
+    }), generiche.length > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginTop: 16
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 4px",
+        fontSize: 14,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, "Segnati come \"non di un portiere\": ", generiche.length, " · ", euroR(generiche.reduce((s, e) => s + (Number(e.importo) || 0), 0))), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 10px",
+        fontSize: 12.5,
+        color: textMuted
+      }
+    }, "Restano nei conti. Se ti sei sbagliato, rimettili da sistemare."), /*#__PURE__*/React.createElement("button", {
+      onClick: () => applica(generiche.map(e => e.id), {
+        senzaPortiere: undefined
+      }, `${generiche.length} incassi rimessi da sistemare`),
+      style: {
+        ...ghostBtn,
+        fontSize: 12.5,
+        padding: "6px 11px"
+      }
+    }, "Rimettili tutti da sistemare")));
   }
   if (view.page === "contabilita") {
     return /*#__PURE__*/React.createElement(PaginaContabilita, {
@@ -16668,7 +16963,8 @@ function PaginaAnalisi({
         if (g) v.portiereId = g.portiereId;
       }
     });
-    const gruppo = v => v.sourceType === "pacchetto" ? "Pacchetti" : v.sourceType === "manuale" ? v.portiereId == null ? "Non collegati" : "Sedute singole" : v.sourceType === "materiale" ? "Materiale" : v.sourceType === "sponsor" ? "Sponsor" : "Eventi";
+    const generiche = new Set((entrate || []).filter(e => e.senzaPortiere).map(e => e.id));
+    const gruppo = v => v.sourceType === "pacchetto" ? "Pacchetti" : v.sourceType === "manuale" ? v.portiereId == null || v.portiereId === "" ? generiche.has(v.sourceId) ? "Altri incassi" : "Non collegati" : "Sedute singole" : v.sourceType === "materiale" ? "Materiale" : v.sourceType === "sponsor" ? "Sponsor" : "Eventi";
     incassi.forEach(v => {
       v.gruppo = gruppo(v);
     });
@@ -18605,7 +18901,7 @@ function CalendarioCompleto({
       } else {
         confirmAction(`Questo pacchetto ha un solo orario per tutte le sedute. Spostare tutte le sedute di ${v.titolo} alle ${nuovaOra}?`, () => modificaPacchetto(pk.id, {
           orario: nuovaOra
-        }));
+        }), "Sposta");
       }
     }
   };
