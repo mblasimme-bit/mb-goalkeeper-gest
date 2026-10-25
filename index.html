@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-TKyQswYd0vNiR8bl5TCGPtnnZniGLieNygs0Z/GR+bA=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-9Sy7dAhCN29CBCNxdbdSBlD+DS2s8Xscy5AS1BOr6GY=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -713,6 +713,9 @@ const THEMES = {
     "--text-primary": "#f5f5f7",
     "--text-secondary": "rgba(235,235,245,0.64)",
     "--text-muted": "rgba(235,235,245,0.4)",
+    "--viz-1": "#3987e5",
+    "--viz-2": "#d95926",
+    "--viz-3": "#199e70",
     htmlBg: "#000000"
   },
   chiaro: {
@@ -723,6 +726,9 @@ const THEMES = {
     "--text-primary": "#1d1d1f",
     "--text-secondary": "rgba(60,60,67,0.68)",
     "--text-muted": "rgba(60,60,67,0.34)",
+    "--viz-1": "#2a78d6",
+    "--viz-2": "#eb6834",
+    "--viz-3": "#1baf7a",
     htmlBg: "#f2f2f7"
   }
 };
@@ -1266,6 +1272,7 @@ const sectionLabelStyle = {
   margin: "0 0 10px"
 };
 const ICONE_MENU = {
+  "analisi": "<path d=\"M3 3v18h18\"/><path d=\"M7 15l4-4 3 3 5-6\"/>",
   "allenamento-mirato": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/>",
   "richieste": "<path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"/>",
   "gare": "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 7.5l4 3-1.5 4.8h-5L8 10.5z\"/><path d=\"M12 7.5V2.5M16 10.5l4.8-1.6M14.5 15.3l3 4.1M9.5 15.3l-3 4.1M8 10.5L3.2 8.9\"/>",
@@ -5417,6 +5424,15 @@ function GestionalePortieri() {
       setGareLoading(false);
     }
   };
+  const caricaRichiesteAnalisi = async () => {
+    if (!dbConfig) return [];
+    const url = `${dbConfig.project_url}/rest/v1/richieste_info_pending?select=creato_il,fonte,tipo,stato,nome_portiere&order=creato_il.desc&limit=5000`;
+    const res = await fetchConTimeout(url, {
+      headers: authHeaders(dbConfig, session && session.access_token)
+    });
+    if (!res.ok) throw new Error("Lettura richieste " + res.status);
+    return res.json();
+  };
   const caricaRichieste = async () => {
     if (!dbConfig) return;
     setRichiesteLoading(true);
@@ -6507,7 +6523,7 @@ function GestionalePortieri() {
       flexDirection: "column",
       overflowY: "auto"
     }
-  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
     key: gruppo,
     style: {
       marginBottom: 14
@@ -12076,6 +12092,33 @@ Matteo`;
       }
     }, "🔁 Ha ", r.recuperiDaFissare === 1 ? "1 recupero" : `${r.recuperiDaFissare} recuperi`, " da fissare (assenza giustificata).")))))));
   }
+  if (view.page === "analisi") {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        padding: 20,
+        maxWidth: 1200,
+        margin: "0 auto"
+      }
+    }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
+      title: "Analisi"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 18
+      }
+    }), /*#__PURE__*/React.createElement(PaginaAnalisi, {
+      portieri: portieri,
+      pacchetti: pacchetti,
+      entrate: entrate,
+      spese: spese,
+      guanti: guanti,
+      eventi: eventi,
+      sponsorComm: sponsorComm,
+      garePending: garePending,
+      settings: settings,
+      setView: setView,
+      caricaRichiesteAnalisi: caricaRichiesteAnalisi
+    }));
+  }
   if (view.page === "calendario") {
     return /*#__PURE__*/React.createElement("div", {
       style: {
@@ -16040,6 +16083,2099 @@ function PaginaSpese({
       fontWeight: 700
     }
   }, "⚠️ Non salvato, controlla la connessione e riprova"))));
+}
+
+// --- Analisi: tutti i numeri del gestionale in un posto solo (calcolati nel browser, sui dati già decifrati) ---
+const AN_MESI = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
+const AN_GG = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+const AN_C1 = "var(--viz-1, #3987e5)",
+  AN_C2 = "var(--viz-2, #d95926)",
+  AN_C3 = "var(--viz-3, #199e70)";
+const AN_SOGLIA = 85000,
+  AN_SOGLIA_USCITA = 100000;
+const anGiorni = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 86400000);
+const anPiuGiorni = (iso, n) => {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const anMeseLabel = ym => AN_MESI[Number(ym.slice(5, 7)) - 1] + " " + ym.slice(2, 4);
+const anUltimiMesi = (oggi, n) => {
+  const out = [];
+  let y = Number(oggi.slice(0, 4)),
+    m = Number(oggi.slice(5, 7));
+  for (let i = 0; i < n; i++) {
+    out.unshift(`${y}-${String(m).padStart(2, "0")}`);
+    m--;
+    if (m === 0) {
+      m = 12;
+      y--;
+    }
+  }
+  return out;
+};
+const anPct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const anMedia = arr => arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : null;
+const anCap = s => {
+  s = String(s || "").trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "Non indicato";
+};
+const anPulisciMetodo = m => String(m || "").replace(/^[^A-Za-zÀ-ÿ]+/, "").replace(/\s*\(.*\)$/, "").trim() || "Non indicato";
+function AnTitolo({
+  children,
+  sotto
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: "26px 0 10px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13,
+      color: goldSoft,
+      fontWeight: 800,
+      textTransform: "uppercase",
+      letterSpacing: "0.07em"
+    }
+  }, children), sotto && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0 0",
+      fontSize: 13.5,
+      color: textSecondary,
+      lineHeight: 1.45
+    }
+  }, sotto));
+}
+function AnKpi({
+  titolo,
+  valore,
+  sotto,
+  coloreSotto
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      padding: "14px 16px",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 12.5,
+      color: textMuted,
+      fontWeight: 700
+    }
+  }, titolo), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0 2px",
+      fontSize: 26,
+      fontWeight: 800,
+      color: textPrimary,
+      fontVariantNumeric: "tabular-nums",
+      lineHeight: 1.15
+    }
+  }, valore), sotto && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 12.5,
+      color: coloreSotto || textSecondary,
+      lineHeight: 1.35
+    }
+  }, sotto));
+}
+const AnGriglia = ({
+  children,
+  min
+}) => /*#__PURE__*/React.createElement("div", {
+  style: {
+    display: "grid",
+    gridTemplateColumns: `repeat(auto-fit, minmax(${min || 170}px, 1fr))`,
+    gap: 12
+  }
+}, children);
+
+// Larghezza reale del contenitore: i grafici si disegnano in pixel veri, così il testo resta leggibile anche su telefono
+function anUseLarghezza() {
+  const [w, setW] = useState(0);
+  const obs = useRef(null);
+  const ref = React.useCallback(el => {
+    if (obs.current) {
+      obs.current.disconnect();
+      obs.current = null;
+    }
+    if (!el) return;
+    const misura = () => {
+      const x = Math.round(el.getBoundingClientRect().width);
+      if (x > 0) setW(v => Math.abs(v - x) > 2 ? x : v);
+    };
+    misura();
+    if (window.ResizeObserver) {
+      obs.current = new ResizeObserver(misura);
+      obs.current.observe(el);
+    }
+  }, []);
+  return [w || 640, ref];
+}
+
+// Barre verticali (una o due serie) con legenda e dettaglio al passaggio/tocco
+function AnBarre({
+  dati,
+  serie,
+  formato,
+  altezza
+}) {
+  const [hov, setHov] = useState(null);
+  const [W, refW] = anUseLarghezza();
+  const H = altezza || 190,
+    n = dati.length;
+  const max = Math.max(1, ...dati.flatMap(d => d.valori.map(v => v || 0)));
+  const passo = (() => {
+    const p = Math.pow(10, Math.floor(Math.log10(max)));
+    const r = max / p;
+    return (r <= 2 ? 0.5 : r <= 5 ? 1 : 2) * p;
+  })();
+  const interi = dati.every(d => d.valori.every(v => Number.isInteger(v || 0)));
+  const passoOk = interi ? Math.max(1, Math.round(passo)) : passo;
+  const top = Math.ceil(max / passoOk) * passoOk;
+  const righe = [];
+  for (let v = 0; v <= top + 1e-9; v += passoOk) righe.push(v);
+  const SX = 44,
+    area = W - SX - 6,
+    larg = area / n,
+    ns = serie.length,
+    gap = 2,
+    bw = Math.max(3, Math.min(26, (larg - 8) / ns - gap));
+  const y = v => 8 + (H - 8) * (1 - v / top);
+  const sel = hov != null ? dati[hov] : null;
+  return /*#__PURE__*/React.createElement("div", {
+    ref: refW
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 14,
+      flexWrap: "wrap",
+      alignItems: "center",
+      minHeight: 22,
+      marginBottom: 6,
+      fontSize: 12.5,
+      color: textSecondary
+    }
+  }, serie.length > 1 && serie.map(s => /*#__PURE__*/React.createElement("span", {
+    key: s.nome,
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 10,
+      height: 10,
+      borderRadius: 3,
+      background: s.colore
+    }
+  }), s.nome)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      marginLeft: "auto",
+      color: sel ? textPrimary : textMuted,
+      fontWeight: sel ? 700 : 500
+    }
+  }, sel ? `${sel.etichettaLunga || sel.etichetta}: ${serie.map((s, i) => (serie.length > 1 ? s.nome + " " : "") + formato(sel.valori[i] || 0)).join(" · ")}` : "Tocca una barra per il dettaglio")), /*#__PURE__*/React.createElement("svg", {
+    viewBox: `0 0 ${W} ${H + 24}`,
+    width: W,
+    height: H + 24,
+    style: {
+      display: "block",
+      maxWidth: "100%"
+    },
+    role: "img",
+    onMouseLeave: () => setHov(null)
+  }, righe.map(v => /*#__PURE__*/React.createElement("g", {
+    key: v
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: SX,
+    x2: W,
+    y1: y(v),
+    y2: y(v),
+    style: {
+      stroke: "var(--border, rgba(255,255,255,0.1))"
+    },
+    strokeWidth: "1"
+  }), /*#__PURE__*/React.createElement("text", {
+    x: SX - 6,
+    y: y(v) + 4,
+    textAnchor: "end",
+    fontSize: "10.5",
+    style: {
+      fill: "var(--text-muted, rgba(235,235,245,0.4))"
+    }
+  }, formato(v, true)))), dati.map((d, i) => {
+    const x0 = SX + i * larg + (larg - (bw + gap) * ns + gap) / 2;
+    return /*#__PURE__*/React.createElement("g", {
+      key: i,
+      onMouseEnter: () => setHov(i),
+      onClick: () => setHov(i),
+      style: {
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("rect", {
+      x: SX + i * larg,
+      y: 0,
+      width: larg,
+      height: H,
+      fill: "transparent"
+    }), hov === i && /*#__PURE__*/React.createElement("rect", {
+      x: SX + i * larg + 1,
+      y: 4,
+      width: larg - 2,
+      height: H - 4,
+      rx: "4",
+      style: {
+        fill: "var(--surface2, rgba(255,255,255,0.065))"
+      }
+    }), d.valori.map((v, k) => {
+      const h = Math.max(0, H - y(v || 0));
+      if (!v) return null;
+      const r = Math.min(4, bw / 2, h);
+      const xx = x0 + k * (bw + gap),
+        yy = y(v);
+      return /*#__PURE__*/React.createElement("path", {
+        key: k,
+        d: `M${xx},${H} V${yy + r} Q${xx},${yy} ${xx + r},${yy} H${xx + bw - r} Q${xx + bw},${yy} ${xx + bw},${yy + r} V${H} Z`,
+        style: {
+          fill: serie[k].colore
+        }
+      });
+    }), (larg >= 26 || i % Math.ceil(26 / larg) === 0) && /*#__PURE__*/React.createElement("text", {
+      x: SX + i * larg + larg / 2,
+      y: H + 16,
+      textAnchor: "middle",
+      fontSize: "10.5",
+      style: {
+        fill: "var(--text-muted, rgba(235,235,245,0.4))"
+      }
+    }, d.etichetta));
+  })));
+}
+
+// Barre orizzontali (classifiche e composizioni)
+function AnBarreOrizz({
+  righe,
+  formato,
+  colore,
+  vuoto,
+  onRiga
+}) {
+  if (!righe.length) return /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13.5,
+      color: textMuted
+    }
+  }, vuoto || "Ancora nessun dato.");
+  const max = Math.max(1, ...righe.map(r => Math.abs(r.valore)));
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 9
+    }
+  }, righe.map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: r.chiave || r.nome + i,
+    onClick: onRiga ? () => onRiga(r) : undefined,
+    style: {
+      cursor: onRiga ? "pointer" : "default"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 10,
+      fontSize: 13.5,
+      marginBottom: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: textPrimary,
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, r.nome), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: textSecondary,
+      fontVariantNumeric: "tabular-nums",
+      whiteSpace: "nowrap"
+    }
+  }, formato(r.valore), r.nota ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: textMuted
+    }
+  }, " · ", r.nota) : null)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 8,
+      background: surface2,
+      borderRadius: 999,
+      overflow: "hidden"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: `${Math.max(2, Math.abs(r.valore) / max * 100)}%`,
+      height: "100%",
+      background: r.colore || colore || AN_C1,
+      borderRadius: 999
+    }
+  })))));
+}
+
+// Linea semplice (una serie) con punti e dettaglio al tocco
+function AnLinea({
+  punti,
+  min,
+  max,
+  formato,
+  colore,
+  altezza
+}) {
+  const [hov, setHov] = useState(null);
+  const [W, refW] = anUseLarghezza();
+  if (punti.length < 2) return /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13.5,
+      color: textMuted
+    }
+  }, "Servono almeno due valori per disegnare l'andamento.");
+  const H = altezza || 150,
+    SX = 34,
+    n = punti.length;
+  const lo = min != null ? min : Math.min(...punti.map(p => p.y)),
+    hi = max != null ? max : Math.max(...punti.map(p => p.y));
+  const span = hi - lo || 1;
+  const x = i => SX + 10 + i * (W - SX - 20) / (n - 1),
+    y = v => 10 + (H - 20) * (1 - (v - lo) / span);
+  const sel = hov != null ? punti[hov] : null;
+  const tacche = [lo, lo + span / 2, hi];
+  return /*#__PURE__*/React.createElement("div", {
+    ref: refW
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontSize: 12.5,
+      minHeight: 18,
+      color: sel ? textPrimary : textMuted,
+      fontWeight: sel ? 700 : 500,
+      textAlign: "right"
+    }
+  }, sel ? `${sel.etichetta}: ${formato(sel.y)}` : "Tocca un punto per il dettaglio"), /*#__PURE__*/React.createElement("svg", {
+    viewBox: `0 0 ${W} ${H + 20}`,
+    width: W,
+    height: H + 20,
+    style: {
+      display: "block",
+      maxWidth: "100%"
+    },
+    onMouseLeave: () => setHov(null)
+  }, tacche.map((v, i) => /*#__PURE__*/React.createElement("g", {
+    key: i
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: SX,
+    x2: W,
+    y1: y(v),
+    y2: y(v),
+    style: {
+      stroke: "var(--border, rgba(255,255,255,0.1))"
+    }
+  }), /*#__PURE__*/React.createElement("text", {
+    x: SX - 6,
+    y: y(v) + 4,
+    textAnchor: "end",
+    fontSize: "10.5",
+    style: {
+      fill: "var(--text-muted, rgba(235,235,245,0.4))"
+    }
+  }, formato(v, true)))), /*#__PURE__*/React.createElement("polyline", {
+    points: punti.map((p, i) => `${x(i)},${y(p.y)}`).join(" "),
+    fill: "none",
+    strokeWidth: "2",
+    strokeLinejoin: "round",
+    style: {
+      stroke: colore || AN_C1
+    }
+  }), punti.map((p, i) => /*#__PURE__*/React.createElement("g", {
+    key: i,
+    onMouseEnter: () => setHov(i),
+    onClick: () => setHov(i),
+    style: {
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: x(i),
+    cy: y(p.y),
+    r: "14",
+    fill: "transparent"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: x(i),
+    cy: y(p.y),
+    r: hov === i ? 6 : 4.5,
+    strokeWidth: "2",
+    style: {
+      fill: colore || AN_C1,
+      stroke: "var(--surface, #18181a)"
+    }
+  }))), /*#__PURE__*/React.createElement("text", {
+    x: x(0),
+    y: H + 16,
+    textAnchor: "start",
+    fontSize: "10.5",
+    style: {
+      fill: "var(--text-muted, rgba(235,235,245,0.4))"
+    }
+  }, punti[0].etichetta), /*#__PURE__*/React.createElement("text", {
+    x: x(n - 1),
+    y: H + 16,
+    textAnchor: "end",
+    fontSize: "10.5",
+    style: {
+      fill: "var(--text-muted, rgba(235,235,245,0.4))"
+    }
+  }, punti[n - 1].etichetta)));
+}
+function AnTabella({
+  colonne,
+  righe,
+  vuoto
+}) {
+  if (!righe.length) return /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13.5,
+      color: textMuted
+    }
+  }, vuoto || "Niente da mostrare.");
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      overflowX: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: "100%",
+      borderCollapse: "collapse",
+      fontSize: 13.5
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, colonne.map(c => /*#__PURE__*/React.createElement("th", {
+    key: c.k,
+    style: {
+      textAlign: c.num ? "right" : "left",
+      color: textMuted,
+      fontWeight: 700,
+      fontSize: 12,
+      padding: "6px 8px",
+      borderBottom: `1px solid ${border}`,
+      whiteSpace: "nowrap"
+    }
+  }, c.t)))), /*#__PURE__*/React.createElement("tbody", null, righe.map((r, i) => /*#__PURE__*/React.createElement("tr", {
+    key: r._k || i,
+    onClick: r._onClick,
+    style: {
+      cursor: r._onClick ? "pointer" : "default"
+    }
+  }, colonne.map(c => /*#__PURE__*/React.createElement("td", {
+    key: c.k,
+    style: {
+      textAlign: c.num ? "right" : "left",
+      padding: "8px",
+      borderBottom: `1px solid ${border}`,
+      color: c.k === colonne[0].k ? textPrimary : textSecondary,
+      fontVariantNumeric: "tabular-nums",
+      whiteSpace: c.wrap ? "normal" : "nowrap"
+    }
+  }, r[c.k])))))));
+}
+function PaginaAnalisi({
+  portieri,
+  pacchetti,
+  entrate,
+  spese,
+  guanti,
+  eventi,
+  sponsorComm,
+  garePending,
+  settings,
+  setView,
+  caricaRichiesteAnalisi
+}) {
+  const oggi = oggiISO();
+  const annoOggi = Number(oggi.slice(0, 4));
+  const [tab, setTab] = useState(() => {
+    try {
+      return localStorage.getItem("analisi-tab") || "soldi";
+    } catch (e) {
+      return "soldi";
+    }
+  });
+  const [anno, setAnno] = useState(annoOggi);
+  const [pSel, setPSel] = useState("");
+  const [richieste, setRichieste] = useState(null);
+  const [richiesteErr, setRichiesteErr] = useState(false);
+  const [mostraTutti, setMostraTutti] = useState(false);
+  const nascondi = !!settings.modalitaPresentazione;
+  const euro = (n, corto) => {
+    if (nascondi) return "€ •••";
+    const v = Number(n) || 0;
+    if (corto && Math.abs(v) >= 1000) return "€" + (v / 1000).toLocaleString("it-IT", {
+      maximumFractionDigits: 1
+    }) + "k";
+    return "€" + Math.round(v).toLocaleString("it-IT");
+  };
+  const num = n => Math.round(Number(n) || 0).toLocaleString("it-IT");
+  const scegliTab = t => {
+    setTab(t);
+    try {
+      localStorage.setItem("analisi-tab", t);
+    } catch (e) {}
+  };
+  const nomeP = id => {
+    const p = portieri.find(x => String(x.id) === String(id));
+    return p ? p.nome : "—";
+  };
+  const apri = id => setView({
+    page: "dettaglio",
+    id
+  });
+  useEffect(() => {
+    if (tab !== "clienti" || richieste || richiesteErr || !caricaRichiesteAnalisi) return;
+    let vivo = true;
+    caricaRichiesteAnalisi().then(r => {
+      if (vivo) setRichieste(Array.isArray(r) ? r : []);
+    }).catch(() => {
+      if (vivo) setRichiesteErr(true);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [tab]);
+
+  // ===== Basi comuni =====
+  const base = useMemo(() => {
+    const incassi = ricavaIncassi(guanti || [], pacchetti || [], entrate || [], eventi || [], sponsorComm || []);
+    const venditePerId = new Map((guanti || []).map(g => [g.id, g]));
+    incassi.forEach(v => {
+      if (v.sourceType === "materiale" && v.portiereId == null) {
+        const g = venditePerId.get(v.sourceId);
+        if (g) v.portiereId = g.portiereId;
+      }
+    });
+    const gruppo = v => v.sourceType === "pacchetto" ? "Pacchetti" : v.sourceType === "manuale" ? v.portiereId == null ? "Non collegati" : "Sedute singole" : v.sourceType === "materiale" ? "Materiale" : v.sourceType === "sponsor" ? "Sponsor" : "Eventi";
+    incassi.forEach(v => {
+      v.gruppo = gruppo(v);
+    });
+    // sedute svolte: pacchetti (date segnate) + sedute singole registrate
+    const sedute = [];
+    (pacchetti || []).forEach(pk => (pk.sedute || []).forEach(d => d && sedute.push({
+      data: d,
+      portiereId: pk.portiereId,
+      orario: pk.tipo === "speciale" ? ((pk.pianificazione || []).find(x => x.data === d) || {}).orario : pk.orario,
+      tipo: "pacchetto"
+    })));
+    (entrate || []).forEach(e => {
+      if (e.data && e.portiereId != null) sedute.push({
+        data: e.data,
+        portiereId: e.portiereId,
+        orario: e.orario || null,
+        tipo: "singola"
+      });
+    });
+    // attività per portiere
+    const att = new Map();
+    const tocca = (id, d) => {
+      if (id == null || !d || d > oggi) return;
+      const k = String(id);
+      const a = att.get(k) || {
+        prima: d,
+        ultima: d,
+        date: []
+      };
+      if (d < a.prima) a.prima = d;
+      if (d > a.ultima) a.ultima = d;
+      a.date.push(d);
+      att.set(k, a);
+    };
+    sedute.forEach(s => tocca(s.portiereId, s.data));
+    (pacchetti || []).forEach(pk => tocca(pk.portiereId, pk.dataInizio));
+    const valore = new Map();
+    incassi.forEach(v => {
+      if (v.portiereId == null) return;
+      const k = String(v.portiereId);
+      valore.set(k, (valore.get(k) || 0) + v.importo);
+    });
+    return {
+      incassi,
+      sedute,
+      att,
+      valore
+    };
+  }, [guanti, pacchetti, entrate, eventi, sponsorComm, oggi]);
+
+  // ===== SOLDI =====
+  const soldi = useMemo(() => {
+    const {
+      incassi,
+      sedute
+    } = base;
+    const anniSet = new Set([annoOggi]);
+    incassi.forEach(v => v.data && anniSet.add(Number(v.data.slice(0, 4))));
+    (spese || []).forEach(s => s.data && anniSet.add(Number(s.data.slice(0, 4))));
+    const anni = [...anniSet].filter(a => a > 2000 && a <= annoOggi).sort((a, b) => b - a);
+    const dellAnno = a => v => v.data && Number(v.data.slice(0, 4)) === a;
+    const fino = anno === annoOggi ? oggi.slice(5) : "12-31";
+    const allaData = a => v => dellAnno(a)(v) && v.data.slice(5) <= fino;
+    const somma = arr => arr.reduce((s, v) => s + (Number(v.importo) || 0), 0);
+    const inc = incassi.filter(dellAnno(anno)),
+      spe = (spese || []).filter(dellAnno(anno));
+    const incPrecPari = somma(incassi.filter(allaData(anno - 1))),
+      spePrecPari = somma((spese || []).filter(allaData(anno - 1)));
+    const totInc = somma(inc),
+      totSpe = somma(spe);
+    const mesi = AN_MESI.map((m, i) => {
+      const k = `${anno}-${String(i + 1).padStart(2, "0")}`,
+        kp = `${anno - 1}-${String(i + 1).padStart(2, "0")}`;
+      return {
+        k,
+        etichetta: m,
+        etichettaLunga: `${m} ${anno}`,
+        inc: somma(incassi.filter(v => v.data && v.data.startsWith(k))),
+        spe: somma((spese || []).filter(s => s.data && s.data.startsWith(k))),
+        incPrec: somma(incassi.filter(v => v.data && v.data.startsWith(kp))),
+        sed: sedute.filter(s => s.data.startsWith(k)).length
+      };
+    });
+    // proiezione di fine anno (solo anno in corso)
+    let proiezione = totInc;
+    const meseOggi = Number(oggi.slice(5, 7));
+    if (anno === annoOggi) {
+      const prevTotPari = incPrecPari;
+      const fattore = prevTotPari > 500 ? Math.min(2, Math.max(0.5, totInc / prevTotPari)) : null;
+      const giorniMese = new Date(annoOggi, meseOggi, 0).getDate(),
+        quota = Number(oggi.slice(8, 10)) / giorniMese;
+      const ultimi3 = mesi.slice(Math.max(0, meseOggi - 4), meseOggi - 1).map(m => m.inc);
+      const ritmo = anMedia(ultimi3) || 0;
+      for (let i = meseOggi - 1; i < 12; i++) {
+        const resto = i === meseOggi - 1 ? 1 - quota : 1;
+        const stima = fattore != null ? mesi[i].incPrec * fattore : ritmo;
+        proiezione += stima * resto;
+      }
+    }
+    const perGruppo = {};
+    inc.forEach(v => {
+      perGruppo[v.gruppo] = (perGruppo[v.gruppo] || 0) + v.importo;
+    });
+    const perCat = {};
+    spe.forEach(s => {
+      const c = anCap(s.categoria || "Altro");
+      perCat[c] = (perCat[c] || 0) + (Number(s.importo) || 0);
+    });
+    const perMetodo = {};
+    inc.forEach(v => {
+      const m = anPulisciMetodo(v.metodoPagamento);
+      perMetodo[m] = (perMetodo[m] || 0) + v.importo;
+    });
+    const sedAnno = sedute.filter(dellAnno(anno));
+    const incSedute = (perGruppo["Pacchetti"] || 0) + (perGruppo["Sedute singole"] || 0);
+    const daIncassare = (entrate || []).filter(e => eNonPagato(e.pagato)).reduce((s, e) => s + Math.max(0, (Number(e.importo) || 0) - (Number(e.acconto) || 0)), 0) + (pacchetti || []).filter(pk => eNonPagato(pk.pagato)).reduce((s, pk) => s + Math.max(0, (Number(pk.importoTotale) || 0) - (Number(pk.acconto) || 0)), 0);
+    const nonCollegati = incassi.filter(v => v.gruppo === "Non collegati"); // tutti gli anni
+    const ordina = o => Object.entries(o).map(([nome, valore]) => ({
+      nome,
+      valore
+    })).sort((a, b) => b.valore - a.valore);
+    return {
+      anni,
+      totInc,
+      totSpe,
+      incPrecPari,
+      spePrecPari,
+      mesi,
+      proiezione,
+      perGruppo: ordina(perGruppo),
+      perCat: ordina(perCat),
+      perMetodo: ordina(perMetodo),
+      sedAnno: sedAnno.length,
+      prezzoMedio: sedAnno.length ? incSedute / sedAnno.length : null,
+      daIncassare,
+      nonCollegati: {
+        n: nonCollegati.length,
+        tot: somma(nonCollegati)
+      },
+      mesiPassati: anno === annoOggi ? meseOggi : 12
+    };
+  }, [base, spese, anno, annoOggi, oggi, entrate, pacchetti]);
+
+  // ===== CLIENTI =====
+  const clienti = useMemo(() => {
+    const {
+      att,
+      valore,
+      sedute
+    } = base;
+    const righe = portieri.map(p => {
+      const a = att.get(String(p.id));
+      return a ? {
+        p,
+        ...a,
+        valore: valore.get(String(p.id)) || 0,
+        fermo: anGiorni(a.ultima, oggi)
+      } : null;
+    }).filter(Boolean);
+    const attivi = righe.filter(r => r.fermo <= 45);
+    const nuoviAnno = righe.filter(r => Number(r.prima.slice(0, 4)) === annoOggi);
+    const conValore = righe.filter(r => r.valore > 0);
+    const durata = anMedia(righe.filter(r => r.date.length > 1).map(r => anGiorni(r.prima, r.ultima) / 30.4));
+    // andamento clienti attivi e nuovi per mese (ultimi 18 mesi)
+    const mesi = anUltimiMesi(oggi, 18);
+    const andamento = mesi.map(ym => {
+      const ids = new Set(sedute.filter(s => s.data.startsWith(ym)).map(s => String(s.portiereId)));
+      const nuovi = righe.filter(r => r.prima.startsWith(ym)).length;
+      return {
+        etichetta: AN_MESI[Number(ym.slice(5, 7)) - 1],
+        etichettaLunga: anMeseLabel(ym),
+        valori: [ids.size, nuovi]
+      };
+    });
+    // futuro programmato per portiere (pacchetti con date ancora da fare)
+    const haFuturo = new Set();
+    (pacchetti || []).forEach(pk => {
+      const fatte = new Set(pk.sedute || []);
+      const date = pk.tipo === "speciale" ? (pk.pianificazione || []).map(x => x.data) : pk.datePrestabilite || [];
+      if (date.some(d => d && d >= oggi && !fatte.has(d))) haFuturo.add(String(pk.portiereId));
+    });
+    const daRichiamare = righe.filter(r => r.fermo >= 21 && r.fermo <= 150 && !haFuturo.has(String(r.p.id))).sort((a, b) => b.valore - a.valore || a.fermo - b.fermo);
+    // pacchetti quasi finiti senza rinnovo
+    const ultimoPkPer = new Map();
+    (pacchetti || []).forEach(pk => {
+      const k = String(pk.portiereId);
+      const cur = ultimoPkPer.get(k);
+      if (!cur || String(pk.dataInizio) > String(cur.dataInizio)) ultimoPkPer.set(k, pk);
+    });
+    const quasiFiniti = [...ultimoPkPer.values()].map(pk => {
+      const tot = Number(pk.numeroSedute) || (pk.pianificazione || []).length || 0;
+      const fatte = new Set(pk.sedute || []).size;
+      const date = (pk.tipo === "speciale" ? (pk.pianificazione || []).map(x => x.data) : pk.datePrestabilite || []).filter(Boolean).sort();
+      const ultimaData = date[date.length - 1] || pk.dataInizio;
+      return {
+        pk,
+        rimaste: Math.max(0, tot - fatte),
+        tot,
+        ultimaData
+      };
+    }).filter(x => x.tot > 0 && x.rimaste <= 1 && anGiorni(x.ultimaData, oggi) <= 30).sort((a, b) => String(a.ultimaData).localeCompare(String(b.ultimaData)));
+    // tasso di rinnovo: pacchetti finiti da almeno 30 giorni → nuovo pacchetto o seduta entro 45 giorni dalla fine
+    const finiti = (pacchetti || []).map(pk => {
+      const date = (pk.tipo === "speciale" ? (pk.pianificazione || []).map(x => x.data) : pk.datePrestabilite || []).filter(Boolean).sort();
+      return {
+        pk,
+        fine: date[date.length - 1] || pk.dataInizio
+      };
+    }).filter(x => x.fine && anGiorni(x.fine, oggi) >= 30);
+    const rinnovati = finiti.filter(({
+      pk,
+      fine
+    }) => {
+      const lim = anPiuGiorni(fine, 45);
+      const altroPk = (pacchetti || []).some(q => q.id !== pk.id && String(q.portiereId) === String(pk.portiereId) && q.dataInizio > String(pk.dataInizio) && q.dataInizio <= lim);
+      const singola = (entrate || []).some(e => String(e.portiereId) === String(pk.portiereId) && e.data > fine && e.data <= lim);
+      return altroPk || singola;
+    });
+    const totaleValore = conValore.reduce((s, r) => s + r.valore, 0);
+    const top = conValore.slice().sort((a, b) => b.valore - a.valore);
+    const top5 = top.slice(0, 5).reduce((s, r) => s + r.valore, 0);
+    const raggruppa = chiave => {
+      const o = {};
+      righe.forEach(r => {
+        const k = chiave(r.p);
+        if (!k) return;
+        o[k] = o[k] || {
+          nome: k,
+          clienti: 0,
+          valore: 0,
+          attivi: 0
+        };
+        o[k].clienti++;
+        o[k].valore += r.valore;
+        if (r.fermo <= 45) o[k].attivi++;
+      });
+      return Object.values(o).sort((a, b) => b.valore - a.valore);
+    };
+    return {
+      righe,
+      attivi,
+      nuoviAnno,
+      valoreMedio: conValore.length ? totaleValore / conValore.length : 0,
+      durata,
+      andamento,
+      daRichiamare,
+      quasiFiniti,
+      rinnovo: {
+        finiti: finiti.length,
+        rinnovati: rinnovati.length
+      },
+      top,
+      quota5: anPct(top5, totaleValore),
+      totaleValore,
+      perSquadra: raggruppa(p => (p.squadra || "").trim() || null),
+      perAnnata: raggruppa(p => p.anno ? String(p.anno) : null).sort((a, b) => a.nome.localeCompare(b.nome))
+    };
+  }, [base, portieri, pacchetti, entrate, oggi, annoOggi]);
+  const canali = useMemo(() => {
+    if (!richieste) return null;
+    const perFonte = {};
+    const perMese = {};
+    const mesi = anUltimiMesi(oggi, 12);
+    richieste.forEach(r => {
+      const f = anCap(r.fonte);
+      const d = String(r.creato_il || "").slice(0, 10);
+      const nome = normNome(r.nome_portiere || "");
+      const p = nome ? portieri.find(x => normNome(x.nome) === nome) : null;
+      const a = p ? base.att.get(String(p.id)) : null;
+      const cliente = !!(a && a.ultima >= d);
+      perFonte[f] = perFonte[f] || {
+        nome: f,
+        richieste: 0,
+        clienti: 0
+      };
+      perFonte[f].richieste++;
+      if (cliente) perFonte[f].clienti++;
+      const ym = d.slice(0, 7);
+      perMese[ym] = (perMese[ym] || 0) + 1;
+    });
+    const fonti = Object.values(perFonte).sort((a, b) => b.richieste - a.richieste);
+    const tot = richieste.length,
+      conv = fonti.reduce((s, f) => s + f.clienti, 0);
+    return {
+      fonti,
+      tot,
+      conv,
+      mesi: mesi.map(ym => ({
+        etichetta: AN_MESI[Number(ym.slice(5, 7)) - 1],
+        etichettaLunga: anMeseLabel(ym),
+        valori: [perMese[ym] || 0]
+      }))
+    };
+  }, [richieste, portieri, base, oggi]);
+
+  // ===== PORTIERI (tecnica) =====
+  const tecnica = useMemo(() => {
+    const tutte = portieri.map(p => ({
+      p,
+      gare: gareDelPortiere(p, garePending || [])
+    })).filter(x => x.gare.length);
+    const voto = (g, k) => {
+      const v = Number((g.voti || {})[k]);
+      return v >= 1 && v <= VOTO_MAX ? v : null;
+    };
+    // finestra di 3 mesi che finisce all'ultima valutazione (così d'estate, senza partite, non resta vuota)
+    const ultimaGara = tutte.reduce((m, x) => x.gare.reduce((mm, g) => g.data && g.data > mm && g.data <= oggi ? g.data : mm, m), "");
+    const fineFin = ultimaGara || oggi;
+    const recente = anPiuGiorni(fineFin, -90),
+      prima = anPiuGiorni(fineFin, -180);
+    const aree = AREE_GARA.map(([k, nome,, corto]) => {
+      const ora = [],
+        prec = [];
+      tutte.forEach(({
+        gare
+      }) => gare.forEach(g => {
+        const v = voto(g, k);
+        if (v == null || !g.data) return;
+        if (g.data >= recente) ora.push(v);else if (g.data >= prima) prec.push(v);
+      }));
+      const tutteV = tutte.flatMap(({
+        gare
+      }) => gare.map(g => voto(g, k)).filter(v => v != null));
+      return {
+        k,
+        nome,
+        corto,
+        ora: anMedia(ora),
+        prec: anMedia(prec),
+        sempre: anMedia(tutteV),
+        n: tutteV.length
+      };
+    });
+    const richiesteLavoro = {};
+    tutte.forEach(({
+      gare
+    }) => gare.slice(0, 3).forEach(g => (g.lavorare || []).forEach(k => {
+      richiesteLavoro[k] = (richiesteLavoro[k] || 0) + 1;
+    })));
+    const mediaGara = g => anMedia(AREE_GARA.map(([k]) => voto(g, k)).filter(v => v != null));
+    const progressi = tutte.filter(x => x.gare.length >= 4).map(({
+      p,
+      gare
+    }) => {
+      const cron = gare.slice().sort((a, b) => String(a.data).localeCompare(String(b.data)));
+      const m = cron.map(mediaGara).filter(v => v != null);
+      const iniz = anMedia(m.slice(0, 3)),
+        fin = anMedia(m.slice(-3));
+      return {
+        p,
+        n: gare.length,
+        iniz,
+        fin,
+        delta: fin - iniz
+      };
+    }).sort((a, b) => b.delta - a.delta);
+    const attiviIds = new Set(clienti.attivi.map(r => String(r.p.id)));
+    const conGaraRecente = tutte.filter(({
+      p,
+      gare
+    }) => attiviIds.has(String(p.id)) && gare.some(g => g.data >= anPiuGiorni(oggi, -30))).length;
+    return {
+      tutte,
+      aree,
+      richiesteLavoro,
+      progressi,
+      conGaraRecente,
+      attivi: attiviIds.size,
+      mediaGara,
+      ultimaGara
+    };
+  }, [portieri, garePending, oggi, clienti]);
+  const scheda = useMemo(() => {
+    if (!pSel) return null;
+    const p = portieri.find(x => String(x.id) === String(pSel));
+    if (!p) return null;
+    const gare = gareDelPortiere(p, garePending || []).slice().sort((a, b) => String(a.data).localeCompare(String(b.data)));
+    const punti = gare.map(g => ({
+      etichetta: formatData(g.data),
+      y: tecnica.mediaGara(g)
+    })).filter(x => x.y != null);
+    const aree = AREE_GARA.map(([k, nome,, corto]) => {
+      const v = gare.map(g => Number((g.voti || {})[k])).filter(x => x >= 1 && x <= VOTO_MAX);
+      return {
+        k,
+        corto,
+        nome,
+        iniz: anMedia(v.slice(0, 3)),
+        fin: anMedia(v.slice(-3)),
+        n: v.length
+      };
+    });
+    const misure = [];
+    String(p.storicoProgressi || "").split(/\n+/).forEach(riga => {
+      const md = /(\d{2})\/(\d{2})\/(\d{4})/.exec(riga);
+      if (!md) return;
+      const h = /altezza\s+(\d+(?:[.,]\d+)?)\s*cm/i.exec(riga),
+        w = /peso\s+(\d+(?:[.,]\d+)?)\s*kg/i.exec(riga);
+      if (h || w) misure.push({
+        data: `${md[3]}-${md[2]}-${md[1]}`,
+        h: h ? Number(h[1].replace(",", ".")) : null,
+        w: w ? Number(w[1].replace(",", ".")) : null
+      });
+    });
+    misure.sort((a, b) => a.data.localeCompare(b.data));
+    const sed = base.sedute.filter(s => String(s.portiereId) === String(p.id));
+    const assenze = (pacchetti || []).filter(pk => String(pk.portiereId) === String(p.id)).flatMap(pk => pk.assenze || []);
+    const a = base.att.get(String(p.id));
+    const conMin = gare.filter(g => g.minuti != null),
+      conGol = gare.filter(g => g.golSubiti != null);
+    return {
+      p,
+      gare,
+      punti,
+      aree,
+      misure,
+      sedute: sed.length,
+      assenze: assenze.length,
+      perse: assenze.filter(x => x.tipo === "persa").length,
+      valore: base.valore.get(String(p.id)) || 0,
+      prima: a ? a.prima : null,
+      ultima: a ? a.ultima : null,
+      minutiMedi: anMedia(conMin.map(g => Number(g.minuti))),
+      golMedi: anMedia(conGol.map(g => Number(g.golSubiti)))
+    };
+  }, [pSel, portieri, garePending, pacchetti, base, tecnica]);
+
+  // ===== ORGANIZZAZIONE =====
+  const org = useMemo(() => {
+    const {
+      sedute
+    } = base;
+    const fasce = ["prima delle 15", "15–16", "16–17", "17–18", "18–19", "19–20", "dalle 20"];
+    const fascia = o => {
+      const h = Number(String(o || "").slice(0, 2));
+      if (!o || isNaN(h)) return null;
+      if (h < 15) return 0;
+      if (h >= 20) return 6;
+      return h - 14;
+    };
+    const griglia = AN_GG.map(() => fasce.map(() => 0));
+    const perGiorno = AN_GG.map(() => 0);
+    let conOrario = 0;
+    const daUnAnno = anPiuGiorni(oggi, -365);
+    sedute.filter(s => s.data >= daUnAnno && s.data <= oggi).forEach(s => {
+      const g = (new Date(s.data + "T12:00:00").getDay() + 6) % 7;
+      perGiorno[g]++;
+      const f = fascia(s.orario);
+      if (f != null) {
+        griglia[g][f]++;
+        conOrario++;
+      }
+    });
+    const maxCella = Math.max(1, ...griglia.flat());
+    const confrontoMesi = AN_MESI.map((m, i) => {
+      const k = String(i + 1).padStart(2, "0");
+      return {
+        etichetta: m,
+        etichettaLunga: m,
+        valori: [annoOggi - 1, annoOggi].map(y => sedute.filter(s => s.data.startsWith(`${y}-${k}`)).length)
+      };
+    });
+    // assenze
+    const tutteAss = (pacchetti || []).flatMap(pk => (pk.assenze || []).map(a => ({
+      ...a,
+      portiereId: pk.portiereId
+    })));
+    const sedPk = sedute.filter(s => s.tipo === "pacchetto").length;
+    const perPortiereAss = {};
+    tutteAss.forEach(a => {
+      const k = String(a.portiereId);
+      perPortiereAss[k] = (perPortiereAss[k] || 0) + 1;
+    });
+    const topAss = Object.entries(perPortiereAss).map(([id, n]) => ({
+      chiave: id,
+      nome: nomeP(id),
+      valore: n
+    })).sort((a, b) => b.valore - a.valore).slice(0, 8);
+    // materiale
+    const vendite = (guanti || []).filter(g => g.tipo === "vendita");
+    const mesi12 = anUltimiMesi(oggi, 12);
+    const venditeMesi = mesi12.map(ym => ({
+      etichetta: AN_MESI[Number(ym.slice(5, 7)) - 1],
+      etichettaLunga: anMeseLabel(ym),
+      valori: [vendite.filter(g => String(g.data || "").startsWith(ym)).reduce((s, g) => s + (Number(g.importo) || 0), 0)]
+    }));
+    const perArticolo = {};
+    vendite.forEach(g => {
+      const k = (g.nome || "Senza nome").trim();
+      perArticolo[k] = perArticolo[k] || {
+        nome: k,
+        valore: 0,
+        incasso: 0
+      };
+      perArticolo[k].valore++;
+      perArticolo[k].incasso += Number(g.importo) || 0;
+    });
+    // pacchetti
+    const pkTagli = {};
+    (pacchetti || []).forEach(pk => {
+      const n = Number(pk.numeroSedute) || (pk.pianificazione || []).length;
+      if (!n) return;
+      const k = `${n} sedute`;
+      pkTagli[k] = pkTagli[k] || {
+        nome: k,
+        valore: 0,
+        n
+      };
+      pkTagli[k].valore++;
+    });
+    const prezziPk = (pacchetti || []).map(pk => {
+      const n = Number(pk.numeroSedute) || (pk.pianificazione || []).length;
+      const t = Number(pk.importoTotale) || 0;
+      return n && t ? t / n : null;
+    }).filter(v => v != null);
+    const prezziSing = (entrate || []).filter(e => e.portiereId != null && Number(e.importo) > 0 && (e.fonte === "Seduta singola" || e.tipoSeduta)).map(e => Number(e.importo));
+    const durate = (pacchetti || []).map(pk => {
+      const s = (pk.sedute || []).slice().sort();
+      const n = Number(pk.numeroSedute) || 0;
+      return n && s.length >= n && s.length > 1 ? anGiorni(s[0], s[s.length - 1]) : null;
+    }).filter(v => v != null);
+    return {
+      fasce,
+      griglia,
+      maxCella,
+      perGiorno,
+      conOrario,
+      confrontoMesi,
+      assenze: {
+        tot: tutteAss.length,
+        perse: tutteAss.filter(a => a.tipo === "persa").length,
+        recuperate: tutteAss.filter(a => a.tipo === "recuperata").length,
+        tasso: anPct(tutteAss.length, tutteAss.length + sedPk),
+        top: topAss
+      },
+      vendite: {
+        n: vendite.length,
+        tot: vendite.reduce((s, g) => s + (Number(g.importo) || 0), 0),
+        mesi: venditeMesi,
+        articoli: Object.values(perArticolo).sort((a, b) => b.valore - a.valore).slice(0, 8)
+      },
+      pk: {
+        tagli: Object.values(pkTagli).sort((a, b) => a.n - b.n),
+        prezzoPk: anMedia(prezziPk),
+        prezzoSing: anMedia(prezziSing),
+        durata: anMedia(durate)
+      }
+    };
+  }, [base, pacchetti, guanti, entrate, oggi, annoOggi, portieri]);
+
+  // ===== Interfaccia =====
+  const tabs = [["soldi", "💶 Soldi"], ["clienti", "👥 Clienti"], ["portieri", "🧤 Portieri"], ["organizzazione", "🗓️ Organizzazione"]];
+  const card = (children, extra) => /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      ...(extra || {})
+    }
+  }, children);
+  const sottotitolo = t => /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 12px",
+      fontSize: 15,
+      fontWeight: 800,
+      color: textPrimary
+    }
+  }, t);
+  const delta = (ora, prima, invertito) => {
+    if (!prima) return null;
+    const d = Math.round((ora - prima) / prima * 100);
+    const buono = invertito ? d <= 0 : d >= 0;
+    return {
+      testo: `${d >= 0 ? "▲" : "▼"} ${Math.abs(d)}% rispetto a ${anno - 1} nello stesso periodo`,
+      colore: buono ? "#1f9d55" : coral
+    };
+  };
+  const vistaSoldi = () => {
+    const s = soldi;
+    const dInc = delta(s.totInc, s.incPrecPari),
+      dSpe = delta(s.totSpe, s.spePrecPari, true);
+    const utile = s.totInc - s.totSpe;
+    const proie = anno === annoOggi ? s.proiezione : s.totInc;
+    const livello = proie >= AN_SOGLIA ? "rosso" : proie >= AN_SOGLIA * 0.8 ? "giallo" : "verde";
+    const colLiv = {
+      rosso: coral,
+      giallo: gold,
+      verde: "#1f9d55"
+    }[livello];
+    const scalaMax = Math.max(AN_SOGLIA_USCITA, proie * 1.05);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        flexWrap: "wrap",
+        marginBottom: 12
+      }
+    }, s.anni.map(a => /*#__PURE__*/React.createElement("button", {
+      key: a,
+      onClick: () => setAnno(a),
+      style: {
+        ...ghostBtn,
+        padding: "6px 14px",
+        fontSize: 13.5,
+        fontWeight: 700,
+        background: a === anno ? gold : surface,
+        borderColor: a === anno ? gold : border,
+        color: a === anno ? "#1a1a1a" : textPrimary
+      }
+    }, a))), /*#__PURE__*/React.createElement(AnGriglia, null, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: `Incassato ${anno}`,
+      valore: euro(s.totInc),
+      sotto: dInc && dInc.testo,
+      coloreSotto: dInc && dInc.colore
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: `Spese ${anno}`,
+      valore: euro(s.totSpe),
+      sotto: dSpe && dSpe.testo,
+      coloreSotto: dSpe && dSpe.colore
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Resta in tasca",
+      valore: euro(utile),
+      sotto: s.totInc ? `${anPct(utile, s.totInc)}% di quello che incassi` : null,
+      coloreSotto: utile >= 0 ? "#1f9d55" : coral
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Prezzo medio a seduta",
+      valore: s.prezzoMedio != null ? euro(s.prezzoMedio) : "—",
+      sotto: `${num(s.sedAnno)} sedute svolte nel ${anno}`
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Quanto entra e quanto esce, mese per mese."
+    }, "Incassi e spese"), card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: s.mesi.map(m => ({
+        etichetta: m.etichetta,
+        etichettaLunga: m.etichettaLunga,
+        valori: [m.inc, m.spe]
+      })),
+      serie: [{
+        nome: "Incassi",
+        colore: AN_C1
+      }, {
+        nome: "Spese",
+        colore: AN_C2
+      }],
+      formato: euro
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: `Gli incassi del ${anno} confrontati con quelli del ${anno - 1}.`
+    }, "Confronto con l'anno prima"), card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: s.mesi.map(m => ({
+        etichetta: m.etichetta,
+        etichettaLunga: m.etichetta,
+        valori: [m.incPrec, m.inc]
+      })),
+      serie: [{
+        nome: String(anno - 1),
+        colore: AN_C3
+      }, {
+        nome: String(anno),
+        colore: AN_C1
+      }],
+      formato: euro
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Regime forfettario: fino a 85.000 € di incassi l'anno. Sopra, dall'anno dopo si esce; sopra i 100.000 € si esce subito."
+    }, "Soglia del forfettario"), card(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: 8,
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 14,
+        color: textSecondary
+      }
+    }, "Incassato finora: ", /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: textPrimary
+      }
+    }, euro(s.totInc))), anno === annoOggi && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 14,
+        color: textSecondary
+      }
+    }, "Stima a fine anno: ", /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: colLiv
+      }
+    }, euro(proie)))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "relative",
+        height: 18,
+        background: surface2,
+        borderRadius: 999,
+        overflow: "hidden"
+      }
+    }, anno === annoOggi && /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: `${Math.min(100, proie / scalaMax * 100)}%`,
+        background: colLiv,
+        opacity: 0.3
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: `${Math.min(100, s.totInc / scalaMax * 100)}%`,
+        background: colLiv,
+        borderRadius: 999
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        top: -2,
+        bottom: -2,
+        left: `${AN_SOGLIA / scalaMax * 100}%`,
+        width: 2,
+        background: textPrimary
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "relative",
+        height: 18,
+        fontSize: 11.5,
+        color: textMuted
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        position: "absolute",
+        left: `${AN_SOGLIA / scalaMax * 100}%`,
+        transform: "translateX(-50%)",
+        whiteSpace: "nowrap"
+      }
+    }, "85k")), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "6px 0 0",
+        fontSize: 13.5,
+        color: textSecondary,
+        lineHeight: 1.5
+      }
+    }, livello === "verde" && `${anno === annoOggi ? "Con questo ritmo" : "Quell'anno"} resti lontano dalla soglia: margine di ${euro(AN_SOGLIA - proie)}.`, livello === "giallo" && `Attenzione: ti stai avvicinando alla soglia (mancano ${euro(AN_SOGLIA - proie)}). Parlane con il commercialista per tempo.`, livello === "rosso" && "La stima supera gli 85.000 €: confrontati subito con il commercialista su cosa fare.", " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: textMuted
+      }
+    }, "Stima indicativa basata sugli incassi registrati: per i conti ufficiali fa fede il commercialista.")))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, null, "Da dove arrivano gli incassi"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: s.perGruppo.map(g => ({
+        ...g,
+        nota: `${anPct(g.valore, s.totInc)}%`,
+        colore: g.nome === "Non collegati" ? gold : AN_C1
+      })),
+      formato: euro
+    }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, null, "Spese per categoria"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: s.perCat.slice(0, 8).map(g => ({
+        ...g,
+        nota: `${anPct(g.valore, s.totSpe)}%`
+      })),
+      formato: euro,
+      colore: AN_C2,
+      vuoto: "Nessuna spesa registrata in questo anno."
+    }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, null, "Come ti pagano"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: s.perMetodo.slice(0, 6).map(g => ({
+        ...g,
+        nota: `${anPct(g.valore, s.totInc)}%`
+      })),
+      formato: euro,
+      colore: AN_C3
+    })))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Quante sedute (pacchetti + singole) hai fatto ogni mese."
+    }, "Sedute svolte"), card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: s.mesi.map(m => ({
+        etichetta: m.etichetta,
+        etichettaLunga: m.etichettaLunga,
+        valori: [m.sed]
+      })),
+      serie: [{
+        nome: "Sedute",
+        colore: AN_C1
+      }],
+      formato: v => num(v),
+      altezza: 150
+    })), /*#__PURE__*/React.createElement(AnGriglia, {
+      min: 240
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13,
+        color: textMuted,
+        fontWeight: 700
+      }
+    }, "Ancora da incassare (tutti gli anni)"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "4px 0 8px",
+        fontSize: 24,
+        fontWeight: 800,
+        color: s.daIncassare > 0 ? gold : textPrimary
+      }
+    }, euro(s.daIncassare)), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "insoluti"
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Apri insoluti")), s.nonCollegati.n > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...cardStyle,
+        marginTop: 12
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13,
+        color: textMuted,
+        fontWeight: 700
+      }
+    }, "Incassi senza portiere (tutti gli anni)"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "4px 0 2px",
+        fontSize: 24,
+        fontWeight: 800,
+        color: gold
+      }
+    }, euro(s.nonCollegati.tot)), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 8px",
+        fontSize: 12.5,
+        color: textSecondary
+      }
+    }, s.nonCollegati.n, " voci non collegate: non contano nelle analisi dei clienti."), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "collega-entrate"
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Ricollegale"))));
+  };
+  const vistaClienti = () => {
+    const c = clienti;
+    const lista = mostraTutti ? c.daRichiamare : c.daRichiamare.slice(0, 10);
+    const tasso = anPct(c.rinnovo.rinnovati, c.rinnovo.finiti);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AnGriglia, null, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Clienti attivi",
+      valore: num(c.attivi.length),
+      sotto: "con almeno una seduta negli ultimi 45 giorni"
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: `Nuovi clienti ${annoOggi}`,
+      valore: num(c.nuoviAnno.length),
+      sotto: "prima seduta quest'anno"
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Tasso di rinnovo pacchetti",
+      valore: c.rinnovo.finiti ? `${tasso}%` : "—",
+      sotto: c.rinnovo.finiti ? `${c.rinnovo.rinnovati} su ${c.rinnovo.finiti} pacchetti finiti hanno continuato entro 45 giorni` : "Servono pacchetti già conclusi",
+      coloreSotto: tasso >= 60 ? "#1f9d55" : tasso >= 40 ? textSecondary : coral
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Valore medio di un cliente",
+      valore: euro(c.valoreMedio),
+      sotto: c.durata != null ? `resta con te in media ${c.durata.toLocaleString("it-IT", {
+        maximumFractionDigits: 1
+      })} mesi` : null
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Portieri fermi da 3 settimane a 5 mesi, senza sedute già programmate. Ordinati per quanto hanno speso con te: sono i primi da sentire."
+    }, "📞 Da richiamare"), card(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AnTabella, {
+      colonne: [{
+        k: "nome",
+        t: "Portiere"
+      }, {
+        k: "squadra",
+        t: "Squadra"
+      }, {
+        k: "ultima",
+        t: "Ultima seduta"
+      }, {
+        k: "fermo",
+        t: "Fermo da",
+        num: true
+      }, {
+        k: "valore",
+        t: "Speso in tutto",
+        num: true
+      }],
+      righe: lista.map(r => ({
+        _k: r.p.id,
+        _onClick: () => apri(r.p.id),
+        nome: r.p.nome,
+        squadra: r.p.squadra || "—",
+        ultima: formatData(r.ultima),
+        fermo: `${r.fermo} gg`,
+        valore: euro(r.valore)
+      })),
+      vuoto: "Nessuno da richiamare: tutti i clienti recenti hanno sedute in programma."
+    }), c.daRichiamare.length > 10 && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setMostraTutti(x => !x),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px",
+        marginTop: 10
+      }
+    }, mostraTutti ? "Mostra meno" : `Mostra tutti (${c.daRichiamare.length})`), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "10px 0 0",
+        fontSize: 12.5,
+        color: textMuted
+      }
+    }, "Tocca un nome per aprire la scheda."))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Ultimo pacchetto con al massimo una seduta rimasta e nessun pacchetto nuovo: è il momento di proporre il rinnovo."
+    }, "📦 Pacchetti in scadenza"), card(/*#__PURE__*/React.createElement(AnTabella, {
+      colonne: [{
+        k: "nome",
+        t: "Portiere"
+      }, {
+        k: "pk",
+        t: "Pacchetto"
+      }, {
+        k: "rimaste",
+        t: "Rimaste",
+        num: true
+      }, {
+        k: "fine",
+        t: "Ultima data",
+        num: true
+      }],
+      righe: c.quasiFiniti.map(x => ({
+        _k: x.pk.id,
+        _onClick: () => setView({
+          page: "pacchetto-dettaglio",
+          id: x.pk.id
+        }),
+        nome: nomeP(x.pk.portiereId),
+        pk: x.pk.nome || `${x.tot} sedute`,
+        rimaste: `${x.rimaste} su ${x.tot}`,
+        fine: formatData(x.ultimaData)
+      })),
+      vuoto: "Nessun pacchetto in scadenza senza rinnovo."
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Clienti con almeno una seduta nel mese, e quanti di questi erano nuovi."
+    }, "Clienti mese per mese"), card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: c.andamento,
+      serie: [{
+        nome: "Clienti attivi",
+        colore: AN_C1
+      }, {
+        nome: "Nuovi",
+        colore: AN_C3
+      }],
+      formato: v => num(v),
+      altezza: 160
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: c.top.length >= 5 ? `I primi 5 valgono il ${c.quota5}% di tutti gli incassi dei clienti${c.quota5 >= 40 ? ": dipendi molto da pochi." : "."}` : null
+    }, "I clienti più importanti"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: c.top.slice(0, 10).map(r => ({
+        chiave: r.p.id,
+        nome: r.p.nome,
+        valore: r.valore,
+        nota: `${Math.max(1, Math.round(anGiorni(r.prima, r.ultima) / 30.4))} mesi`
+      })),
+      formato: euro,
+      onRiga: r => apri(r.chiave)
+    }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Da quali squadre arrivano i tuoi clienti."
+    }, "Per squadra"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: c.perSquadra.slice(0, 10).map(g => ({
+        nome: g.nome,
+        valore: g.valore,
+        nota: `${g.clienti} ${g.clienti === 1 ? "portiere" : "portieri"}${g.attivi ? `, ${g.attivi} attivi` : ""}`
+      })),
+      formato: euro,
+      colore: AN_C3,
+      vuoto: "Squadre non indicate nelle schede."
+    })))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Quanti portieri per anno di nascita e quanto incassi da ciascuna annata."
+    }, "Per annata"), card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: c.perAnnata.map(g => ({
+        etichetta: g.nome.slice(2),
+        etichettaLunga: `Annata ${g.nome} (${g.clienti} portieri)`,
+        valori: [g.valore]
+      })),
+      serie: [{
+        nome: "Incassi",
+        colore: AN_C1
+      }],
+      formato: euro,
+      altezza: 150
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Le richieste arrivate dal modulo informazioni del sito: da quale canale e quante sono diventate clienti."
+    }, "Da dove arrivano i nuovi clienti"), card(richiesteErr ? /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13.5,
+        color: textMuted
+      }
+    }, "Non riesco a leggere le richieste adesso (sei offline?). Riprova più tardi.") : !canali ? /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13.5,
+        color: textMuted
+      }
+    }, "Carico le richieste…") : canali.tot === 0 ? /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13.5,
+        color: textMuted
+      }
+    }, "Ancora nessuna richiesta dal sito.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 12px",
+        fontSize: 14,
+        color: textSecondary
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: textPrimary
+      }
+    }, canali.tot), " richieste in tutto, ", /*#__PURE__*/React.createElement("b", {
+      style: {
+        color: textPrimary
+      }
+    }, canali.conv), " diventate clienti (", anPct(canali.conv, canali.tot), "%)."), /*#__PURE__*/React.createElement(AnTabella, {
+      colonne: [{
+        k: "nome",
+        t: "Canale"
+      }, {
+        k: "r",
+        t: "Richieste",
+        num: true
+      }, {
+        k: "c",
+        t: "Diventati clienti",
+        num: true
+      }, {
+        k: "p",
+        t: "Conversione",
+        num: true
+      }],
+      righe: canali.fonti.map(f => ({
+        _k: f.nome,
+        nome: f.nome,
+        r: f.richieste,
+        c: f.clienti,
+        p: `${anPct(f.clienti, f.richieste)}%`
+      }))
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 14
+      }
+    }), /*#__PURE__*/React.createElement(AnBarre, {
+      dati: canali.mesi,
+      serie: [{
+        nome: "Richieste",
+        colore: AN_C1
+      }],
+      formato: v => num(v),
+      altezza: 120
+    }), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "8px 0 0",
+        fontSize: 12.5,
+        color: textMuted
+      }
+    }, "\"Diventati clienti\" = c'è un portiere con lo stesso nome che ha fatto almeno una seduta dopo la richiesta."))));
+  };
+  const vistaPortieri = () => {
+    const t = tecnica;
+    const voto = v => v == null ? "—" : fmtMedia(v);
+    const lavoro = AREE_GARA.map(([k, nome]) => ({
+      nome,
+      valore: t.richiesteLavoro[k] || 0
+    })).filter(x => x.valore > 0).sort((a, b) => b.valore - a.valore);
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AnGriglia, null, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Portieri con valutazioni",
+      valore: num(t.tutte.length),
+      sotto: `${num(t.tutte.reduce((s, x) => s + x.gare.length, 0))} partite valutate in tutto`
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Hanno compilato nell'ultimo mese",
+      valore: t.attivi ? `${anPct(t.conGaraRecente, t.attivi)}%` : "—",
+      sotto: `${t.conGaraRecente} dei ${t.attivi} clienti attivi`
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: `Media dei voti di tutti i tuoi portieri, area per area (da 1 a 4): i 3 mesi fino all'ultima valutazione${t.ultimaGara ? ` (${formatData(t.ultimaGara)})` : ""}, con la differenza rispetto ai 3 mesi prima.`
+    }, "Punti forti e punti deboli del gruppo"), card(/*#__PURE__*/React.createElement(AnTabella, {
+      colonne: [{
+        k: "nome",
+        t: "Area",
+        wrap: true
+      }, {
+        k: "ora",
+        t: "Ultimi 3 mesi",
+        num: true
+      }, {
+        k: "d",
+        t: "Differenza",
+        num: true
+      }, {
+        k: "sempre",
+        t: "Da sempre",
+        num: true
+      }],
+      righe: t.aree.slice().sort((a, b) => (a.ora ?? a.sempre ?? 9) - (b.ora ?? b.sempre ?? 9)).map(a => {
+        const d = a.ora != null && a.prec != null ? a.ora - a.prec : null;
+        return {
+          _k: a.k,
+          nome: a.nome,
+          ora: voto(a.ora),
+          sempre: voto(a.sempre),
+          d: d == null ? "—" : /*#__PURE__*/React.createElement("span", {
+            style: {
+              color: Math.abs(d) < 0.05 ? textMuted : d > 0 ? "#1f9d55" : coral,
+              fontWeight: 700
+            }
+          }, d > 0 ? "▲ +" : d < 0 ? "▼ " : "", fmtMedia(d))
+        };
+      }),
+      vuoto: "Ancora nessuna valutazione di gara."
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Le aree che i portieri chiedono di allenare nelle ultime 3 partite."
+    }, "Cosa chiedono di lavorare"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: lavoro,
+      formato: v => `${v} ${v === 1 ? "volta" : "volte"}`,
+      colore: AN_C2
+    }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Chi ha almeno 4 partite valutate: media delle ultime 3 contro le prime 3."
+    }, "Chi sta migliorando di più"), card(/*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: t.progressi.slice(0, 8).map(x => ({
+        chiave: x.p.id,
+        nome: x.p.nome,
+        valore: x.delta,
+        nota: `${voto(x.iniz)} → ${voto(x.fin)}`,
+        colore: x.delta >= 0 ? AN_C3 : AN_C2
+      })),
+      formato: v => (v >= 0 ? "+" : "") + fmtMedia(v),
+      onRiga: r => setPSel(String(r.chiave)),
+      vuoto: "Servono almeno 4 partite valutate per portiere."
+    })))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Scegli un portiere: andamento delle partite, aree, crescita fisica e presenze."
+    }, "Scheda di un portiere"), card(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SelettorePortiere, {
+      portieri: portieri,
+      value: pSel,
+      onChange: v => setPSel(v),
+      placeholder: "Scegli un portiere…",
+      style: {
+        marginBottom: 12
+      }
+    }), scheda && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(AnGriglia, {
+      min: 140
+    }, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Sedute fatte",
+      valore: num(scheda.sedute),
+      sotto: scheda.prima ? `dal ${formatData(scheda.prima)}` : null
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Assenze",
+      valore: num(scheda.assenze),
+      sotto: scheda.assenze ? `${scheda.perse} perse · ${anPct(scheda.assenze, scheda.assenze + scheda.sedute)}%` : "nessuna"
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Partite valutate",
+      valore: num(scheda.gare.length),
+      sotto: scheda.minutiMedi != null ? `${Math.round(scheda.minutiMedi)}' di media · ${fmtMedia(scheda.golMedi || 0)} gol subiti` : null
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Speso in tutto",
+      valore: euro(scheda.valore)
+    })), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "16px 0 6px",
+        fontSize: 14,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, "Media voto partita per partita"), /*#__PURE__*/React.createElement(AnLinea, {
+      punti: scheda.punti,
+      min: 1,
+      max: 4,
+      formato: v => fmtMedia(v)
+    }), scheda.gare.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "16px 0 6px",
+        fontSize: 14,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, "Area per area: inizio e adesso"), /*#__PURE__*/React.createElement(AnTabella, {
+      colonne: [{
+        k: "nome",
+        t: "Area",
+        wrap: true
+      }, {
+        k: "i",
+        t: "Prime 3",
+        num: true
+      }, {
+        k: "f",
+        t: "Ultime 3",
+        num: true
+      }, {
+        k: "d",
+        t: "",
+        num: true
+      }],
+      righe: scheda.aree.filter(a => a.n).map(a => {
+        const d = a.fin - a.iniz;
+        return {
+          _k: a.k,
+          nome: a.nome,
+          i: fmtMedia(a.iniz),
+          f: fmtMedia(a.fin),
+          d: scheda.gare.length < 4 ? "" : /*#__PURE__*/React.createElement("span", {
+            style: {
+              color: Math.abs(d) < 0.05 ? textMuted : d > 0 ? "#1f9d55" : coral,
+              fontWeight: 700
+            }
+          }, Math.abs(d) < 0.05 ? "=" : d > 0 ? "▲" : "▼")
+        };
+      })
+    })), scheda.misure.length >= 2 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+        gap: 14,
+        marginTop: 16
+      }
+    }, scheda.misure.filter(m => m.h).length >= 2 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 6px",
+        fontSize: 14,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, "Altezza"), /*#__PURE__*/React.createElement(AnLinea, {
+      punti: scheda.misure.filter(m => m.h).map(m => ({
+        etichetta: formatData(m.data),
+        y: m.h
+      })),
+      formato: v => `${Math.round(v)} cm`,
+      colore: AN_C3,
+      altezza: 110
+    })), scheda.misure.filter(m => m.w).length >= 2 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 6px",
+        fontSize: 14,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, "Peso"), /*#__PURE__*/React.createElement(AnLinea, {
+      punti: scheda.misure.filter(m => m.w).map(m => ({
+        etichetta: formatData(m.data),
+        y: m.w
+      })),
+      formato: v => `${Math.round(v)} kg`,
+      colore: AN_C2,
+      altezza: 110
+    }))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => apri(scheda.p.id),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "Apri scheda portiere"), scheda.gare.length > 0 && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "allenamento-mirato",
+        id: scheda.p.id
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "7px 12px"
+      }
+    }, "🎯 Allenamento mirato"))))));
+  };
+  const vistaOrg = () => {
+    const o = org;
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: `Ultimi 12 mesi. ${o.conOrario ? `Le fasce orarie si basano sulle ${o.conOrario} sedute con l'orario segnato.` : "Segna l'orario nelle sedute per vedere anche le fasce."}`
+    }, "Quando lavori di più"), card(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AnBarre, {
+      dati: AN_GG.map((g, i) => ({
+        etichetta: g,
+        valori: [o.perGiorno[i]]
+      })),
+      serie: [{
+        nome: "Sedute",
+        colore: AN_C1
+      }],
+      formato: v => num(v),
+      altezza: 130
+    }), o.conOrario > 0 && /*#__PURE__*/React.createElement("div", {
+      style: {
+        overflowX: "auto",
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: `44px repeat(${o.fasce.length}, minmax(52px, 1fr))`,
+        gap: 3,
+        minWidth: 440
+      }
+    }, /*#__PURE__*/React.createElement("div", null), o.fasce.map(f => /*#__PURE__*/React.createElement("div", {
+      key: f,
+      style: {
+        fontSize: 11,
+        color: textMuted,
+        textAlign: "center",
+        padding: "2px 0"
+      }
+    }, f)), AN_GG.map((g, gi) => /*#__PURE__*/React.createElement(React.Fragment, {
+      key: g
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: textSecondary,
+        display: "flex",
+        alignItems: "center"
+      }
+    }, g), o.fasce.map((f, fi) => {
+      const v = o.griglia[gi][fi];
+      return /*#__PURE__*/React.createElement("div", {
+        key: f,
+        title: `${g} ${f}: ${v} sedute`,
+        style: {
+          position: "relative",
+          height: 30,
+          borderRadius: 6,
+          background: surface2,
+          overflow: "hidden"
+        }
+      }, v > 0 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: "absolute",
+          inset: 0,
+          background: AN_C1,
+          opacity: 0.18 + 0.82 * (v / o.maxCella)
+        }
+      }), /*#__PURE__*/React.createElement("span", {
+        style: {
+          position: "relative",
+          display: "flex",
+          height: "100%",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 12,
+          fontWeight: 700,
+          color: v ? textPrimary : textMuted
+        }
+      }, v || ""));
+    })))), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "8px 0 0",
+        fontSize: 12.5,
+        color: textMuted
+      }
+    }, "Più il colore è pieno, più sedute in quella fascia. Le caselle vuote sono spazi liberi da riempire.")))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: `Sedute mese per mese: ${annoOggi} contro ${annoOggi - 1}. Utile per capire i mesi pieni e quelli morti.`
+    }, "Stagionalità"), card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: o.confrontoMesi,
+      serie: [{
+        nome: String(annoOggi - 1),
+        colore: AN_C3
+      }, {
+        nome: String(annoOggi),
+        colore: AN_C1
+      }],
+      formato: v => num(v),
+      altezza: 150
+    })), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Assenze segnate nei pacchetti."
+    }, "Assenze"), /*#__PURE__*/React.createElement(AnGriglia, null, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Assenze in tutto",
+      valore: num(o.assenze.tot),
+      sotto: `${o.assenze.tasso}% delle sedute dei pacchetti`
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Recuperate",
+      valore: num(o.assenze.recuperate)
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Perse",
+      valore: num(o.assenze.perse),
+      coloreSotto: coral
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 12
+      }
+    }), card(/*#__PURE__*/React.createElement(React.Fragment, null, sottotitolo("Chi salta più spesso"), /*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: o.assenze.top,
+      formato: v => `${v} ${v === 1 ? "assenza" : "assenze"}`,
+      colore: AN_C2,
+      onRiga: r => apri(r.chiave),
+      vuoto: "Nessuna assenza registrata."
+    }))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Come sono fatti i pacchetti che vendi."
+    }, "Pacchetti"), /*#__PURE__*/React.createElement(AnGriglia, null, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Prezzo a seduta nei pacchetti",
+      valore: o.pk.prezzoPk != null ? euro(o.pk.prezzoPk) : "—",
+      sotto: o.pk.prezzoSing != null ? `contro ${euro(o.pk.prezzoSing)} della seduta singola` : null
+    }), /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Tempo per finire un pacchetto",
+      valore: o.pk.durata != null ? `${Math.round(o.pk.durata)} giorni` : "—",
+      sotto: "dalla prima all'ultima seduta"
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 12
+      }
+    }), card(/*#__PURE__*/React.createElement(React.Fragment, null, sottotitolo("Pacchetti venduti per numero di sedute"), /*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: o.pk.tagli,
+      formato: v => `${v} venduti`
+    }))), /*#__PURE__*/React.createElement(AnTitolo, {
+      sotto: "Materiale venduto negli ultimi 12 mesi."
+    }, "Materiale"), /*#__PURE__*/React.createElement(AnGriglia, null, /*#__PURE__*/React.createElement(AnKpi, {
+      titolo: "Pezzi venduti (sempre)",
+      valore: num(o.vendite.n),
+      sotto: `per ${euro(o.vendite.tot)}`
+    })), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 12
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: 12
+      }
+    }, card(/*#__PURE__*/React.createElement(AnBarre, {
+      dati: o.vendite.mesi,
+      serie: [{
+        nome: "Incasso materiale",
+        colore: AN_C3
+      }],
+      formato: euro,
+      altezza: 130
+    })), card(/*#__PURE__*/React.createElement(React.Fragment, null, sottotitolo("Articoli più venduti"), /*#__PURE__*/React.createElement(AnBarreOrizz, {
+      righe: o.vendite.articoli.map(a => ({
+        nome: a.nome,
+        valore: a.valore,
+        nota: euro(a.incasso)
+      })),
+      formato: v => `${v} pz`,
+      colore: AN_C3,
+      vuoto: "Nessuna vendita registrata."
+    })))));
+  };
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap",
+      marginBottom: 16
+    }
+  }, tabs.map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => scegliTab(k),
+    style: {
+      ...ghostBtn,
+      padding: "8px 16px",
+      fontSize: 14,
+      fontWeight: 700,
+      background: tab === k ? gold : surface,
+      color: tab === k ? "#1a1a1a" : textPrimary,
+      borderColor: tab === k ? gold : border
+    }
+  }, l))), nascondi && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 12px",
+      fontSize: 13,
+      color: textMuted
+    }
+  }, "Modalità presentazione attiva: gli importi sono nascosti."), tab === "soldi" && vistaSoldi(), tab === "clienti" && vistaClienti(), tab === "portieri" && vistaPortieri(), tab === "organizzazione" && vistaOrg(), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "26px 0 0",
+      fontSize: 12,
+      color: textMuted,
+      lineHeight: 1.5
+    }
+  }, "Tutti i numeri sono calcolati qui, sul tuo dispositivo, dai dati del gestionale: niente esce dal gestionale."));
 }
 
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
