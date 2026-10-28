@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-T49oiBFHrZlJHPOYiId/Hxt7UdtNUn0hJBcgxAqdRKo=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-zPN5IrGnBPBloFM451/Vo8vHLWYGLdLUNKWyk3a1eUE=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -23473,6 +23473,14 @@ function PaginaPacchetti({
   handlePrint,
   handleShare
 }) {
+  const [pkChiusi, setPkChiusi] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("pacchetti-gruppi-chiusi") || "[]");
+    } catch (e) {
+      return [];
+    }
+  });
+  const [pkMostraRinnovati, setPkMostraRinnovati] = useState(false);
   const rigeneraDateIniziale = (dataInizio, numeroSedute) => {
     if (!dataInizio) return [];
     const n = Math.min(10, Math.max(2, Number(numeroSedute) || 4));
@@ -24201,168 +24209,285 @@ function PaginaPacchetti({
   }, "Crea e apri"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowForm(false),
     style: ghostBtn
-  }, "Annulla"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
-      gap: 12
-    }
-  }, [...pacchetti].sort((a, b) => (b.dataInizio || "").localeCompare(a.dataInizio || "")).map(pk => {
-    const fatte = new Set(pk.sedute).size;
-    const completo = fatte >= pk.numeroSedute;
-    const daRinnovare = completo && !pk.rinnovato;
-    const rimanenti = pk.numeroSedute - fatte;
-
-    // Arancione: manca solo una seduta. Rosso: pacchetto terminato (in attesa di rinnovo)
-    const coloreRiga = daRinnovare ? {
-      bg: coralDim,
-      bd: coral
-    } : rimanenti === 1 ? {
-      bg: "rgba(245,158,11,0.12)",
-      bd: "#f59e0b"
-    } : null;
-    const perc = pk.numeroSedute ? Math.min(100, Math.round(fatte / pk.numeroSedute * 100)) : 0;
-    const coloreBarra = coloreRiga ? coloreRiga.bd : completo ? pitch : sky;
-    return /*#__PURE__*/React.createElement("div", {
-      key: pk.id,
-      style: {
-        ...cardStyle,
-        position: "relative",
-        margin: 0,
-        padding: 12,
-        aspectRatio: "1 / 1",
-        minWidth: 0,
-        display: "flex",
-        flexDirection: "column",
-        ...(coloreRiga ? {
-          background: coloreRiga.bg,
-          border: `1px solid ${coloreRiga.bd}`
-        } : {})
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => setView({
-        page: "pacchetto-dettaglio",
-        id: pk.id
-      }),
-      style: {
-        background: "none",
-        border: "none",
-        textAlign: "left",
-        cursor: "pointer",
-        padding: 0,
-        flex: 1,
-        minWidth: 0,
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        minWidth: 0
-      }
-    }, /*#__PURE__*/React.createElement("p", {
-      style: {
-        margin: 0,
-        paddingRight: 18,
-        fontSize: 13,
-        color: textPrimary,
-        fontWeight: 700,
-        lineHeight: 1.25,
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden"
-      }
-    }, pk.nome), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "2px 6px",
-        marginTop: 3
-      }
-    }, pk.tipo === "speciale" && /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 10,
-        fontWeight: 700,
-        color: lilla
-      }
-    }, "⭐ Speciale"), daRinnovare && /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 10,
-        fontWeight: 700,
-        color: pitch
-      }
-    }, "🔄 da rinnovare"), (pk.assenze || []).length > 0 && /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 10,
-        fontWeight: 700,
-        color: "#c9522f"
-      }
-    }, "🚫 ", (pk.assenze || []).length, " ass."), (pk.assenze || []).some(a => a.tipo === "recuperata" && !a.dataRecupero) && /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 10,
-        fontWeight: 700,
-        color: "#c9522f"
-      }
-    }, "🔁 recupero da fissare"), pk.note && /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 10
+  }, "Annulla"))), (() => {
+    // Tre gruppi: in corso (verde), in scadenza = manca 1 seduta (arancione), finiti (rosso)
+    const VERDE = {
+        bg: "rgba(31,157,85,0.12)",
+        bd: "#1f9d55"
       },
-      title: pk.note
-    }, "📝"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
-      style: {
-        margin: "0 0 5px",
-        fontSize: 24,
-        fontWeight: 700,
-        lineHeight: 1,
-        color: completo ? pitch : textPrimary
-      }
-    }, fatte, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 14,
-        fontWeight: 600,
-        color: textMuted
-      }
-    }, "/", pk.numeroSedute)), /*#__PURE__*/React.createElement("div", {
-      style: {
-        height: 4,
-        borderRadius: 2,
-        background: surface2
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        width: `${perc}%`,
-        height: 4,
-        borderRadius: 2,
-        background: coloreBarra
-      }
-    })), /*#__PURE__*/React.createElement("p", {
-      style: {
-        margin: "5px 0 0",
-        fontSize: 10.5,
-        color: textMuted,
-        lineHeight: 1.3
-      }
-    }, "dal ", formatData(pk.dataInizio), pk.importoTotale ? ` · €${Number(pk.importoTotale).toFixed(0)}` : ""))), /*#__PURE__*/React.createElement("button", {
-      "aria-label": "Elimina pacchetto",
-      onClick: () => {
-        confirmAction(`Eliminare il pacchetto di ${pk.nome}? L'azione non è reversibile.`, () => rimuoviPacchetto(pk.id));
+      ARANCIO = {
+        bg: "rgba(245,158,11,0.12)",
+        bd: "#f59e0b"
       },
-      style: {
-        position: "absolute",
-        top: 4,
-        right: 4,
-        background: "none",
-        border: "none",
-        color: textMuted,
-        fontSize: 18,
-        cursor: "pointer",
-        padding: "2px 6px",
-        lineHeight: 1
-      }
-    }, "×"));
-  })), pacchetti.length === 0 && /*#__PURE__*/React.createElement("p", {
+      ROSSO = {
+        bg: coralDim,
+        bd: coral
+      };
+    const info = pk => {
+      const fatte = new Set(pk.sedute || []).size,
+        tot = Number(pk.numeroSedute) || 0;
+      const completo = tot > 0 && fatte >= tot;
+      return {
+        pk,
+        fatte,
+        tot,
+        completo,
+        rimanenti: tot - fatte,
+        daRinnovare: completo && !pk.rinnovato
+      };
+    };
+    const tutti = [...pacchetti].sort((a, b) => (b.dataInizio || "").localeCompare(a.dataInizio || "")).map(info);
+    const inCorso = tutti.filter(x => !x.completo && x.rimanenti !== 1);
+    const inScadenza = tutti.filter(x => !x.completo && x.rimanenti === 1);
+    const finiti = tutti.filter(x => x.completo).sort((a, b) => (b.daRinnovare ? 1 : 0) - (a.daRinnovare ? 1 : 0));
+    const finitiDaRinnovare = finiti.filter(x => x.daRinnovare),
+      finitiRinnovati = finiti.filter(x => !x.daRinnovare);
+    const card = ({
+      pk,
+      fatte,
+      tot,
+      completo,
+      daRinnovare
+    }, colore) => {
+      const perc = tot ? Math.min(100, Math.round(fatte / tot * 100)) : 0;
+      const tenue = completo && !daRinnovare; // finito e già rinnovato: resta rosso ma più leggero
+      return /*#__PURE__*/React.createElement("div", {
+        key: pk.id,
+        style: {
+          ...cardStyle,
+          position: "relative",
+          margin: 0,
+          padding: 12,
+          aspectRatio: "1 / 1",
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          background: colore.bg,
+          border: `1px solid ${colore.bd}`,
+          opacity: tenue ? 0.6 : 1
+        }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: () => setView({
+          page: "pacchetto-dettaglio",
+          id: pk.id
+        }),
+        style: {
+          background: "none",
+          border: "none",
+          textAlign: "left",
+          cursor: "pointer",
+          padding: 0,
+          flex: 1,
+          minWidth: 0,
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between"
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          minWidth: 0
+        }
+      }, /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0,
+          paddingRight: 18,
+          fontSize: 13,
+          color: textPrimary,
+          fontWeight: 700,
+          lineHeight: 1.25,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden"
+        }
+      }, pk.nome), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "2px 6px",
+          marginTop: 3
+        }
+      }, pk.tipo === "speciale" && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10,
+          fontWeight: 700,
+          color: lilla
+        }
+      }, "⭐ Speciale"), daRinnovare && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10,
+          fontWeight: 700,
+          color: coral
+        }
+      }, "🔄 da rinnovare"), completo && !daRinnovare && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10,
+          fontWeight: 700,
+          color: textMuted
+        }
+      }, "✓ rinnovato"), (pk.assenze || []).length > 0 && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10,
+          fontWeight: 700,
+          color: "#c9522f"
+        }
+      }, "🚫 ", (pk.assenze || []).length, " ass."), (pk.assenze || []).some(a => a.tipo === "recuperata" && !a.dataRecupero) && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10,
+          fontWeight: 700,
+          color: "#c9522f"
+        }
+      }, "🔁 recupero da fissare"), pk.note && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 10
+        },
+        title: pk.note
+      }, "📝"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: "0 0 5px",
+          fontSize: 24,
+          fontWeight: 700,
+          lineHeight: 1,
+          color: textPrimary
+        }
+      }, fatte, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 14,
+          fontWeight: 600,
+          color: textMuted
+        }
+      }, "/", pk.numeroSedute)), /*#__PURE__*/React.createElement("div", {
+        style: {
+          height: 4,
+          borderRadius: 2,
+          background: surface2
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          width: `${perc}%`,
+          height: 4,
+          borderRadius: 2,
+          background: colore.bd
+        }
+      })), /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: "5px 0 0",
+          fontSize: 10.5,
+          color: textMuted,
+          lineHeight: 1.3
+        }
+      }, "dal ", formatData(pk.dataInizio), pk.importoTotale ? ` · €${Number(pk.importoTotale).toFixed(0)}` : ""))), /*#__PURE__*/React.createElement("button", {
+        "aria-label": "Elimina pacchetto",
+        onClick: () => {
+          confirmAction(`Eliminare il pacchetto di ${pk.nome}? L'azione non è reversibile.`, () => rimuoviPacchetto(pk.id));
+        },
+        style: {
+          position: "absolute",
+          top: 4,
+          right: 4,
+          background: "none",
+          border: "none",
+          color: textMuted,
+          fontSize: 18,
+          cursor: "pointer",
+          padding: "2px 6px",
+          lineHeight: 1
+        }
+      }, "×"));
+    };
+    const gruppo = (chiave, titolo, spiegazione, colore, lista, extra) => {
+      const chiuso = pkChiusi.includes(chiave);
+      return /*#__PURE__*/React.createElement("div", {
+        key: chiave,
+        style: {
+          marginBottom: 22
+        }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: () => setPkChiusi(x => {
+          const v = chiuso ? x.filter(k => k !== chiave) : [...x, chiave];
+          try {
+            localStorage.setItem("pacchetti-gruppi-chiusi", JSON.stringify(v));
+          } catch (e) {}
+          return v;
+        }),
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          width: "100%",
+          background: "none",
+          border: "none",
+          padding: "4px 0 10px",
+          cursor: "pointer",
+          textAlign: "left"
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: 12,
+          height: 12,
+          borderRadius: "50%",
+          background: colore.bd,
+          flex: "none"
+        }
+      }), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 16,
+          fontWeight: 800,
+          color: textPrimary
+        }
+      }, titolo), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 13,
+          fontWeight: 800,
+          color: colore.bd,
+          background: colore.bg,
+          borderRadius: 999,
+          padding: "2px 10px"
+        }
+      }, lista.length + (extra ? extra.length : 0)), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 12.5,
+          color: textMuted,
+          flex: 1,
+          minWidth: 0
+        }
+      }, spiegazione), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 13,
+          color: textMuted
+        }
+      }, chiuso ? "▸" : "▾")), !chiuso && /*#__PURE__*/React.createElement(React.Fragment, null, lista.length > 0 ? /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+          gap: 12
+        }
+      }, lista.map(x => card(x, colore))) : !(extra && extra.length) && /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: 0,
+          fontSize: 13.5,
+          color: textMuted
+        }
+      }, "Nessuno."), extra && extra.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+        onClick: () => setPkMostraRinnovati(v => !v),
+        style: {
+          ...ghostBtn,
+          fontSize: 13,
+          padding: "7px 12px",
+          marginTop: lista.length ? 12 : 0
+        }
+      }, pkMostraRinnovati ? "Nascondi i pacchetti già rinnovati" : `Mostra anche i ${extra.length} già rinnovati`), pkMostraRinnovati && /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))",
+          gap: 12,
+          marginTop: 12
+        }
+      }, extra.map(x => card(x, colore))))));
+    };
+    return pacchetti.length === 0 ? null : /*#__PURE__*/React.createElement(React.Fragment, null, gruppo("corso", "In corso", "più di una seduta da fare", VERDE, inCorso), gruppo("scadenza", "In scadenza", "manca l'ultima seduta", ARANCIO, inScadenza), gruppo("finiti", "Finiti", finitiDaRinnovare.length ? "prima quelli da rinnovare" : "tutte le sedute fatte", ROSSO, finitiDaRinnovare, finitiRinnovati));
+  })(), pacchetti.length === 0 && /*#__PURE__*/React.createElement("p", {
     style: {
       textAlign: "center",
       color: textSecondary,
