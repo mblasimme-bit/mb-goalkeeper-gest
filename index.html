@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-wfvnY58bAwFZm2lFE9cq3Fl8585BXRabQgJrDqI9iuU=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-XMDMW4EydhK3pAfRaOmoXIuFuTtnfN07LD2viKpYECA=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -1323,6 +1323,7 @@ const sectionLabelStyle = {
   margin: "0 0 10px"
 };
 const ICONE_MENU = {
+  "messaggio-inattivi": "<path d=\"M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5z\"/><path d=\"M9 11h.01M12 11h.01M15 11h.01\"/>",
   "analisi": "<path d=\"M3 3v18h18\"/><path d=\"M7 15l4-4 3 3 5-6\"/>",
   "allenamento-mirato": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/>",
   "richieste": "<path d=\"M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z\"/>",
@@ -6707,7 +6708,7 @@ function GestionalePortieri() {
       flexDirection: "column",
       overflowY: "auto"
     }
-  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["messaggio-inattivi", "👋 Scrivi agli inattivi", whatsapp, whatsappDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
     key: gruppo,
     style: {
       marginBottom: 14
@@ -10050,6 +10051,20 @@ function GestionalePortieri() {
         textAlign: "center"
       }
     }, "\"Condividi / Salva immagine\" crea la schermata come foto: dal telefono la mandi su WhatsApp a chi vuoi, dal computer viene scaricata."));
+  }
+  if (view.page === "messaggio-inattivi") {
+    return /*#__PURE__*/React.createElement(PaginaMessaggioInattivi, {
+      portieri: portieri,
+      pacchetti: pacchetti,
+      entrate: entrate,
+      settings: settings,
+      updateSettings: updateSettings,
+      updatePortiere: updatePortiere,
+      setView: setView,
+      Menu: Menu,
+      TopBar: TopBar,
+      printStyle: printStyle
+    });
   }
   if (view.page === "ricevuta") {
     const r = view.datiRicevuta || {};
@@ -18106,13 +18121,36 @@ function PaginaAnalisi({
         padding: "7px 12px",
         marginTop: 10
       }
-    }, mostraTutti ? "Mostra meno" : `Mostra tutti (${c.daRichiamare.length})`), /*#__PURE__*/React.createElement("p", {
+    }, mostraTutti ? "Mostra meno" : `Mostra tutti (${c.daRichiamare.length})`), /*#__PURE__*/React.createElement("div", {
       style: {
-        margin: "10px 0 0",
-        fontSize: 12.5,
-        color: textMuted
+        display: "flex",
+        gap: 10,
+        alignItems: "center",
+        flexWrap: "wrap",
+        marginTop: 10
       }
-    }, "Tocca un nome per aprire la scheda."))), /*#__PURE__*/React.createElement(AnTitolo, {
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12.5,
+        color: textMuted,
+        flex: 1
+      }
+    }, "Tocca un nome per aprire la scheda."), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "messaggio-inattivi"
+      }),
+      style: {
+        background: "rgba(31,157,85,0.12)",
+        color: "#1f9d55",
+        border: "1px solid #1f9d55",
+        borderRadius: 9,
+        padding: "7px 12px",
+        fontSize: 13,
+        fontWeight: 800,
+        cursor: "pointer"
+      }
+    }, "👋 Scrivi a chi è fermo")))), /*#__PURE__*/React.createElement(AnTitolo, {
       sotto: "Ultimo pacchetto con al massimo una seduta rimasta e nessun pacchetto nuovo: è il momento di proporre il rinnovo."
     }, "📦 Pacchetti in scadenza"), card(/*#__PURE__*/React.createElement(AnTabella, {
       colonne: [{
@@ -19807,6 +19845,477 @@ function SegretarioCard({
       cursor: "pointer"
     }
   }, "Apri il calendario →")));
+}
+
+// --- Messaggio ai portieri inattivi: scegli chi, il testo si personalizza col nome, un tocco apre WhatsApp ---
+// Tre toni, a seconda della confidenza con la famiglia (testi modificabili, salvati nelle impostazioni)
+const TONI_INATTIVI = [["formale", "🤝 Formale", "Buongiorno, sono Matteo Blasimme, il preparatore dei portieri.\nVolevo sapere come sta {nome} e come sta andando la sua stagione.\nUn cordiale saluto."], ["cordiale", "🙂 Cordiale", "Ciao! Sono Matteo 🧤\nVolevo sapere come sta {nome} e come sta andando la stagione. Spero tutto bene in squadra!\nUn saluto a tutti ⚽"], ["amico", "😄 Confidenziale", "Ehi, come state? 😊\nChe mi racconta {nome}? Come sta andando con la squadra?\nUn abbraccio a tutti! 🧤⚽"]];
+const MSG_INATTIVI_DEFAULT = TONI_INATTIVI[1][2];
+function telWa(tel) {
+  let d = String(tel || "").replace(/[^\d]/g, "");
+  if (!d) return "";
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.length >= 9 && d.length <= 10 && d.startsWith("3")) d = "39" + d; // cellulare italiano senza prefisso
+  return d;
+}
+function apriWhatsappA(tel, testo) {
+  const a = document.createElement("a");
+  a.href = `https://wa.me/${telWa(tel)}?text=${encodeURIComponent(testo)}`;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+const nomeCapitalizzato = n => String(n || "").trim().toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+function PaginaMessaggioInattivi({
+  portieri,
+  pacchetti,
+  entrate,
+  settings,
+  updateSettings,
+  updatePortiere,
+  setView,
+  Menu,
+  TopBar,
+  printStyle
+}) {
+  const oggi = oggiISO();
+  const testiSalvati = settings.messaggiInattivi || {};
+  const testoTono = t => testiSalvati[t] ?? (t === "cordiale" ? settings.messaggioInattivi : undefined) ?? (TONI_INATTIVI.find(x => x[0] === t) || TONI_INATTIVI[1])[2];
+  const [tonoModifica, setTonoModifica] = useState("cordiale");
+  const [toni, setToni] = useState({}); // tono scelto al volo per portiere
+  const [personalizzati, setPersonalizzati] = useState({}); // testo ritoccato per un singolo invio
+  const [minGg, setMinGg] = useState(30);
+  const [maxGg, setMaxGg] = useState(365);
+  const [nascondiScritti, setNascondiScritti] = useState(true);
+  const [nomi, setNomi] = useState({}); // nome da usare nel messaggio, modificato al volo
+
+  const giorni = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 86400000);
+  const elenco = useMemo(() => {
+    const ultima = new Map(),
+      futuro = new Set();
+    const tocca = (id, d) => {
+      if (id == null || id === "" || !d || d > oggi) return;
+      const k = String(id);
+      if (!ultima.has(k) || d > ultima.get(k)) ultima.set(k, d);
+    };
+    (pacchetti || []).forEach(pk => {
+      (pk.sedute || []).forEach(d => tocca(pk.portiereId, d));
+      tocca(pk.portiereId, pk.dataInizio);
+      const fatte = new Set(pk.sedute || []);
+      const date = pk.tipo === "speciale" ? (pk.pianificazione || []).map(x => x.data) : pk.datePrestabilite || [];
+      if (date.some(d => d && d >= oggi && !fatte.has(d))) futuro.add(String(pk.portiereId));
+    });
+    (entrate || []).forEach(e => {
+      tocca(e.portiereId, e.data);
+      if (e.portiereId != null && e.data > oggi) futuro.add(String(e.portiereId));
+    });
+    return portieri.map(p => {
+      const u = ultima.get(String(p.id));
+      return u ? {
+        p,
+        ultima: u,
+        fermo: giorni(u, oggi)
+      } : null;
+    }).filter(x => x && !futuro.has(String(x.p.id)) && x.fermo >= minGg && x.fermo <= maxGg).map(x => ({
+      ...x,
+      scrittoIl: x.p.ultimoMessaggioInattivi || null
+    })).filter(x => !nascondiScritti || !x.scrittoIl || x.scrittoIl === oggi || giorni(x.scrittoIl, oggi) > 30).sort((a, b) => a.fermo - b.fermo);
+  }, [portieri, pacchetti, entrate, oggi, minGg, maxGg, nascondiScritti]);
+  const nomeDi = p => nomi[p.id] ?? p.nomeMessaggio ?? nomeCapitalizzato(p.nome);
+  const tonoDi = p => toni[p.id] || p.tonoMessaggio || "cordiale";
+  const messaggioPer = p => personalizzati[p.id] ?? testoTono(tonoDi(p)).split("{nome}").join(nomeDi(p));
+  const salvaTesto = (t, v) => updateSettings({
+    messaggiInattivi: {
+      ...testiSalvati,
+      [t]: v
+    }
+  });
+  const testo = testoTono(tonoModifica);
+  const scrivi = x => {
+    apriWhatsappA(x.p.telefono, messaggioPer(x.p));
+    const patch = {
+      ultimoMessaggioInattivi: oggi
+    };
+    const n = nomi[x.p.id];
+    if (n != null && n.trim() && n.trim() !== nomeCapitalizzato(x.p.nome)) patch.nomeMessaggio = n.trim(); // la prossima volta lo ricorda
+    if (toni[x.p.id]) patch.tonoMessaggio = toni[x.p.id]; // e si ricorda anche il tono scelto per questa famiglia
+    updatePortiere(x.p.id, patch);
+  };
+  const daScrivere = elenco.filter(x => x.p.telefono && x.scrittoIl !== oggi);
+  const prossimo = daScrivere[0];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 20,
+      maxWidth: 760,
+      margin: "0 auto"
+    }
+  }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
+    title: "Messaggio ai portieri inattivi"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 18
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      ...cardStyle,
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 8px",
+      fontSize: 14,
+      color: textSecondary,
+      lineHeight: 1.5
+    }
+  }, "Il messaggio è uguale per tutti: al posto di ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, "{nome}"), " il gestionale mette il nome di ogni ragazzo. Tocca ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, "💬 Scrivi"), ": si apre WhatsApp con il messaggio pronto per quel genitore, tu premi solo invia."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 8px",
+      fontSize: 13.5,
+      color: textSecondary
+    }
+  }, "Hai tre versioni, a seconda della confidenza con la famiglia. Scegli quale modificare:"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap",
+      marginBottom: 8
+    }
+  }, TONI_INATTIVI.map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => setTonoModifica(k),
+    style: {
+      ...ghostBtn,
+      fontSize: 13,
+      padding: "6px 12px",
+      borderColor: tonoModifica === k ? whatsapp : undefined,
+      color: tonoModifica === k ? whatsapp : undefined,
+      background: tonoModifica === k ? whatsappDim : undefined,
+      fontWeight: 700
+    }
+  }, l))), /*#__PURE__*/React.createElement("textarea", {
+    style: {
+      ...inputStyle,
+      minHeight: 100,
+      fontFamily: "inherit",
+      resize: "vertical"
+    },
+    value: testo,
+    onChange: e => salvaTesto(tonoModifica, e.target.value)
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      flexWrap: "wrap",
+      marginTop: 8
+    }
+  }, !testo.includes("{nome}") && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12.5,
+      color: coral
+    }
+  }, "Manca ", "{nome}", ": il messaggio non sarà personalizzato."), testo !== (TONI_INATTIVI.find(x => x[0] === tonoModifica) || [])[2] && /*#__PURE__*/React.createElement("button", {
+    onClick: () => salvaTesto(tonoModifica, (TONI_INATTIVI.find(x => x[0] === tonoModifica) || [])[2]),
+    style: {
+      ...ghostBtn,
+      fontSize: 12.5,
+      padding: "5px 10px"
+    }
+  }, "Ripristina il testo iniziale"))), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      ...cardStyle,
+      marginBottom: 14,
+      display: "flex",
+      gap: 10,
+      flexWrap: "wrap",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      color: textSecondary
+    }
+  }, "Fermi da"), /*#__PURE__*/React.createElement("select", {
+    value: minGg,
+    onChange: e => setMinGg(Number(e.target.value)),
+    style: {
+      ...inputStyle,
+      width: "auto",
+      padding: "6px 8px"
+    }
+  }, [[21, "3 settimane"], [30, "1 mese"], [60, "2 mesi"], [90, "3 mesi"]].map(([v, l]) => /*#__PURE__*/React.createElement("option", {
+    key: v,
+    value: v
+  }, l))), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 14,
+      color: textSecondary
+    }
+  }, "fino a"), /*#__PURE__*/React.createElement("select", {
+    value: maxGg,
+    onChange: e => setMaxGg(Number(e.target.value)),
+    style: {
+      ...inputStyle,
+      width: "auto",
+      padding: "6px 8px"
+    }
+  }, [[90, "3 mesi"], [180, "6 mesi"], [365, "1 anno"], [100000, "sempre"]].map(([v, l]) => /*#__PURE__*/React.createElement("option", {
+    key: v,
+    value: v
+  }, l))), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      fontSize: 13.5,
+      color: textSecondary,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: nascondiScritti,
+    onChange: e => setNascondiScritti(e.target.checked)
+  }), " nascondi chi ho già scritto nell'ultimo mese")), prossimo && /*#__PURE__*/React.createElement("button", {
+    className: "no-print",
+    onClick: () => scrivi(prossimo),
+    style: {
+      width: "100%",
+      marginBottom: 14,
+      background: whatsapp,
+      color: "#fff",
+      border: "none",
+      borderRadius: 12,
+      padding: "14px 16px",
+      fontSize: 15.5,
+      fontWeight: 800,
+      cursor: "pointer"
+    }
+  }, "💬 Scrivi al prossimo: ", nomeDi(prossimo.p), " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: 600,
+      opacity: 0.85
+    }
+  }, "(", daScrivere.length, " da scrivere)")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 10px",
+      fontSize: 14,
+      color: textSecondary
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, elenco.length), " ", elenco.length === 1 ? "portiere" : "portieri", " senza sedute da ", minGg, " giorni in su e senza sedute in programma."), elenco.length === 0 && /*#__PURE__*/React.createElement("div", {
+    style: cardStyle
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      color: textMuted,
+      fontSize: 14
+    }
+  }, "Nessuno da sentire con questi filtri. 👍")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, elenco.map(x => {
+    const fatto = x.scrittoIl === oggi;
+    return /*#__PURE__*/React.createElement("div", {
+      key: x.p.id,
+      style: {
+        ...cardStyle,
+        padding: "12px 14px",
+        opacity: fatto ? 0.6 : 1
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 10,
+        alignItems: "center",
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        minWidth: 0,
+        flex: "1 1 220px"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "dettaglio",
+        id: x.p.id
+      }),
+      style: {
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        fontSize: 15,
+        fontWeight: 800,
+        color: textPrimary,
+        textAlign: "left"
+      }
+    }, x.p.nome), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "2px 0 0",
+        fontSize: 12.5,
+        color: textMuted
+      }
+    }, x.p.squadra ? `${x.p.squadra} · ` : "", "ultima seduta ", formatData(x.ultima), " (", x.fermo, " giorni fa)", x.scrittoIl && !fatto ? ` · scritto il ${formatData(x.scrittoIl)}` : "")), fatto ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        fontWeight: 800,
+        color: whatsapp
+      }
+    }, "✓ scritto oggi") : x.p.telefono ? /*#__PURE__*/React.createElement("button", {
+      onClick: () => scrivi(x),
+      style: {
+        background: whatsappDim,
+        color: whatsapp,
+        border: `1px solid ${whatsapp}`,
+        borderRadius: 9,
+        padding: "8px 14px",
+        fontSize: 13.5,
+        fontWeight: 800,
+        cursor: "pointer"
+      }
+    }, "💬 Scrivi") : /*#__PURE__*/React.createElement("button", {
+      onClick: () => setView({
+        page: "dettaglio",
+        id: x.p.id
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 12.5,
+        padding: "6px 10px",
+        color: coral,
+        borderColor: coral
+      }
+    }, "Manca il telefono")), !fatto && x.p.telefono && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        alignItems: "center",
+        marginTop: 8,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("select", {
+      value: tonoDi(x.p),
+      onChange: e => {
+        const v = e.target.value;
+        setToni(m => ({
+          ...m,
+          [x.p.id]: v
+        }));
+        setPersonalizzati(m => {
+          const n = {
+            ...m
+          };
+          delete n[x.p.id];
+          return n;
+        });
+      },
+      "aria-label": "Tono del messaggio",
+      style: {
+        ...inputStyle,
+        width: "auto",
+        padding: "6px 8px",
+        fontSize: 13
+      }
+    }, TONI_INATTIVI.map(([k, l]) => /*#__PURE__*/React.createElement("option", {
+      key: k,
+      value: k
+    }, l))), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12.5,
+        color: textMuted,
+        whiteSpace: "nowrap"
+      }
+    }, "Nome:"), /*#__PURE__*/React.createElement("input", {
+      style: {
+        ...inputStyle,
+        padding: "6px 9px",
+        fontSize: 13.5,
+        flex: "1 1 140px",
+        width: "auto"
+      },
+      value: nomeDi(x.p),
+      onChange: e => {
+        const v = e.target.value;
+        setNomi(m => ({
+          ...m,
+          [x.p.id]: v
+        }));
+        setPersonalizzati(m => {
+          const n = {
+            ...m
+          };
+          delete n[x.p.id];
+          return n;
+        });
+      },
+      "aria-label": "Nome da usare nel messaggio"
+    }), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setPersonalizzati(m => {
+        const n = {
+          ...m
+        };
+        if (n[x.p.id] != null) delete n[x.p.id];else n[x.p.id] = messaggioPer(x.p);
+        return n;
+      }),
+      style: {
+        ...ghostBtn,
+        fontSize: 12.5,
+        padding: "6px 10px"
+      }
+    }, personalizzati[x.p.id] != null ? "↺ Torna al testo standard" : "✎ Ritocca il messaggio")), personalizzati[x.p.id] != null ? /*#__PURE__*/React.createElement("textarea", {
+      style: {
+        ...inputStyle,
+        minHeight: 90,
+        marginTop: 8,
+        fontFamily: "inherit",
+        resize: "vertical"
+      },
+      value: personalizzati[x.p.id],
+      onChange: e => {
+        const v = e.target.value;
+        setPersonalizzati(m => ({
+          ...m,
+          [x.p.id]: v
+        }));
+      },
+      "aria-label": "Messaggio per questa famiglia"
+    }) : /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "8px 0 0",
+        fontSize: 12.5,
+        color: textMuted,
+        whiteSpace: "pre-wrap",
+        lineHeight: 1.45,
+        borderLeft: `2px solid ${border}`,
+        paddingLeft: 8
+      }
+    }, messaggioPer(x.p))));
+  })), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "16px 0 0",
+      fontSize: 12.5,
+      color: textMuted,
+      lineHeight: 1.5
+    }
+  }, "Per ogni ragazzo scegli il tono e correggi il nome (per esempio solo il nome, senza cognome): il gestionale se li ricorda per le volte successive. \"Ritocca il messaggio\" cambia il testo solo per quell'invio. WhatsApp richiede un tocco per ogni invio: non manda messaggi in automatico."));
 }
 
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
