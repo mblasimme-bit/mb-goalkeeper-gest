@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-PxuTSEaNyZeF4rzYxt8FkSrUdZ+uscaf3OwVqZ5b1Y4=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-kSJ6tBJgM9DET+gPu33WxWmqevUir3HkC7fEey+5DNE=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -7572,7 +7572,7 @@ function GestionalePortieri() {
         height: 16,
         accentColor: gold
       }
-    })))), tab === "tecnici" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+    })))), tab === "tecnici" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", { className: "no-print", onClick: () => setView({ page: "progressi", id: p.id }), style: { width: "100%", margin: "0 0 14px", background: lillaDim, color: lilla, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 14px", fontSize: 15, fontWeight: 800, cursor: "pointer" } }, "📈 Progressi di " + sgNomeBreve(p.nome) + " →"), /*#__PURE__*/React.createElement("p", {
       style: sectionLabelStyle
     }, "🧑‍🏫 Squadra"), /*#__PURE__*/React.createElement("div", {
       style: cardStyle
@@ -9978,6 +9978,9 @@ function GestionalePortieri() {
         marginTop: 24
       }
     }, "Documento riepilogativo generato da MB Goalkeeper Academy Gest.")));
+  }
+  if (view.page === "progressi" || view.page === "progressi-genitori") {
+    return /*#__PURE__*/React.createElement(PaginaProgressi, { id: view.id, genitori: view.page === "progressi-genitori", portieri, pacchetti, entrate, garePending, settings, setView, updatePortiere, Menu, TopBar, printStyle, goBack, handleShare, handlePrint, bg });
   }
   if (view.page === "resoconto-seduta") {
     const pr = portieri.find(x => String(x.id) === String(view.id));
@@ -18538,7 +18541,7 @@ function PaginaAnalisi({
         fontSize: 13,
         padding: "7px 12px"
       }
-    }, "Apri scheda portiere"), scheda.gare.length > 0 && /*#__PURE__*/React.createElement("button", {
+    }, "Apri scheda portiere"), /*#__PURE__*/React.createElement("button", { onClick: () => setView({ page: "progressi", id: scheda.p.id }), style: { ...ghostBtn, fontSize: 13, padding: "7px 12px", borderColor: lilla, color: lilla } }, "📈 Progressi"), scheda.gare.length > 0 && /*#__PURE__*/React.createElement("button", {
       onClick: () => setView({
         page: "allenamento-mirato",
         id: scheda.p.id
@@ -20392,6 +20395,841 @@ function PaginaMessaggioInattivi({
   }, "Per ogni ragazzo scegli il tono e correggi il nome (per esempio solo il nome, senza cognome): il gestionale se li ricorda per le volte successive. \"Ritocca il messaggio\" cambia il testo solo per quell'invio. WhatsApp richiede un tocco per ogni invio: non manda messaggi in automatico."));
 }
 
+// --- Progressi del portiere: una schermata chiara (per Matteo) e la versione pulita da condividere con i genitori ---
+const PG_SCURO = {
+  testo: textPrimary,
+  sec: textSecondary,
+  muto: textMuted,
+  card: surface,
+  bordo: border,
+  fondo: surface2,
+  accento: lilla,
+  oro: goldSoft
+};
+const PG_CHIARO = {
+  testo: "#111",
+  sec: "#444",
+  muto: "#8a8a90",
+  card: "#fff",
+  bordo: "#e4e4e7",
+  fondo: "#f3f3f5",
+  accento: "#7a4fb0",
+  oro: "#8a6d2f"
+};
+
+// livello (1-8) di una categoria in una seduta del diario: voto di categoria, oppure (diari vecchi) il voto più alto dei lavori di quella categoria
+function pgLivello(voce, cat) {
+  if (voce.votiCategoria && voce.votiCategoria[cat]) {
+    const i = votoInfo(voce.votiCategoria[cat]);
+    return i ? i.livello : null;
+  }
+  if (voce.voti) {
+    const l = (voce.lavori || []).filter(k => categoriaLavoro(k) === cat).map(k => votoInfo(voce.voti[k])).filter(Boolean).map(i => i.livello);
+    return l.length ? Math.max(...l) : null;
+  }
+  return null;
+}
+const pgGiorni = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 86400000);
+const pgMedia = arr => arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : null;
+function progressiDi(p, {
+  pacchetti,
+  entrate,
+  garePending
+}) {
+  const oggi = oggiISO();
+  const date = [];
+  let assenze = 0;
+  (pacchetti || []).filter(pk => String(pk.portiereId) === String(p.id)).forEach(pk => {
+    (pk.sedute || []).forEach(d => d && d <= oggi && date.push(d));
+    assenze += (pk.assenze || []).length;
+  });
+  (entrate || []).filter(e => String(e.portiereId) === String(p.id) && e.data && e.data <= oggi).forEach(e => date.push(e.data));
+  date.sort();
+  const sedute = date.length;
+  const prima = date[0] || null;
+  const mesi = prima ? Math.max(1, Math.round(pgGiorni(prima, oggi) / 30.4)) : 0;
+
+  // partite
+  const gare = gareDelPortiere(p, garePending || []).slice().sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  const votoArea = (g, k) => {
+    const v = Number((g.voti || {})[k]);
+    return v >= 1 && v <= VOTO_MAX ? v : null;
+  };
+  const mediaGara = g => pgMedia(AREE_GARA.map(([k]) => votoArea(g, k)).filter(v => v != null));
+  const puntiGare = gare.map(g => ({
+    data: g.data,
+    y: mediaGara(g)
+  })).filter(x => x.y != null);
+  const ultime3 = pgMedia(puntiGare.slice(-3).map(x => x.y)),
+    prec3 = puntiGare.length >= 6 ? pgMedia(puntiGare.slice(-6, -3).map(x => x.y)) : null;
+  const recenti = gare.slice(-5);
+  const aree = AREE_GARA.map(([k, nome,, corto]) => ({
+    k,
+    nome,
+    corto,
+    m: pgMedia(recenti.map(g => votoArea(g, k)).filter(v => v != null))
+  })).filter(a => a.m != null);
+  const ord = aree.slice().sort((a, b) => b.m - a.m);
+  const forti = ord.slice(0, 2),
+    deboli = ord.length >= 4 ? ord.slice(-2).reverse() : [];
+
+  // diario: livelli per categoria nel tempo
+  const diario = (p.diarioSedute || []).filter(v => !v.saltata).slice().sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  const categorie = ORDINE_CATEGORIE.map(cat => {
+    const punti = diario.map(v => ({
+      data: v.data,
+      liv: pgLivello(v, cat)
+    })).filter(x => x.liv != null);
+    const conta = {};
+    diario.forEach(v => (v.lavori || []).filter(k => categoriaLavoro(k) === cat).forEach(k => {
+      conta[k] = (conta[k] || 0) + 1;
+    }));
+    const lavori = Object.entries(conta).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => nomeLavoro(k));
+    if (!punti.length && !lavori.length) return null;
+    const ora = punti[punti.length - 1] || null;
+    let prima = null;
+    if (ora) {
+      const vecchi = punti.filter(x => pgGiorni(x.data, ora.data) >= 30);
+      prima = vecchi.length ? vecchi[vecchi.length - 1] : punti.length > 1 ? punti[0] : null;
+    }
+    return {
+      cat,
+      punti,
+      ora,
+      prima,
+      lavori
+    };
+  }).filter(Boolean);
+
+  // misure dallo storico
+  const misure = [];
+  String(p.storicoProgressi || "").split(/\n+/).forEach(riga => {
+    const md = /(\d{2})\/(\d{2})\/(\d{4})/.exec(riga);
+    if (!md) return;
+    const h = /altezza\s+(\d+(?:[.,]\d+)?)\s*cm/i.exec(riga),
+      w = /peso\s+(\d+(?:[.,]\d+)?)\s*kg/i.exec(riga);
+    if (h || w) misure.push({
+      data: `${md[3]}-${md[2]}-${md[1]}`,
+      h: h ? Number(h[1].replace(",", ".")) : null,
+      w: w ? Number(w[1].replace(",", ".")) : null
+    });
+  });
+  misure.sort((a, b) => a.data.localeCompare(b.data));
+  const note = diario.filter(v => v.nota).slice(-4).reverse();
+  return {
+    sedute,
+    assenze,
+    presenza: sedute + assenze ? Math.round(sedute / (sedute + assenze) * 100) : null,
+    prima,
+    mesi,
+    gare,
+    puntiGare,
+    ultime3,
+    prec3,
+    forti,
+    deboli,
+    categorie,
+    misure,
+    note,
+    nDiario: diario.length
+  };
+}
+
+// linea semplice senza testo dentro (le etichette stanno fuori, così non si deformano)
+function PgLinea({
+  valori,
+  min,
+  max,
+  colore,
+  alt,
+  sfondo
+}) {
+  if (valori.length < 2) return null;
+  const lo = min != null ? min : Math.min(...valori),
+    hi = max != null ? max : Math.max(...valori),
+    sp = hi - lo || 1;
+  const pts = valori.map((v, i) => `${i / (valori.length - 1) * 100},${4 + (1 - (v - lo) / sp) * 92}`).join(" ");
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 100 100",
+    preserveAspectRatio: "none",
+    style: {
+      width: "100%",
+      height: alt || 40,
+      display: "block",
+      background: sfondo || "transparent",
+      borderRadius: 6
+    },
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("polyline", {
+    points: pts,
+    fill: "none",
+    stroke: colore,
+    strokeWidth: "2",
+    vectorEffect: "non-scaling-stroke",
+    strokeLinejoin: "round",
+    strokeLinecap: "round"
+  }));
+}
+
+// scala a 8 gradini: pieni fino al livello attuale, contorno tratteggiato dove era prima
+function PgScala({
+  ora,
+  prima,
+  t
+}) {
+  const col = ora ? VOTI_LAVORO[ora - 1][2] : t.muto;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(8, 1fr)",
+      gap: 4
+    }
+  }, VOTI_LAVORO.map(([k], i) => {
+    const pieno = ora && i < ora,
+      fantasma = prima && i === prima - 1 && prima !== ora;
+    return /*#__PURE__*/React.createElement("div", {
+      key: k,
+      style: {
+        height: 14 + i * 2.2,
+        alignSelf: "end",
+        borderRadius: 4,
+        background: pieno ? col : t.fondo,
+        outline: fantasma ? `2px dashed ${t.sec}` : "none",
+        outlineOffset: -2,
+        opacity: pieno ? 0.55 + 0.45 * ((i + 1) / ora) : 1
+      }
+    });
+  }));
+}
+function ProgressiVista({
+  p,
+  d,
+  t,
+  genitori,
+  obiettiviEditor
+}) {
+  const card = {
+    background: t.card,
+    border: `1px solid ${t.bordo}`,
+    borderRadius: 14,
+    padding: "16px 18px",
+    marginBottom: 14
+  };
+  const titolo = (s, sotto) => /*#__PURE__*/React.createElement("div", {
+    style: {
+      margin: "0 0 12px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 12.5,
+      fontWeight: 800,
+      letterSpacing: "0.07em",
+      textTransform: "uppercase",
+      color: t.oro
+    }
+  }, s), sotto && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "3px 0 0",
+      fontSize: 13,
+      color: t.muto
+    }
+  }, sotto));
+  const kpi = (n, l, sotto, colSotto) => /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: t.fondo,
+      borderRadius: 12,
+      padding: "12px 14px",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 26,
+      fontWeight: 800,
+      color: t.testo,
+      lineHeight: 1.1
+    }
+  }, n), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "3px 0 0",
+      fontSize: 12.5,
+      color: t.sec,
+      fontWeight: 600
+    }
+  }, l), sotto && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 12,
+      color: colSotto || t.muto,
+      fontWeight: 700
+    }
+  }, sotto));
+  const freccia = d.ultime3 != null && d.prec3 != null ? d.ultime3 - d.prec3 : null;
+  const obiettivi = p.obiettivi || [];
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...card,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: 0,
+      fontSize: 26,
+      color: t.testo
+    }
+  }, sgNomeBreve(p.nome)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0 14px",
+      fontSize: 14,
+      color: t.sec
+    }
+  }, [p.squadra, p.anno ? `annata ${p.anno}` : null, d.mesi ? `si allena con me da ${d.mesi} ${d.mesi === 1 ? "mese" : "mesi"}` : null].filter(Boolean).join(" · ")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+      gap: 10,
+      textAlign: "left"
+    }
+  }, kpi(d.sedute, "sedute fatte"), !genitori && kpi(d.presenza != null ? `${d.presenza}%` : "—", "presenza", d.assenze ? `${d.assenze} ${d.assenze === 1 ? "assenza" : "assenze"}` : "nessuna assenza"), kpi(d.gare.length, "partite valutate"), kpi(d.ultime3 != null ? fmtMedia(d.ultime3) : "—", "voto partite (ultime 3)", freccia == null ? null : Math.abs(freccia) < 0.05 ? "= stabile" : freccia > 0 ? `▲ +${fmtMedia(freccia)} rispetto a prima` : `▼ ${fmtMedia(freccia)} rispetto a prima`, freccia == null || Math.abs(freccia) < 0.05 ? null : freccia > 0 ? "#1f9d55" : "#d95926"))), /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, titolo("A che punto è", "Dal diario delle sedute. Il riquadro tratteggiato indica dov'era circa un mese prima."), d.categorie.length === 0 ? /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 14,
+      color: t.muto
+    }
+  }, "Ancora nessun diario compilato: dopo le prossime sedute qui comparir\xE0 il percorso.") : d.categorie.map(c => {
+    const info = c.ora ? VOTI_LAVORO[c.ora.liv - 1] : null;
+    const salito = c.ora && c.prima && c.ora.liv > c.prima.liv;
+    return /*#__PURE__*/React.createElement("div", {
+      key: c.cat,
+      style: {
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 1fr)",
+        gap: 16,
+        alignItems: "center",
+        padding: "12px 0",
+        borderTop: `1px solid ${t.bordo}`
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        minWidth: 0
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        gap: 8,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 16,
+        fontWeight: 800,
+        color: t.testo
+      }
+    }, c.cat), salito && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        fontWeight: 800,
+        color: "#1f9d55"
+      }
+    }, "\u25B2 +", c.ora.liv - c.prima.liv)), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "2px 0 8px",
+        fontSize: 13.5,
+        fontWeight: 700,
+        color: info ? info[2] === "#9a9aa2" ? t.sec : info[2] : t.muto
+      }
+    }, info ? `${c.ora.liv}. ${info[1]}` : "Non ancora valutato"), c.ora && /*#__PURE__*/React.createElement(PgScala, {
+      ora: c.ora.liv,
+      prima: c.prima ? c.prima.liv : null,
+      t: t
+    }), c.lavori.length > 0 && /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "8px 0 0",
+        fontSize: 12.5,
+        color: t.muto
+      }
+    }, "Lavorato soprattutto su: ", c.lavori.join(", "))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        minWidth: 0
+      }
+    }, c.punti.length >= 2 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PgLinea, {
+      valori: c.punti.slice(-12).map(x => x.liv),
+      min: 1,
+      max: 8,
+      colore: info ? info[2] : t.accento,
+      alt: 54,
+      sfondo: t.fondo
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 11,
+        color: t.muto,
+        marginTop: 3
+      }
+    }, /*#__PURE__*/React.createElement("span", null, formatData(c.punti.slice(-12)[0].data)), /*#__PURE__*/React.createElement("span", null, formatData(c.ora.data)))) : /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12.5,
+        color: t.muto,
+        textAlign: "center"
+      }
+    }, "L'andamento comparir\xE0 dopo qualche seduta valutata.")));
+  })), d.gare.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, titolo("Le partite", `${d.gare.length} ${d.gare.length === 1 ? "partita valutata" : "partite valutate"}, voti da 1 a ${VOTO_MAX}.`), d.puntiGare.length >= 2 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PgLinea, {
+    valori: d.puntiGare.map(x => x.y),
+    min: 1,
+    max: VOTO_MAX,
+    colore: t.accento,
+    alt: 70,
+    sfondo: t.fondo
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      fontSize: 11,
+      color: t.muto,
+      margin: "3px 0 12px"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, formatData(d.puntiGare[0].data)), /*#__PURE__*/React.createElement("span", null, "media voto partita per partita"), /*#__PURE__*/React.createElement("span", null, formatData(d.puntiGare[d.puntiGare.length - 1].data)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: t.fondo,
+      borderRadius: 12,
+      padding: "12px 14px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontSize: 13,
+      fontWeight: 800,
+      color: "#1f9d55"
+    }
+  }, "\uD83D\uDCAA Punti forti"), d.forti.map(a => /*#__PURE__*/React.createElement("p", {
+    key: a.k,
+    style: {
+      margin: "3px 0",
+      fontSize: 14,
+      color: t.testo
+    }
+  }, a.nome, " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: t.muto
+    }
+  }, "\xB7 ", fmtMedia(a.m))))), d.deboli.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: t.fondo,
+      borderRadius: 12,
+      padding: "12px 14px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontSize: 13,
+      fontWeight: 800,
+      color: "#d95926"
+    }
+  }, "\uD83C\uDFAF Su cosa stiamo lavorando"), d.deboli.map(a => /*#__PURE__*/React.createElement("p", {
+    key: a.k,
+    style: {
+      margin: "3px 0",
+      fontSize: 14,
+      color: t.testo
+    }
+  }, a.nome, " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: t.muto
+    }
+  }, "\xB7 ", fmtMedia(a.m)))))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "8px 0 0",
+      fontSize: 12,
+      color: t.muto
+    }
+  }, "Calcolati sulle ultime ", Math.min(5, d.gare.length), " partite.")), d.misure.length >= 2 && /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, titolo("Crescita"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 14
+    }
+  }, [["h", "Altezza", "cm", "#199e70"], ["w", "Peso", "kg", "#3987e5"]].map(([k, nome, u, col]) => {
+    const m = d.misure.filter(x => x[k] != null);
+    if (m.length < 2) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      key: k
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 6px",
+        fontSize: 14,
+        color: t.testo
+      }
+    }, /*#__PURE__*/React.createElement("b", null, nome), ": ", m[0][k], " \u2192 ", /*#__PURE__*/React.createElement("b", null, m[m.length - 1][k], " ", u), " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: t.muto
+      }
+    }, "(", m[m.length - 1][k] - m[0][k] >= 0 ? "+" : "", Math.round((m[m.length - 1][k] - m[0][k]) * 10) / 10, " ", u, ")")), /*#__PURE__*/React.createElement(PgLinea, {
+      valori: m.map(x => x[k]),
+      colore: col,
+      alt: 44,
+      sfondo: t.fondo
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 11,
+        color: t.muto,
+        marginTop: 3
+      }
+    }, /*#__PURE__*/React.createElement("span", null, formatData(m[0].data)), /*#__PURE__*/React.createElement("span", null, formatData(m[m.length - 1].data))));
+  }))), (obiettiviEditor || obiettivi.length > 0) && /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, titolo("Prossimi obiettivi"), obiettivi.length === 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 10px",
+      fontSize: 13.5,
+      color: t.muto
+    }
+  }, "Scrivi 2\u20133 obiettivi concreti, per esempio \"Uscite alte con presa sicura entro Natale\"."), obiettivi.map(o => /*#__PURE__*/React.createElement("div", {
+    key: o.id,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      padding: "7px 0",
+      borderTop: `1px solid ${t.bordo}`
+    }
+  }, obiettiviEditor ? /*#__PURE__*/React.createElement("button", {
+    onClick: () => obiettiviEditor.segna(o.id),
+    "aria-label": o.raggiunto ? "Segna come da raggiungere" : "Segna come raggiunto",
+    style: {
+      width: 24,
+      height: 24,
+      borderRadius: 7,
+      border: `2px solid ${o.raggiunto ? "#1f9d55" : t.muto}`,
+      background: o.raggiunto ? "#1f9d55" : "transparent",
+      color: "#fff",
+      fontSize: 14,
+      cursor: "pointer",
+      padding: 0,
+      flex: "none"
+    }
+  }, o.raggiunto ? "✓" : "") : /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 22,
+      flex: "none",
+      fontSize: 16
+    }
+  }, o.raggiunto ? "✅" : "🎯"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: 14.5,
+      color: t.testo,
+      textDecoration: o.raggiunto && !genitori ? "line-through" : "none",
+      opacity: o.raggiunto && !genitori ? 0.7 : 1
+    }
+  }, o.testo), o.raggiunto && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: "#1f9d55",
+      fontWeight: 700,
+      whiteSpace: "nowrap"
+    }
+  }, "raggiunto il ", formatData(o.raggiunto)), obiettiviEditor && /*#__PURE__*/React.createElement("button", {
+    onClick: () => obiettiviEditor.togli(o.id),
+    "aria-label": "Elimina obiettivo",
+    style: {
+      background: "none",
+      border: "none",
+      color: t.muto,
+      fontSize: 18,
+      cursor: "pointer",
+      padding: "0 4px"
+    }
+  }, "\xD7"))), obiettiviEditor && /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      marginTop: 10
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    style: {
+      ...inputStyle,
+      flex: 1
+    },
+    placeholder: "Nuovo obiettivo\u2026",
+    value: obiettiviEditor.nuovo,
+    onChange: e => obiettiviEditor.setNuovo(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        obiettiviEditor.aggiungi();
+      }
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    onClick: obiettiviEditor.aggiungi,
+    disabled: !obiettiviEditor.nuovo.trim(),
+    style: {
+      ...ghostBtn,
+      padding: "8px 14px",
+      opacity: obiettiviEditor.nuovo.trim() ? 1 : 0.5
+    }
+  }, "+ Aggiungi"))), d.note.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, titolo("Le ultime note"), d.note.map(v => /*#__PURE__*/React.createElement("div", {
+    key: v.id,
+    style: {
+      padding: "8px 0",
+      borderTop: `1px solid ${t.bordo}`
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 12,
+      color: t.muto,
+      fontWeight: 700
+    }
+  }, formatData(v.data)), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 14.5,
+      color: t.testo,
+      lineHeight: 1.5,
+      whiteSpace: "pre-wrap"
+    }
+  }, v.nota)))));
+}
+function PaginaProgressi({
+  id,
+  genitori,
+  portieri,
+  pacchetti,
+  entrate,
+  garePending,
+  settings,
+  setView,
+  updatePortiere,
+  Menu,
+  TopBar,
+  printStyle,
+  goBack,
+  handleShare,
+  handlePrint,
+  bg
+}) {
+  const [nuovo, setNuovo] = useState("");
+  const p = portieri.find(x => String(x.id) === String(id));
+  const d = useMemo(() => p ? progressiDi(p, {
+    pacchetti,
+    entrate,
+    garePending
+  }) : null, [p, pacchetti, entrate, garePending]);
+  if (!p) return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 40,
+      color: textSecondary,
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Menu, null), "Portiere non trovato.");
+  if (genitori) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: bg,
+        minHeight: "100%"
+      }
+    }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement("div", {
+      className: "no-print",
+      style: {
+        maxWidth: 680,
+        margin: "0 auto",
+        padding: "14px 20px",
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 8,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: goBack,
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        background: "none",
+        border: "none",
+        color: textPrimary,
+        fontSize: 15,
+        fontWeight: 600,
+        cursor: "pointer",
+        padding: 0
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 18,
+        lineHeight: 1
+      }
+    }, "\u2190"), " Indietro"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: handlePrint,
+      style: {
+        ...ghostBtn,
+        fontSize: 13,
+        padding: "8px 12px"
+      }
+    }, "\uD83D\uDDA8\uFE0F Stampa / PDF"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => handleShare(`Progressi ${p.nome}`, `Progressi · ${p.nome}`),
+      style: {
+        ...primaryBtn,
+        fontSize: 13,
+        padding: "8px 14px"
+      }
+    }, "\uD83D\uDCE4 Condividi / Salva immagine"))), /*#__PURE__*/React.createElement("div", {
+      id: "print-area",
+      style: {
+        maxWidth: 680,
+        margin: "0 auto",
+        padding: "26px 26px 34px",
+        background: "#fafafa",
+        color: "#111",
+        fontFamily: "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", system-ui, sans-serif"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        textAlign: "center",
+        marginBottom: 16
+      }
+    }, /*#__PURE__*/React.createElement(LogoDocumento, {
+      custom: settings.logoCustom,
+      w: 74
+    }), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12,
+        letterSpacing: "0.1em",
+        textTransform: "uppercase",
+        fontWeight: 700,
+        color: "#555"
+      }
+    }, "MB Goalkeeper Academy"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "6px 0 0",
+        fontSize: 13,
+        color: "#8a6d2f",
+        fontWeight: 800,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase"
+      }
+    }, "I progressi \xB7 ", formatData(oggiISO()))), /*#__PURE__*/React.createElement(ProgressiVista, {
+      p: p,
+      d: d,
+      t: PG_CHIARO,
+      genitori: true
+    }), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "14px 0 0",
+        textAlign: "center",
+        fontSize: 13,
+        color: "#777"
+      }
+    }, "Matteo Blasimme \xB7 Preparatore dei portieri")));
+  }
+  const obiettivi = p.obiettivi || [];
+  const editor = {
+    nuovo,
+    setNuovo,
+    aggiungi: () => {
+      const t = nuovo.trim();
+      if (!t) return;
+      updatePortiere(p.id, {
+        obiettivi: [...obiettivi, {
+          id: generaId(),
+          testo: t,
+          creatoIl: oggiISO(),
+          raggiunto: null
+        }]
+      });
+      setNuovo("");
+    },
+    segna: oid => updatePortiere(p.id, {
+      obiettivi: obiettivi.map(o => o.id === oid ? {
+        ...o,
+        raggiunto: o.raggiunto ? null : oggiISO()
+      } : o)
+    }),
+    togli: oid => updatePortiere(p.id, {
+      obiettivi: obiettivi.filter(o => o.id !== oid)
+    })
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 20,
+      maxWidth: 820,
+      margin: "0 auto"
+    }
+  }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
+    title: "Progressi"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 14
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      display: "flex",
+      gap: 8,
+      flexWrap: "wrap",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView({
+      page: "progressi-genitori",
+      id: p.id
+    }),
+    style: {
+      ...primaryBtn,
+      fontSize: 14,
+      padding: "10px 16px"
+    }
+  }, "\uD83D\uDCC4 Condividi i progressi con i genitori"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView({
+      page: "dettaglio",
+      id: p.id
+    }),
+    style: {
+      ...ghostBtn,
+      fontSize: 13.5,
+      padding: "9px 14px"
+    }
+  }, "Apri la scheda")), /*#__PURE__*/React.createElement(ProgressiVista, {
+    p: p,
+    d: d,
+    t: PG_SCURO,
+    obiettiviEditor: editor
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "no-print",
+    style: {
+      margin: "6px 0 0",
+      fontSize: 12.5,
+      color: textMuted,
+      lineHeight: 1.5
+    }
+  }, "Nella versione per i genitori non compaiono presenze, assenze e pagamenti: solo il percorso, le partite, la crescita, gli obiettivi e le note."));
+}
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
 const CAL_TIPI = {
   programmata: {
