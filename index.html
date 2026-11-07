@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-XMDMW4EydhK3pAfRaOmoXIuFuTtnfN07LD2viKpYECA=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-PxuTSEaNyZeF4rzYxt8FkSrUdZ+uscaf3OwVqZ5b1Y4=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -5405,7 +5405,11 @@ function GestionalePortieri() {
       id: generaId(),
       data,
       lavori: v.lavori || [],
-      voti: v.voti || {},
+      ...(v.votiCategoria ? {
+        votiCategoria: v.votiCategoria
+      } : {
+        voti: v.voti || {}
+      }),
       nota: v.nota || "",
       ...(v.saltata ? {
         saltata: true
@@ -5416,11 +5420,14 @@ function GestionalePortieri() {
       diarioSedute: [...(p.diarioSedute || []), voce]
     };
     if (!v.saltata) {
-      const nomi = voce.lavori.map(k => {
-        const vi = votoInfo(voce.voti[k]);
-        return nomeLavoro(k) + (vi ? ` (${vi.nome.toLowerCase()})` : "");
-      });
-      const riga = `🏋️ ${formatData(data)} · Seduta${nomi.length ? ": " + nomi.join(", ") : ""}${voce.nota ? " — " + voce.nota : ""}`;
+      // una parte per categoria: "Tecnica (netto miglioramento): Presa, Parate"
+      const parti = ORDINE_CATEGORIE.map(cat => {
+        const qui = voce.lavori.filter(k => categoriaLavoro(k) === cat);
+        if (!qui.length) return null;
+        const vi = votoInfo((voce.votiCategoria || {})[cat]);
+        return `${cat}${vi ? ` (${vi.nome.toLowerCase()})` : ""}: ${qui.map(nomeLavoro).join(", ")}`;
+      }).filter(Boolean);
+      const riga = `🏋️ ${formatData(data)} · Seduta${parti.length ? " — " + parti.join("; ") : ""}${voce.nota ? " — " + voce.nota : ""}`;
       patch.storicoProgressi = (p.storicoProgressi ? p.storicoProgressi + "\n\n" : "") + riga;
     }
     updatePortiere(p.id, patch);
@@ -17599,7 +17606,8 @@ function PaginaAnalisi({
     const ultimoVoto = {};
     diario.slice().sort((a, b) => String(a.data).localeCompare(String(b.data))).forEach(v => (v.lavori || []).forEach(k => {
       contaLavori[k] = (contaLavori[k] || 0) + 1;
-      if (v.voti && v.voti[k]) ultimoVoto[k] = v.voti[k];
+      const vv = votoDiLavoro(v, k);
+      if (vv) ultimoVoto[k] = vv;
     }));
     const lavori = Object.entries(contaLavori).map(([k, n]) => {
       const vi = ultimoVoto[k] ? votoInfo(ultimoVoto[k]) : null;
@@ -18911,6 +18919,11 @@ const VOTO_VECCHIO = {
   4: "molto_bene"
 };
 const votoChiave = v => typeof v === "number" ? VOTO_VECCHIO[v] : v;
+// Il voto si dà per categoria (Tecnica, Atletica…): ogni lavoro prende il voto della sua categoria
+const CATEGORIA_DI = Object.fromEntries(LAVORI_SEDUTA.flatMap(([g, v]) => v.map(([k]) => [k, g])));
+const categoriaLavoro = k => String(k).startsWith("x:") ? "Altro" : CATEGORIA_DI[k] || "Altro";
+const ORDINE_CATEGORIE = [...LAVORI_SEDUTA.map(([g]) => g), "Altro"];
+const votoDiLavoro = (voce, k) => voce.votiCategoria && voce.votiCategoria[categoriaLavoro(k)] || voce.voti && voce.voti[k] || null;
 const votoInfo = v => {
   const k = votoChiave(v);
   const i = VOTI_LAVORO.findIndex(x => x[0] === k);
@@ -18929,6 +18942,64 @@ function lavoriPersonali(portieri) {
     if (String(k).startsWith("x:")) set.set(String(k).slice(2).toLowerCase(), k);
   })));
   return [...set.values()].sort((a, b) => nomeLavoro(a).localeCompare(nomeLavoro(b)));
+}
+
+// Voto con un tocco: 8 pulsanti numerati
+function VotoRapido({
+  value,
+  onChange
+}) {
+  const info = votoInfo(value);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 8,
+      padding: "8px 10px",
+      borderRadius: 10,
+      background: surface2
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      flexWrap: "wrap",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: textMuted,
+      fontWeight: 700,
+      marginRight: 4
+    }
+  }, "Voto"), VOTI_LAVORO.map(([k, nome, col], i) => {
+    const on = info && info.k === k,
+      sotto = info && i < info.livello;
+    return /*#__PURE__*/React.createElement("button", {
+      key: k,
+      title: nome,
+      "aria-label": `${i + 1}. ${nome}`,
+      onClick: () => onChange(on ? "" : k),
+      style: {
+        width: 34,
+        height: 34,
+        borderRadius: 9,
+        border: `1.5px solid ${on ? col : sotto ? col + "88" : border}`,
+        background: on ? col : sotto ? col + "33" : "transparent",
+        color: on ? "#fff" : textPrimary,
+        fontSize: 14,
+        fontWeight: 800,
+        cursor: "pointer",
+        padding: 0
+      }
+    }, i + 1);
+  })), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 12.5,
+      color: info ? info.colore : textMuted,
+      fontWeight: info ? 800 : 500
+    }
+  }, info ? `${info.livello}. ${info.nome}` : "Tocca un numero: 1 = primo approccio … 8 = molto bene (facoltativo)"));
 }
 
 // Scaletta a 8 tacche per far vedere a che punto è
@@ -19104,7 +19175,53 @@ function ResocontoSeduta({
       textTransform: "uppercase",
       letterSpacing: "0.06em"
     }
-  }, "Abbiamo lavorato su"), (v.lavori || []).map(k => {
+  }, "Abbiamo lavorato su"), v.votiCategoria ? ORDINE_CATEGORIE.map(cat => {
+    const qui = (v.lavori || []).filter(k => categoriaLavoro(k) === cat);
+    if (!qui.length) return null;
+    const info = votoInfo(v.votiCategoria[cat]);
+    return /*#__PURE__*/React.createElement("div", {
+      key: cat,
+      style: {
+        padding: "10px 0",
+        borderBottom: "1px solid #f0f0f2"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 12
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 15,
+        fontWeight: 800,
+        color: "#111"
+      }
+    }, cat), info && /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-end",
+        gap: 4
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 13,
+        fontWeight: 700,
+        color: info.colore === "#9a9aa2" ? "#666" : info.colore
+      }
+    }, info.nome), /*#__PURE__*/React.createElement(ScalaVoto, {
+      v: v.votiCategoria[cat],
+      chiaro: true
+    }))), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "4px 0 0",
+        fontSize: 14,
+        color: "#444"
+      }
+    }, qui.map(nomeLavoro).join(" · ")));
+  }) : (v.lavori || []).map(k => {
     const info = v.voti ? votoInfo(v.voti[k]) : null;
     return /*#__PURE__*/React.createElement("div", {
       key: k,
@@ -19173,11 +19290,11 @@ function DiarioSedutaModal({
   } = stato;
   const voti = stato.voti || {};
   const nuovoLavoro = stato.nuovoLavoro || "";
-  const setVoto = (k, v) => setStato(s => ({
+  const setVoto = (cat, v) => setStato(s => ({
     ...s,
     voti: {
       ...(s.voti || {}),
-      [k]: v || undefined
+      [cat]: v || undefined
     }
   }));
   const setSel = f => setStato(s => ({
@@ -19200,9 +19317,10 @@ function DiarioSedutaModal({
     }));
   };
   const vuoto = sel.length === 0 && !nota.trim();
+  const categorieUsate = [...new Set(sel.map(categoriaLavoro))];
   const valore = () => ({
     lavori: sel,
-    voti: Object.fromEntries(sel.filter(k => voti[k]).map(k => [k, voti[k]])),
+    votiCategoria: Object.fromEntries(categorieUsate.filter(c => voti[c]).map(c => [c, voti[c]])),
     nota: nota.trim()
   });
   const chip = (k, nome) => {
@@ -19307,7 +19425,10 @@ function DiarioSedutaModal({
       gap: 6,
       flexWrap: "wrap"
     }
-  }, voci.map(([k, nome]) => chip(k, nome))))), /*#__PURE__*/React.createElement("div", {
+  }, voci.map(([k, nome]) => chip(k, nome))), categorieUsate.includes(gruppo) && /*#__PURE__*/React.createElement(VotoRapido, {
+    value: voti[gruppo],
+    onChange: v => setVoto(gruppo, v)
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 10
     }
@@ -19358,57 +19479,10 @@ function DiarioSedutaModal({
       padding: "8px 14px",
       opacity: nuovoLavoro.trim() ? 1 : 0.5
     }
-  }, "+ Aggiungi"))), sel.length > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 8,
-      marginBottom: 12,
-      paddingTop: 12,
-      borderTop: `1px solid ${border}`
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 10px",
-      fontSize: 14,
-      color: textSecondary
-    }
-  }, "A che punto è, lavoro per lavoro?"), sel.map(k => /*#__PURE__*/React.createElement("div", {
-    key: k,
-    style: {
-      display: "grid",
-      gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.2fr)",
-      gap: 10,
-      alignItems: "center",
-      marginBottom: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 14,
-      fontWeight: 700,
-      color: textPrimary,
-      minWidth: 0
-    }
-  }, nomeLavoro(k), voti[k] && /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "block",
-      marginTop: 4
-    }
-  }, /*#__PURE__*/React.createElement(ScalaVoto, {
-    v: voti[k]
-  }))), /*#__PURE__*/React.createElement("select", {
-    value: votoChiave(voti[k]) || "",
-    onChange: e => setVoto(k, e.target.value),
-    style: {
-      ...inputStyle,
-      padding: "8px 10px",
-      fontSize: 13.5,
-      borderColor: voti[k] ? (votoInfo(voti[k]) || {}).colore : undefined
-    }
-  }, /*#__PURE__*/React.createElement("option", {
-    value: ""
-  }, "Valutazione…"), VOTI_LAVORO.map(([v, l], i) => /*#__PURE__*/React.createElement("option", {
-    key: v,
-    value: v
-  }, i + 1, ". ", l)))))), /*#__PURE__*/React.createElement("textarea", {
+  }, "+ Aggiungi")), categorieUsate.includes("Altro") && /*#__PURE__*/React.createElement(VotoRapido, {
+    value: voti["Altro"],
+    onChange: v => setVoto("Altro", v)
+  })), /*#__PURE__*/React.createElement("textarea", {
     style: {
       ...inputStyle,
       minHeight: 80,
