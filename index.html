@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-kSJ6tBJgM9DET+gPu33WxWmqevUir3HkC7fEey+5DNE=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-W9Nnw0NhRqhnAWh2IPyqMWX6FAAXyLW6fqnGny/5cGs=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -1323,6 +1323,7 @@ const sectionLabelStyle = {
   margin: "0 0 10px"
 };
 const ICONE_MENU = {
+  "dati-fattura": "<path d=\"M6 2h9l3 3v17H6z\"/><path d=\"M9 8h6M9 12h6M9 16h4\"/>",
   "messaggio-inattivi": "<path d=\"M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5z\"/><path d=\"M9 11h.01M12 11h.01M15 11h.01\"/>",
   "analisi": "<path d=\"M3 3v18h18\"/><path d=\"M7 15l4-4 3 3 5-6\"/>",
   "allenamento-mirato": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/>",
@@ -6715,7 +6716,7 @@ function GestionalePortieri() {
       flexDirection: "column",
       overflowY: "auto"
     }
-  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["messaggio-inattivi", "👋 Scrivi agli inattivi", whatsapp, whatsappDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["messaggio-inattivi", "👋 Scrivi agli inattivi", whatsapp, whatsappDim], ["dati-fattura", "🧾 Dati per le fatture", goldSoft, goldDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
     key: gruppo,
     style: {
       marginBottom: 14
@@ -8188,7 +8189,7 @@ function GestionalePortieri() {
         cursor: "pointer"
       },
       title: "Genera ricevuta"
-    }, "🧾"), v.entrataId != null && /*#__PURE__*/React.createElement("button", {
+    }, "🧾"), v.pagato && (() => { const ftEs = (settings.fatture || []).find(x => x.chiave === v.id); return /*#__PURE__*/React.createElement("button", { className: "no-print", onClick: () => setView({ page: "fattura", datiFattura: { chiave: v.id, portiereId: p.id, importo: v.importo, data: v.data, fonte: v.fonte, note: v.note, metodoPagamento: v.metodoPagamento }, tornaA: view }), title: ftEs ? "Apri la fattura" : "Prepara la fattura", style: { background: "none", border: "none", color: ftEs ? "#1f9d55" : goldSoft, fontSize: 12.5, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" } }, ftEs ? `📄 Fatt. ${ftEs.numero}/${ftEs.anno}` : "📄 Fattura"); })(), v.entrataId != null && /*#__PURE__*/React.createElement("button", {
       className: "no-print",
       onClick: () => confirmAction("Eliminare questo pagamento?", () => rimuoviEntrata(v.entrataId)),
       style: {
@@ -10075,6 +10076,12 @@ function GestionalePortieri() {
       TopBar: TopBar,
       printStyle: printStyle
     });
+  }
+  if (view.page === "dati-fattura") {
+    return /*#__PURE__*/React.createElement(PaginaDatiFattura, { portieri, dbConfig, session, updatePortiere, setView, Menu, TopBar, printStyle, fetchConTimeout, authHeaders });
+  }
+  if (view.page === "fattura") {
+    return /*#__PURE__*/React.createElement(PaginaFattura, { dati: view.datiFattura, portieri, pacchetti, guanti, settings, updateSettings, updatePortiere, goBack, Menu, printStyle, handlePrint, handleShare, bg });
   }
   if (view.page === "ricevuta") {
     const r = view.datiRicevuta || {};
@@ -21230,6 +21237,1399 @@ function PaginaProgressi({
     }
   }, "Nella versione per i genitori non compaiono presenze, assenze e pagamenti: solo il percorso, le partite, la crescita, gli obiettivi e le note."));
 }
+// --- Fattura (copia di cortesia, regime forfettario): si compila dal pagamento, numerazione progressiva, logo ---
+const FT_SOGLIA_BOLLO = 77.47,
+  FT_BOLLO = 2;
+const FT_DICITURA = "Operazione effettuata ai sensi dell'art. 1, commi 54-89, della Legge n. 190/2014 – regime forfettario. Operazione senza applicazione dell'IVA. Non si applica la ritenuta d'acconto ai sensi dell'art. 1, comma 67, della Legge n. 190/2014.";
+const FT_DICITURA_BOLLO = "Imposta di bollo assolta in modo virtuale ai sensi del DM 17/06/2014.";
+const ftEuro = n => "€ " + (Number(n) || 0).toLocaleString("it-IT", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+const ftCfOk = cf => /^[A-Z0-9]{16}$/.test(String(cf || "").trim().toUpperCase());
+const ftMetodo = m => String(m || "").replace(/^[^A-Za-zÀ-ÿ]+/, "").trim();
+function ftDescrizione(dati, p, pacchetti, guanti) {
+  const chi = p ? ` a favore di ${sgNomeBreve(p.nome)}` : "";
+  const k = String(dati.chiave || "");
+  if (k.startsWith("pk-")) {
+    const pk = (pacchetti || []).find(x => `pk-${x.id}` === k.replace(/-acconto$|-saldo$/, ""));
+    const n = pk ? Number(pk.numeroSedute) || (pk.pianificazione || []).length : null;
+    const d = new Date((pk && pk.dataInizio || dati.data || oggiISO()) + "T12:00:00");
+    const periodo = d.toLocaleDateString("it-IT", {
+      month: "long",
+      year: "numeric"
+    });
+    const parte = k.endsWith("-acconto") ? " (acconto)" : k.endsWith("-saldo") ? " (saldo)" : "";
+    return `Pacchetto di ${n || "__"} sedute di allenamento individuale per portieri${chi}, periodo ${periodo}${parte}`;
+  }
+  if (k.startsWith("mat-")) {
+    const g = (guanti || []).find(x => `mat-${x.id}` === k);
+    return `Fornitura materiale tecnico per portieri${g && g.nome ? `: ${g.nome}` : ""}${chi}`;
+  }
+  if (k.startsWith("ent-")) return `Seduta di allenamento individuale per portieri${chi} del ${formatData(dati.data)}`;
+  return `${dati.fonte || "Prestazione"}${dati.note ? ` – ${dati.note}` : ""}${chi}`;
+}
+function PaginaFattura({
+  dati,
+  portieri,
+  pacchetti,
+  guanti,
+  settings,
+  updateSettings,
+  updatePortiere,
+  goBack,
+  Menu,
+  printStyle,
+  handlePrint,
+  handleShare,
+  bg
+}) {
+  dati = dati || {};
+  const p = portieri.find(x => String(x.id) === String(dati.portiereId));
+  const registro = settings.fatture || [];
+  const esistente = registro.find(f => f.chiave === dati.chiave);
+  const emit = settings.datiFattura || {};
+  const anno = Number(oggiISO().slice(0, 4));
+  const prossimo = registro.filter(f => f.anno === anno).reduce((m, f) => Math.max(m, Number(f.numero) || 0), 0) + 1;
+  const imp0 = Number(dati.importo) || 0;
+  const [f, setF] = useState(() => esistente ? {
+    ...esistente
+  } : {
+    numero: prossimo,
+    anno,
+    data: oggiISO(),
+    intestatario: {
+      nome: "",
+      cf: "",
+      indirizzo: "",
+      ...(p && p.intestatarioFattura)
+    },
+    descrizione: ftDescrizione(dati, p, pacchetti, guanti),
+    importo: imp0,
+    bollo: imp0 > FT_SOGLIA_BOLLO,
+    metodo: ftMetodo(dati.metodoPagamento),
+    dataPagamento: dati.data || oggiISO()
+  });
+  const [mostraEmit, setMostraEmit] = useState(!emit.piva);
+  const [emitForm, setEmitForm] = useState({
+    nome: "Matteo Blasimme",
+    insegna: "MB Goalkeeper Academy",
+    indirizzo: "",
+    piva: "",
+    cf: "",
+    email: "",
+    telefono: "",
+    iban: "",
+    ...emit
+  });
+  const [copiato, setCopiato] = useState("");
+  const set = patch => setF(x => ({
+    ...x,
+    ...patch
+  }));
+  const setInt = patch => setF(x => ({
+    ...x,
+    intestatario: {
+      ...x.intestatario,
+      ...patch
+    }
+  }));
+  const importo = Number(String(f.importo).replace(",", ".")) || 0;
+  const bollo = f.bollo && importo > FT_SOGLIA_BOLLO ? FT_BOLLO : 0;
+  const totale = importo + bollo;
+  const emessa = !!esistente;
+  const numeroUsato = !emessa && registro.some(r => r.anno === Number(f.anno) && Number(r.numero) === Number(f.numero));
+  const cfOk = ftCfOk(f.intestatario.cf);
+  const manca = [!emit.piva && "i tuoi dati (P. IVA)", !f.intestatario.nome.trim() && "nome dell'intestatario", !cfOk && "codice fiscale valido (16 caratteri)", !f.descrizione.trim() && "descrizione", !(importo > 0) && "importo"].filter(Boolean);
+  const salvaEmit = () => {
+    updateSettings({
+      datiFattura: {
+        ...emitForm,
+        piva: emitForm.piva.trim(),
+        cf: emitForm.cf.trim().toUpperCase()
+      }
+    });
+    setMostraEmit(false);
+  };
+  const emetti = () => {
+    const voce = {
+      ...f,
+      numero: Number(f.numero),
+      anno: Number(f.anno),
+      importo,
+      bollo: !!bollo,
+      intestatario: {
+        ...f.intestatario,
+        cf: f.intestatario.cf.trim().toUpperCase()
+      },
+      chiave: dati.chiave,
+      portiereId: p ? p.id : null,
+      emessaIl: oggiISO()
+    };
+    updateSettings({
+      fatture: [...registro.filter(r => r.chiave !== dati.chiave), voce]
+    });
+    if (p) updatePortiere(p.id, {
+      intestatarioFattura: voce.intestatario
+    });
+  };
+  const salvaModifiche = () => {
+    const voce = {
+      ...esistente,
+      ...f,
+      importo,
+      bollo: !!bollo,
+      intestatario: {
+        ...f.intestatario,
+        cf: f.intestatario.cf.trim().toUpperCase()
+      }
+    };
+    updateSettings({
+      fatture: registro.map(r => r.chiave === dati.chiave ? voce : r)
+    });
+    if (p) updatePortiere(p.id, {
+      intestatarioFattura: voce.intestatario
+    });
+  };
+  const ultimoDellAnno = emessa && Number(esistente.numero) === registro.filter(r => r.anno === esistente.anno).reduce((m, r) => Math.max(m, Number(r.numero) || 0), 0);
+  const annulla = () => updateSettings({
+    fatture: registro.filter(r => r.chiave !== dati.chiave)
+  });
+  const copia = (testo, etichetta) => {
+    try {
+      navigator.clipboard.writeText(testo);
+      setCopiato(etichetta);
+      setTimeout(() => setCopiato(""), 1500);
+    } catch (e) {}
+  };
+  const campo = (label, value, onChange, extra) => /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0,
+      ...(extra && extra.box)
+    }
+  }, /*#__PURE__*/React.createElement("label", {
+    style: labelStyle
+  }, label), /*#__PURE__*/React.createElement("input", {
+    style: {
+      ...inputStyle,
+      ...(extra && extra.style)
+    },
+    value: value,
+    onChange: e => onChange(e.target.value),
+    placeholder: extra && extra.ph
+  }));
+  const ORO = "#a8842f";
+  const dataIt = iso => iso ? formatData(iso) : "";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: bg,
+      minHeight: "100%"
+    }
+  }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      maxWidth: 820,
+      margin: "0 auto",
+      padding: "14px 20px 0"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 8,
+      flexWrap: "wrap",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: goBack,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      background: "none",
+      border: "none",
+      color: textPrimary,
+      fontSize: 15,
+      fontWeight: 600,
+      cursor: "pointer",
+      padding: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 18,
+      lineHeight: 1
+    }
+  }, "\u2190"), " Indietro"), emessa && /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      gap: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handlePrint,
+    style: {
+      ...ghostBtn,
+      fontSize: 13,
+      padding: "8px 12px"
+    }
+  }, "\uD83D\uDDA8\uFE0F Stampa / PDF"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => handleShare(`Fattura ${f.numero}/${f.anno}`, `Fattura ${f.numero}-${f.anno}`),
+    style: {
+      ...primaryBtn,
+      fontSize: 13,
+      padding: "8px 14px"
+    }
+  }, "\uD83D\uDCE4 Condividi / Salva immagine"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setMostraEmit(v => !v),
+    style: {
+      background: "none",
+      border: "none",
+      padding: 0,
+      cursor: "pointer",
+      color: textPrimary,
+      fontSize: 15,
+      fontWeight: 800,
+      width: "100%",
+      textAlign: "left",
+      display: "flex",
+      justifyContent: "space-between"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "\uD83D\uDC64 I tuoi dati in fattura ", emit.piva ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#1f9d55",
+      fontSize: 13
+    }
+  }, "\u2713 impostati") : /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: coral,
+      fontSize: 13
+    }
+  }, "da impostare")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: textMuted
+    }
+  }, mostraEmit ? "▾" : "▸")), mostraEmit && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "8px 0 10px",
+      fontSize: 13,
+      color: textMuted
+    }
+  }, "Li inserisci una volta sola: restano salvati (cifrati) e compaiono su tutte le fatture."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 10
+    }
+  }, campo("Nome e cognome", emitForm.nome, v => setEmitForm(x => ({
+    ...x,
+    nome: v
+  }))), campo("Insegna", emitForm.insegna, v => setEmitForm(x => ({
+    ...x,
+    insegna: v
+  }))), campo("Indirizzo completo", emitForm.indirizzo, v => setEmitForm(x => ({
+    ...x,
+    indirizzo: v
+  })), {
+    ph: "Via…, CAP Città (Prov.)"
+  }), campo("Partita IVA", emitForm.piva, v => setEmitForm(x => ({
+    ...x,
+    piva: v
+  })), {
+    ph: "11 cifre"
+  }), campo("Codice fiscale", emitForm.cf, v => setEmitForm(x => ({
+    ...x,
+    cf: v
+  }))), campo("Email", emitForm.email, v => setEmitForm(x => ({
+    ...x,
+    email: v
+  }))), campo("Telefono", emitForm.telefono, v => setEmitForm(x => ({
+    ...x,
+    telefono: v
+  }))), campo("IBAN (per i bonifici)", emitForm.iban, v => setEmitForm(x => ({
+    ...x,
+    iban: v
+  })))), /*#__PURE__*/React.createElement("button", {
+    onClick: salvaEmit,
+    disabled: !emitForm.piva.trim(),
+    style: {
+      ...primaryBtn,
+      marginTop: 12,
+      opacity: emitForm.piva.trim() ? 1 : 0.5
+    }
+  }, "Salva i miei dati"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 10px",
+      fontSize: 15,
+      fontWeight: 800,
+      color: textPrimary
+    }
+  }, "\uD83E\uDDFE ", emessa ? `Fattura n. ${esistente.numero}/${esistente.anno} emessa il ${dataIt(esistente.emessaIl)}` : "Nuova fattura"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+      gap: 10
+    }
+  }, campo("Numero", String(f.numero), v => set({
+    numero: v.replace(/[^\d]/g, "")
+  }), {
+    style: emessa ? {
+      opacity: 0.6
+    } : null
+  }), campo("Data fattura", f.data, v => set({
+    data: v
+  }), {
+    ph: "AAAA-MM-GG"
+  }), campo("Importo (€)", String(f.importo), v => {
+    const pulito = v.replace(/[^\d.,]/g, "");
+    const n = Number(pulito.replace(",", ".")) || 0;
+    setF(x => ({
+      ...x,
+      importo: pulito,
+      bollo: x.bolloToccato ? x.bollo : n > FT_SOGLIA_BOLLO
+    }));
+  }), campo("Pagato con", f.metodo, v => set({
+    metodo: v
+  }))), numeroUsato && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 12.5,
+      color: coral
+    }
+  }, "Il numero ", f.numero, "/", f.anno, " \xE8 gi\xE0 usato da un'altra fattura."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap",
+      margin: "14px 0 6px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13,
+      fontWeight: 800,
+      color: textSecondary
+    }
+  }, "Intestata a (il genitore che paga)"), p && /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      gap: 6,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => apriWhatsappA(p.telefono, `Ciao! Sono Matteo 🧤\nPer prepararti la fattura mi servono i dati di chi la intesta. Ci vuole un minuto, puoi compilarli qui:\n${linkDatiFattura(p)}\nGrazie! ⚽`),
+    style: {
+      background: whatsappDim,
+      color: whatsapp,
+      border: `1px solid ${whatsapp}`,
+      borderRadius: 9,
+      padding: "6px 11px",
+      fontSize: 12.5,
+      fontWeight: 800,
+      cursor: "pointer"
+    }
+  }, "\uD83D\uDCF2 Chiedi i dati al genitore"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => copia(linkDatiFattura(p), "link"),
+    style: {
+      ...ghostBtn,
+      fontSize: 12,
+      padding: "5px 10px"
+    }
+  }, copiato === "link" ? "✓ Copiato" : "Copia link"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+      gap: 10
+    }
+  }, campo("Nome e cognome", f.intestatario.nome, v => setInt({
+    nome: v
+  })), campo("Codice fiscale", f.intestatario.cf, v => setInt({
+    cf: v.toUpperCase()
+  }), {
+    style: f.intestatario.cf && !cfOk ? {
+      borderColor: coral
+    } : null
+  }), campo("Indirizzo", f.intestatario.indirizzo, v => setInt({
+    indirizzo: v
+  }), {
+    ph: "Via…, CAP Città"
+  })), /*#__PURE__*/React.createElement("label", {
+    style: {
+      ...labelStyle,
+      marginTop: 10
+    }
+  }, "Descrizione"), /*#__PURE__*/React.createElement("textarea", {
+    style: {
+      ...inputStyle,
+      minHeight: 60,
+      fontFamily: "inherit",
+      resize: "vertical"
+    },
+    value: f.descrizione,
+    onChange: e => set({
+      descrizione: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 10,
+      fontSize: 13.5,
+      color: textSecondary,
+      cursor: importo > FT_SOGLIA_BOLLO ? "pointer" : "default",
+      opacity: importo > FT_SOGLIA_BOLLO ? 1 : 0.5
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: !!f.bollo && importo > FT_SOGLIA_BOLLO,
+    disabled: importo <= FT_SOGLIA_BOLLO,
+    onChange: e => set({
+      bollo: e.target.checked,
+      bolloToccato: true
+    })
+  }), "Addebita il bollo da \u20AC 2,00 al cliente ", importo <= FT_SOGLIA_BOLLO ? "(non serve sotto € 77,47)" : ""), manca.length > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "10px 0 0",
+      fontSize: 13,
+      color: coral
+    }
+  }, "Manca: ", manca.join(", "), "."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      flexWrap: "wrap",
+      marginTop: 12
+    }
+  }, !emessa ? /*#__PURE__*/React.createElement("button", {
+    onClick: emetti,
+    disabled: manca.length > 0 || numeroUsato,
+    style: {
+      ...primaryBtn,
+      opacity: manca.length || numeroUsato ? 0.5 : 1
+    }
+  }, "\u2705 Emetti fattura n. ", f.numero, "/", f.anno) : /*#__PURE__*/React.createElement("button", {
+    onClick: salvaModifiche,
+    disabled: manca.length > 0,
+    style: {
+      ...ghostBtn,
+      opacity: manca.length ? 0.5 : 1
+    }
+  }, "Salva le modifiche"), emessa && ultimoDellAnno && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      if (window.confirm(`Annullare la fattura ${esistente.numero}/${esistente.anno}? Il numero torna libero.`)) annulla();
+    },
+    style: {
+      ...ghostBtn,
+      color: coral,
+      borderColor: coral
+    }
+  }, "Annulla questa fattura"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 4px",
+      fontSize: 15,
+      fontWeight: 800,
+      color: textPrimary
+    }
+  }, "\uD83D\uDCE8 Da copiare nella fattura elettronica"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 10px",
+      fontSize: 13,
+      color: textMuted
+    }
+  }, "Questa \xE8 la copia di cortesia per il genitore. La fattura valida va inviata allo SdI (Fatture e Corrispettivi o programma del commercialista) entro 12 giorni dal pagamento."), [["Codice fiscale cliente", f.intestatario.cf.toUpperCase()], ["Codice destinatario", "0000000"], ["Descrizione", f.descrizione], ["Importo", importo.toFixed(2).replace(".", ",")], ["Natura IVA", "N2.2 – Non soggette, altri casi (aliquota 0%)"], ["Regime fiscale", "RF19 – Forfettario"], ["Bollo virtuale", bollo ? "Sì – € 2,00" : "No"], ["Causale / note", FT_DICITURA + (bollo ? " " + FT_DICITURA_BOLLO : "")]].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "grid",
+      gridTemplateColumns: "150px minmax(0,1fr) auto",
+      gap: 10,
+      alignItems: "center",
+      padding: "6px 0",
+      borderTop: `1px solid ${border}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12.5,
+      color: textMuted
+    }
+  }, k), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13.5,
+      color: textPrimary,
+      wordBreak: "break-word"
+    }
+  }, v || "—"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => copia(v, k),
+    disabled: !v,
+    style: {
+      ...ghostBtn,
+      fontSize: 12,
+      padding: "4px 10px"
+    }
+  }, copiato === k ? "✓ Copiato" : "Copia")))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 10px",
+      fontSize: 13,
+      color: textMuted,
+      textAlign: "center"
+    }
+  }, emessa ? "Anteprima della copia di cortesia:" : "Anteprima (diventa definitiva quando premi \"Emetti\"):")), /*#__PURE__*/React.createElement("div", {
+    id: "print-area",
+    style: {
+      maxWidth: 794,
+      margin: "0 auto 40px",
+      background: "#fff",
+      color: "#1a1a1a",
+      padding: "44px 52px 40px",
+      fontFamily: "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", system-ui, sans-serif",
+      position: "relative",
+      boxShadow: "0 10px 40px rgba(0,0,0,0.25)"
+    }
+  }, !emessa && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      top: 18,
+      right: 52,
+      fontSize: 12,
+      fontWeight: 800,
+      letterSpacing: "0.1em",
+      color: "#c0392b",
+      border: "1.5px solid #c0392b",
+      borderRadius: 6,
+      padding: "3px 8px"
+    }
+  }, "BOZZA"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      gap: 20,
+      paddingBottom: 18,
+      borderBottom: `3px solid ${ORO}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement(LogoDocumento, {
+    custom: settings.logoCustom,
+    w: 96
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 17,
+      fontWeight: 800,
+      letterSpacing: "0.02em"
+    }
+  }, emit.insegna || "MB Goalkeeper Academy"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 12.5,
+      color: "#666"
+    }
+  }, "Preparazione dei portieri"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "right"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 30,
+      fontWeight: 800,
+      letterSpacing: "0.08em",
+      color: ORO
+    }
+  }, "FATTURA"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0 0",
+      fontSize: 14,
+      fontWeight: 700
+    }
+  }, "N. ", f.numero, "/", f.anno), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 13,
+      color: "#555"
+    }
+  }, "Data ", dataIt(f.data)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 18,
+      margin: "22px 0"
+    }
+  }, [["Emessa da", [emit.nome || "Matteo Blasimme", emit.indirizzo, emit.piva && `P. IVA ${emit.piva}`, emit.cf && `C.F. ${emit.cf}`, [emit.email, emit.telefono].filter(Boolean).join(" · ")]], ["Intestata a", [f.intestatario.nome || "—", f.intestatario.indirizzo, f.intestatario.cf && `C.F. ${f.intestatario.cf.toUpperCase()}`, p && `Atleta: ${sgNomeBreve(p.nome)}`]]].map(([t, righe]) => /*#__PURE__*/React.createElement("div", {
+    key: t,
+    style: {
+      background: "#f7f5f0",
+      borderRadius: 10,
+      padding: "14px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontSize: 11,
+      fontWeight: 800,
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      color: ORO
+    }
+  }, t), righe.filter(Boolean).map((r, i) => /*#__PURE__*/React.createElement("p", {
+    key: i,
+    style: {
+      margin: "2px 0",
+      fontSize: i === 0 ? 14.5 : 13,
+      fontWeight: i === 0 ? 700 : 400,
+      color: i === 0 ? "#111" : "#444"
+    }
+  }, r))))), /*#__PURE__*/React.createElement("table", {
+    style: {
+      width: "100%",
+      borderCollapse: "collapse",
+      fontSize: 13.5
+    }
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+    style: {
+      background: "#1a1a1a",
+      color: "#fff"
+    }
+  }, /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: "left",
+      padding: "10px 12px",
+      fontWeight: 700,
+      borderRadius: "8px 0 0 8px"
+    }
+  }, "Descrizione"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: "right",
+      padding: "10px 12px",
+      fontWeight: 700,
+      width: 70
+    }
+  }, "Q.t\xE0"), /*#__PURE__*/React.createElement("th", {
+    style: {
+      textAlign: "right",
+      padding: "10px 12px",
+      fontWeight: 700,
+      width: 120,
+      borderRadius: "0 8px 8px 0"
+    }
+  }, "Importo"))), /*#__PURE__*/React.createElement("tbody", null, /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "14px 12px",
+      borderBottom: "1px solid #eee",
+      lineHeight: 1.45
+    }
+  }, f.descrizione), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "14px 12px",
+      borderBottom: "1px solid #eee",
+      textAlign: "right"
+    }
+  }, "1"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "14px 12px",
+      borderBottom: "1px solid #eee",
+      textAlign: "right",
+      fontVariantNumeric: "tabular-nums"
+    }
+  }, ftEuro(importo))), bollo > 0 && /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "10px 12px",
+      borderBottom: "1px solid #eee",
+      color: "#555"
+    }
+  }, "Rivalsa imposta di bollo"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "10px 12px",
+      borderBottom: "1px solid #eee",
+      textAlign: "right"
+    }
+  }, "1"), /*#__PURE__*/React.createElement("td", {
+    style: {
+      padding: "10px 12px",
+      borderBottom: "1px solid #eee",
+      textAlign: "right",
+      fontVariantNumeric: "tabular-nums"
+    }
+  }, ftEuro(bollo))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 20,
+      marginTop: 20,
+      alignItems: "flex-start",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12.5,
+      color: "#555",
+      lineHeight: 1.6,
+      flex: "1 1 260px"
+    }
+  }, f.metodo && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "#222"
+    }
+  }, "Pagamento:"), " ", f.metodo, f.dataPagamento ? ` · ricevuto il ${dataIt(f.dataPagamento)}` : ""), emit.iban && /bonific/i.test(f.metodo || "") && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: "#222"
+    }
+  }, "IBAN:"), " ", emit.iban)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 250,
+      background: "#f7f5f0",
+      borderRadius: 10,
+      padding: "12px 16px",
+      fontSize: 13.5
+    }
+  }, [["Imponibile", ftEuro(importo)], ["IVA", "non applicata"], ...(bollo ? [["Imposta di bollo", ftEuro(bollo)]] : [])].map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    key: k,
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      padding: "3px 0",
+      color: "#444"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, k), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontVariantNumeric: "tabular-nums"
+    }
+  }, v))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      marginTop: 8,
+      paddingTop: 8,
+      borderTop: `2px solid ${ORO}`,
+      fontSize: 17,
+      fontWeight: 800
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "Totale"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: ORO,
+      fontVariantNumeric: "tabular-nums"
+    }
+  }, ftEuro(totale))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 28,
+      paddingTop: 12,
+      borderTop: "1px solid #e6e6e6",
+      fontSize: 11,
+      color: "#777",
+      lineHeight: 1.55
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0
+    }
+  }, FT_DICITURA, bollo ? " " + FT_DICITURA_BOLLO : ""), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0"
+    }
+  }, "Copia di cortesia: il documento valido ai fini fiscali \xE8 la fattura elettronica trasmessa tramite il Sistema di Interscambio."))));
+}
+// --- Dati per la fattura: modulo pubblico per i genitori (?fattura=1) e pagina per approvarli ---
+const DF_CF_RE = /^[A-Z]{6}[0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/;
+const dfCfValido = cf => DF_CF_RE.test(String(cf || "").trim().toUpperCase());
+function ModuloDatiFattura() {
+  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const pId = (params.get("p") || "").replace(/[^\w-]/g, "").slice(0, 40);
+  const pNome = (params.get("n") || "").slice(0, 80);
+  const [form, setForm] = useState({
+    portiere: pNome,
+    nome: "",
+    cognome: "",
+    cf: "",
+    via: "",
+    cap: "",
+    citta: "",
+    email: ""
+  });
+  const [consenso, setConsenso] = useState(false);
+  const [stato, setStato] = useState("idle");
+  const [errore, setErrore] = useState("");
+  const set = (k, v) => setForm(f => ({
+    ...f,
+    [k]: v
+  }));
+  const cf = form.cf.trim().toUpperCase();
+  const capOk = /^\d{5}$/.test(form.cap.trim());
+  const pronto = form.portiere.trim() && form.nome.trim() && form.cognome.trim() && dfCfValido(cf) && form.via.trim() && capOk && form.citta.trim() && consenso;
+  const invia = async e => {
+    e.preventDefault();
+    if (!pronto) return;
+    setStato("inviando");
+    setErrore("");
+    try {
+      const res = await fetch(`${DEFAULT_SUPABASE_CONFIG.project_url}/rest/v1/dati_fattura_pending`, {
+        method: "POST",
+        headers: {
+          apikey: DEFAULT_SUPABASE_CONFIG.anon_key,
+          Authorization: `Bearer ${DEFAULT_SUPABASE_CONFIG.anon_key}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify([{
+          portiere_id: pId || null,
+          nome_portiere: form.portiere.trim(),
+          nome: form.nome.trim(),
+          cognome: form.cognome.trim(),
+          codice_fiscale: cf,
+          via: form.via.trim(),
+          cap: form.cap.trim(),
+          citta: form.citta.trim(),
+          email: form.email.trim() || null
+        }])
+      });
+      if (!res.ok) throw new Error(res.status === 404 ? "Il modulo non è ancora attivo. Avvisa Matteo." : "Invio non riuscito (" + res.status + "). Riprova tra poco.");
+      setStato("inviato");
+    } catch (err) {
+      setStato("errore");
+      setErrore(err.message);
+    }
+  };
+  const font = "-apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"SF Pro Text\", system-ui, sans-serif";
+  const inp = {
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    fontSize: 15,
+    background: "#fff",
+    color: "#1a1a1a",
+    fontFamily: font,
+    boxSizing: "border-box"
+  };
+  const lab = {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#444",
+    display: "block",
+    marginBottom: 6,
+    marginTop: 14
+  };
+  const pagina = children => /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: "#f4f2ec",
+      padding: "24px 16px",
+      fontFamily: font
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 480,
+      margin: "0 auto",
+      background: "#fff",
+      borderRadius: 16,
+      padding: "28px 24px",
+      boxShadow: "0 4px 20px rgba(0,0,0,0.08)"
+    }
+  }, children));
+  if (stato === "inviato") return pagina(/*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 48,
+      margin: 0
+    }
+  }, "\u2705"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 22,
+      margin: "8px 0",
+      color: "#1a1a1a"
+    }
+  }, "Grazie!"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 15,
+      color: "#555",
+      lineHeight: 1.5
+    }
+  }, "Dati ricevuti. Le prossime fatture saranno intestate a ", form.nome, " ", form.cognome, ".")));
+  return pagina(/*#__PURE__*/React.createElement("form", {
+    onSubmit: invia
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      marginBottom: 18
+    }
+  }, /*#__PURE__*/React.createElement(LogoDocumento, {
+    w: 70
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 12,
+      letterSpacing: "0.06em",
+      textTransform: "uppercase",
+      fontWeight: 700,
+      color: "#555"
+    }
+  }, "MB Goalkeeper Academy")), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      textAlign: "center",
+      margin: "0 0 4px",
+      color: "#1a1a1a"
+    }
+  }, "Dati per la fattura"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13,
+      textAlign: "center",
+      color: "#777",
+      margin: "0 0 6px",
+      lineHeight: 1.5
+    }
+  }, "La fattura elettronica viene intestata al genitore che paga. Basta compilarlo una volta."), /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Nome e cognome del ragazzo/a *"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    required: true,
+    value: form.portiere,
+    onChange: e => set("portiere", e.target.value),
+    maxLength: 120
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "20px 0 0",
+      fontSize: 12,
+      fontWeight: 800,
+      letterSpacing: "0.06em",
+      textTransform: "uppercase",
+      color: "#8a6d2f"
+    }
+  }, "Genitore intestatario"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Nome *"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    required: true,
+    value: form.nome,
+    onChange: e => set("nome", e.target.value),
+    maxLength: 80,
+    autoComplete: "given-name"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Cognome *"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    required: true,
+    value: form.cognome,
+    onChange: e => set("cognome", e.target.value),
+    maxLength: 80,
+    autoComplete: "family-name"
+  }))), /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Codice fiscale *"), /*#__PURE__*/React.createElement("input", {
+    style: {
+      ...inp,
+      textTransform: "uppercase",
+      borderColor: form.cf && !dfCfValido(cf) ? "#c0392b" : "#ddd"
+    },
+    required: true,
+    value: form.cf,
+    onChange: e => set("cf", e.target.value.replace(/\s/g, "")),
+    maxLength: 16,
+    autoCapitalize: "characters"
+  }), form.cf && !dfCfValido(cf) && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#c0392b",
+      fontSize: 12.5,
+      margin: "6px 0 0"
+    }
+  }, "Controlla il codice fiscale: sono 16 caratteri, lettere e numeri."), /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Indirizzo di residenza (via e numero) *"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    required: true,
+    value: form.via,
+    onChange: e => set("via", e.target.value),
+    maxLength: 150,
+    autoComplete: "street-address"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "110px 1fr",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "CAP *"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    required: true,
+    inputMode: "numeric",
+    value: form.cap,
+    onChange: e => set("cap", e.target.value.replace(/[^\d]/g, "")),
+    maxLength: 5,
+    autoComplete: "postal-code"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Citt\xE0 e provincia *"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    required: true,
+    value: form.citta,
+    onChange: e => set("citta", e.target.value),
+    maxLength: 80,
+    placeholder: "Roma (RM)"
+  }))), /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Email (facoltativa, per ricevere la copia)"), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    type: "email",
+    value: form.email,
+    onChange: e => set("email", e.target.value),
+    maxLength: 150,
+    autoComplete: "email"
+  }), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "flex-start",
+      marginTop: 18,
+      fontSize: 13,
+      color: "#444",
+      lineHeight: 1.45,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: consenso,
+    onChange: e => setConsenso(e.target.checked),
+    style: {
+      marginTop: 3
+    }
+  }), /*#__PURE__*/React.createElement("span", null, "Autorizzo Matteo Blasimme a usare questi dati solo per emettere le fatture, come previsto dalla legge (art. 6.1.c GDPR). I dati sono conservati in modo protetto per il tempo richiesto dalle norme fiscali.")), errore && /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#c0392b",
+      fontSize: 13,
+      marginTop: 10
+    }
+  }, errore), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    disabled: !pronto || stato === "inviando",
+    style: {
+      width: "100%",
+      marginTop: 18,
+      padding: "14px 0",
+      borderRadius: 12,
+      border: "none",
+      background: pronto ? "#1a1a1a" : "#bbb",
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: 700,
+      cursor: pronto ? "pointer" : "not-allowed",
+      fontFamily: font
+    }
+  }, stato === "inviando" ? "Invio…" : "Invia i dati")));
+}
+
+// Link personale (con il nome del ragazzo già scritto) e messaggio WhatsApp pronto
+function linkDatiFattura(p) {
+  const base = window.location.origin + window.location.pathname + "?fattura=1";
+  return p ? `${base}&p=${encodeURIComponent(p.id)}&n=${encodeURIComponent(sgNomeBreve(p.nome))}` : base;
+}
+function PaginaDatiFattura({
+  portieri,
+  dbConfig,
+  session,
+  updatePortiere,
+  setView,
+  Menu,
+  TopBar,
+  printStyle,
+  fetchConTimeout,
+  authHeaders
+}) {
+  const [righe, setRighe] = useState(null);
+  const [errore, setErrore] = useState("");
+  const [scelte, setScelte] = useState({});
+  const [copiato, setCopiato] = useState(false);
+  const [fatti, setFatti] = useState({});
+  const headers = () => authHeaders(dbConfig, session && session.access_token);
+  const carica = async () => {
+    setErrore("");
+    try {
+      const res = await fetchConTimeout(`${dbConfig.project_url}/rest/v1/dati_fattura_pending?order=creato_il.desc`, {
+        headers: headers()
+      });
+      if (res.status === 404) {
+        setErrore("tabella");
+        setRighe([]);
+        return;
+      }
+      if (!res.ok) throw new Error("Lettura " + res.status);
+      setRighe(await res.json());
+    } catch (e) {
+      setErrore(e.message);
+      setRighe([]);
+    }
+  };
+  useEffect(() => {
+    if (dbConfig) carica();
+  }, []);
+  const elimina = async id => {
+    const res = await fetchConTimeout(`${dbConfig.project_url}/rest/v1/dati_fattura_pending?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: {
+        ...headers(),
+        Prefer: "return=minimal"
+      }
+    });
+    if (!res.ok) throw new Error("Eliminazione " + res.status);
+  };
+  const portiereDi = r => {
+    if (scelte[r.id]) return portieri.find(p => String(p.id) === String(scelte[r.id]));
+    if (r.portiere_id) {
+      const p = portieri.find(x => String(x.id) === String(r.portiere_id));
+      if (p) return p;
+    }
+    const n = normNome(r.nome_portiere || "");
+    return portieri.find(p => normNome(p.nome) === n) || null;
+  };
+  const salva = async r => {
+    const p = portiereDi(r);
+    if (!p) return;
+    updatePortiere(p.id, {
+      intestatarioFattura: {
+        nome: `${r.nome} ${r.cognome}`.trim(),
+        cf: String(r.codice_fiscale || "").toUpperCase(),
+        indirizzo: `${r.via}, ${r.cap} ${r.citta}`.trim(),
+        email: r.email || ""
+      }
+    });
+    try {
+      await elimina(r.id);
+    } catch (e) {}
+    setFatti(m => ({
+      ...m,
+      [r.id]: `Salvati nella scheda di ${p.nome}`
+    }));
+  };
+  const scarta = async r => {
+    try {
+      await elimina(r.id);
+      setFatti(m => ({
+        ...m,
+        [r.id]: "Scartati"
+      }));
+    } catch (e) {
+      setErrore(e.message);
+    }
+  };
+  const link = typeof window !== "undefined" ? linkDatiFattura(null) : "";
+  const vive = (righe || []).filter(r => !fatti[r.id]);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 20,
+      maxWidth: 680,
+      margin: "0 auto"
+    }
+  }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
+    title: "Dati per le fatture"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 18
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      ...cardStyle,
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13,
+      color: textSecondary
+    }
+  }, "Link da mandare ai genitori (funziona senza login). Dalla pagina Fattura di ogni pagamento c'\xE8 anche il link personale, con il nome del ragazzo gi\xE0 scritto."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 13,
+      fontWeight: 700,
+      color: goldSoft,
+      wordBreak: "break-all"
+    }
+  }, link), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      try {
+        navigator.clipboard.writeText(link);
+        setCopiato(true);
+        setTimeout(() => setCopiato(false), 1500);
+      } catch (e) {}
+    },
+    style: {
+      ...ghostBtn,
+      marginTop: 10,
+      fontSize: 12,
+      padding: "6px 12px"
+    }
+  }, copiato ? "✓ Copiato" : "📋 Copia link")), errore === "tabella" ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      borderColor: coral
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 14,
+      color: coral,
+      fontWeight: 700
+    }
+  }, "Il modulo non \xE8 ancora attivo sul database."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 13,
+      color: textSecondary
+    }
+  }, "Va eseguito una volta il codice SQL \"dati per la fattura\" su Supabase.")) : errore ? /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: coral,
+      fontSize: 13
+    }
+  }, errore) : null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 14,
+      color: textSecondary,
+      margin: 0
+    }
+  }, righe == null ? "Carico…" : `${vive.length} ${vive.length === 1 ? "invio" : "invii"} da approvare`), /*#__PURE__*/React.createElement("button", {
+    onClick: carica,
+    style: {
+      ...ghostBtn,
+      fontSize: 12,
+      padding: "6px 12px"
+    }
+  }, "\uD83D\uDD04 Aggiorna")), (righe || []).map(r => {
+    if (fatti[r.id]) return /*#__PURE__*/React.createElement("div", {
+      key: r.id,
+      style: {
+        ...cardStyle,
+        marginBottom: 10,
+        opacity: 0.6
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 14,
+        color: "#1f9d55",
+        fontWeight: 700
+      }
+    }, "\u2713 ", fatti[r.id]));
+    const p = portiereDi(r);
+    return /*#__PURE__*/React.createElement("div", {
+      key: r.id,
+      style: {
+        ...cardStyle,
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12,
+        color: textMuted
+      }
+    }, "Inviato il ", formatData(String(r.creato_il).slice(0, 10)), " \xB7 per ", r.nome_portiere), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "6px 0 2px",
+        fontSize: 16,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, r.nome, " ", r.cognome), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 13.5,
+        color: textSecondary,
+        lineHeight: 1.5
+      }
+    }, "C.F. ", r.codice_fiscale, " ", dfCfValido(r.codice_fiscale) ? "" : /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: coral
+      }
+    }, "(da controllare)"), /*#__PURE__*/React.createElement("br", null), r.via, ", ", r.cap, " ", r.citta, r.email ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("br", null), r.email) : null), /*#__PURE__*/React.createElement("label", {
+      style: {
+        ...labelStyle,
+        marginTop: 10
+      }
+    }, "Portiere ", p ? "(trovato in automatico)" : "— scegli a chi associarli"), /*#__PURE__*/React.createElement(SelettorePortiere, {
+      portieri: portieri,
+      value: p ? String(p.id) : "",
+      onChange: v => setScelte(m => ({
+        ...m,
+        [r.id]: v
+      })),
+      placeholder: "Scegli il portiere\u2026"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        marginTop: 10,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => salva(r),
+      disabled: !p,
+      style: {
+        ...primaryBtn,
+        opacity: p ? 1 : 0.5
+      }
+    }, "\u2705 Salva nella scheda"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => scarta(r),
+      style: {
+        ...ghostBtn,
+        color: coral,
+        borderColor: coral
+      }
+    }, "Scarta")));
+  }), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "14px 0 0",
+      fontSize: 12.5,
+      color: textMuted,
+      lineHeight: 1.5
+    }
+  }, "Quando salvi o scarti, l'invio viene cancellato dal database: i dati restano solo nella scheda del portiere, cifrati."));
+}
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
 const CAL_TIPI = {
   programmata: {
@@ -24218,7 +25618,7 @@ function PaginaContabilita({
         }),
         style: iconBtn,
         title: "Genera ricevuta"
-      }, "🧾"), v.sourceType === "evento-incasso" ? /*#__PURE__*/React.createElement("button", {
+      }, "🧾"), (() => { const chiave = v.sourceType === "pacchetto" ? `pk-${v.sourceId}${/acconto/.test(v.dettaglio || "") ? "-acconto" : /saldo/.test(v.dettaglio || "") ? "-saldo" : ""}` : v.sourceType === "manuale" ? `ent-${v.sourceId}` : v.sourceType === "materiale" ? `mat-${v.sourceId}` : `${v.sourceType}-${v.sourceId}-${v.data}`; const ftEs = (settings.fatture || []).find(x => x.chiave === chiave); return /*#__PURE__*/React.createElement("button", { className: "no-print", onClick: () => setView({ page: "fattura", datiFattura: { chiave, portiereId: v.portiereId, importo: v.importo, data: v.data, fonte: v.fonte, note: v.note, metodoPagamento: v.metodoPagamento }, tornaA: { page: "contabilita" } }), style: { ...iconBtn, color: ftEs ? "#1f9d55" : undefined }, title: ftEs ? `Fattura ${ftEs.numero}/${ftEs.anno}` : "Prepara la fattura" }, "📄"); })(), v.sourceType === "evento-incasso" ? /*#__PURE__*/React.createElement("button", {
         className: "no-print",
         onClick: () => setView({
           page: "eventi"
@@ -28859,7 +30259,7 @@ function PaginaPacchettoDettaglio({
 }
 const App = () => {
   const search = typeof window !== "undefined" ? window.location.search : "";
-  if (/iscrizione=1|verifica=1|gara=1|(^|[?&])info=1/.test(search)) {
+  if (/iscrizione=1|verifica=1|gara=1|fattura=1|(^|[?&])info=1/.test(search)) {
     const radice = document.getElementById("root");
     if (radice) radice.style.paddingLeft = "0";
   }
@@ -28867,6 +30267,7 @@ const App = () => {
   if (search.includes("iscrizione=1")) return /*#__PURE__*/React.createElement(ModuloIscrizione, null);
   if (search.includes("verifica=1")) return /*#__PURE__*/React.createElement(ModuloVerificaPeriodica, null);
   if (search.includes("gara=1")) return /*#__PURE__*/React.createElement(ModuloValutazioneGara, null);
+  if (/(^|[?&])fattura=1/.test(search)) return /*#__PURE__*/React.createElement(ModuloDatiFattura, null);
   if (/(^|[?&])info=1/.test(search)) return /*#__PURE__*/React.createElement(ModuloRichiesta, null);
   return /*#__PURE__*/React.createElement(GestionalePortieri, null);
 };
