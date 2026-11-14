@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-r8BAvAAP9NOVSC++7GEasFImsEFNM8eSZxGme78eSao=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-is0xdwPbkd8hZw1Cd29AOv6MUP/Cu/xOhJcad5Wdyp8=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -22630,7 +22630,7 @@ function PaginaDatiFattura({
     }
   }, "Quando salvi o scarti, l'invio viene cancellato dal database: i dati restano solo nella scheda del portiere, cifrati."));
 }
-// --- Esporta le sedute dei pacchetti nel Calendario del Mac/iPhone (file .ics) ---
+// --- La mia settimana: tutti gli impegni (pacchetti, singole, eventi), stampa/PDF e file per il Calendario ---
 function icsTesto(s) {
   return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
@@ -22652,16 +22652,31 @@ function icsDataOra(iso, min) {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}T${p(d.getHours())}${p(d.getMinutes())}00`;
 }
 function icsSotto(v) {
-  if (!v.pk) return v.sotto || "";
-  const n = Number(String(v.id).split("-").pop()) + 1;
-  const tot = v.pk.numeroSedute || (v.pk.datePrestabilite || []).length;
-  return `Pacchetto, seduta ${n}${tot ? "/" + tot : ""}`;
+  if (v.pk) {
+    const n = Number(String(v.id).split("-").pop()) + 1;
+    const tot = v.pk.numeroSedute || (v.pk.datePrestabilite || []).length;
+    return String(v.id).startsWith("pk-") ? `Pacchetto, seduta ${n}${tot ? "/" + tot : ""}` : "Seduta del pacchetto";
+  }
+  if (v.tipo === "incasso") return "Seduta singola";
+  if (v.tipo === "evento") return v.sotto ? "Evento · " + v.sotto : "Evento";
+  return v.sotto || "";
 }
+const SETT_TIPO = v => v.pk ? "pacchetto" : v.tipo === "incasso" ? "singola" : "evento";
+const SETT_COL = {
+  pacchetto: "#1d6fa5",
+  singola: "#0e9f96",
+  evento: "#8562b0"
+};
+const SETT_NOME = {
+  pacchetto: "Pacchetto",
+  singola: "Singola",
+  evento: "Evento"
+};
 function creaIcs(voci, avvisoMin) {
   const p = n => String(n).padStart(2, "0");
   const ora = new Date();
   const stamp = `${ora.getUTCFullYear()}${p(ora.getUTCMonth() + 1)}${p(ora.getUTCDate())}T${p(ora.getUTCHours())}${p(ora.getUTCMinutes())}${p(ora.getUTCSeconds())}Z`;
-  const r = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MB Goalkeeper Academy//Gestionale//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:MB Pacchetti"];
+  const r = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MB Goalkeeper Academy//Gestionale//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:MB Academy"];
   voci.forEach(v => {
     const ini = calMin(v.ora);
     const chiave = v.pk ? `pk${v.pk.id}-${v.data}` : `${v.id}`;
@@ -22672,8 +22687,7 @@ function creaIcs(voci, avvisoMin) {
       const fine = calIso(calPiu(calData(v.data), 1)).replace(/-/g, "");
       r.push(`DTSTART;VALUE=DATE:${v.data.replace(/-/g, "")}`, `DTEND;VALUE=DATE:${fine}`);
     }
-    const titolo = v.titolo + " · " + icsSotto(v);
-    r.push(icsPiega(`SUMMARY:${icsTesto(titolo)}`));
+    r.push(icsPiega(`SUMMARY:${icsTesto(v.titolo + " · " + icsSotto(v))}`));
     r.push(icsPiega(`DESCRIPTION:${icsTesto((ini == null ? "Orario non indicato nel gestionale. " : "") + "Dal gestionale MB Goalkeeper Academy.")}`));
     if (avvisoMin > 0 && ini != null) r.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsTesto(v.titolo)}`, `TRIGGER:-PT${avvisoMin}M`, "END:VALARM");
     r.push("END:VEVENT");
@@ -22681,73 +22695,371 @@ function creaIcs(voci, avvisoMin) {
   r.push("END:VCALENDAR");
   return r.join("\r\n") + "\r\n";
 }
+const MESI_IT = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+function SettAggiungi({
+  data,
+  portieri,
+  aggiungiEntrata,
+  settings,
+  chiudi,
+  occupate
+}) {
+  const [cerca, setCerca] = useState("");
+  const [chi, setChi] = useState(null);
+  const [ora, setOra] = useState("");
+  const [prezzo, setPrezzo] = useState(String(settings && settings.prezzoDefaultSeduta || 40));
+  const [pagata, setPagata] = useState(false);
+  const q = cerca.trim().toLowerCase();
+  const trovati = q.length < 2 ? [] : (portieri || []).filter(p => (p.nome || "").toLowerCase().includes(q)).slice(0, 6);
+  const ORE = ["14:30", "15:30", "16:30", "17:30", "18:30"];
+  const ok = chi && /^\d{1,2}:\d{2}$/.test(ora);
+  const salva = () => {
+    if (!ok) return;
+    aggiungiEntrata({
+      portiereId: Number(chi.id),
+      importo: Number(prezzo) || 0,
+      data,
+      orario: ora,
+      note: "",
+      metodoPagamento: null,
+      pagato: pagata,
+      fonte: "Seduta singola",
+      tipoSeduta: "Singola esclusiva"
+    });
+    chiudi(`${chi.nome} alle ${ora}`);
+  };
+  const chip = on => ({
+    border: `1px solid ${on ? "#0e9f96" : border}`,
+    background: on ? "rgba(14,159,150,.18)" : "transparent",
+    color: textPrimary,
+    borderRadius: 999,
+    padding: "6px 11px",
+    fontSize: 13.5,
+    fontWeight: 700,
+    cursor: "pointer"
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      border: "1px solid #0e9f96",
+      borderRadius: 10,
+      padding: 10,
+      margin: "4px 0 8px",
+      background: "rgba(14,159,150,.06)"
+    }
+  }, chi ? /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 8px",
+      fontSize: 14
+    }
+  }, "\uD83D\uDC64 ", /*#__PURE__*/React.createElement("b", null, chi.nome), " ", /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setChi(null);
+      setCerca("");
+    },
+    style: {
+      background: "none",
+      border: "none",
+      color: textMuted,
+      cursor: "pointer",
+      fontSize: 13,
+      textDecoration: "underline"
+    }
+  }, "cambia")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("input", {
+    autoFocus: true,
+    value: cerca,
+    onChange: e => setCerca(e.target.value),
+    placeholder: "Scrivi il nome del portiere\u2026",
+    "aria-label": "Portiere",
+    style: {
+      width: "100%",
+      boxSizing: "border-box",
+      background: surface2,
+      border: `1px solid ${border}`,
+      borderRadius: 8,
+      padding: "9px 10px",
+      color: textPrimary,
+      fontSize: 15,
+      marginBottom: 6
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      marginBottom: 6
+    }
+  }, trovati.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.id,
+    onClick: () => setChi(p),
+    style: chip(false)
+  }, p.nome)), q.length >= 2 && trovati.length === 0 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: textMuted
+    }
+  }, "Nessun portiere con questo nome."))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      alignItems: "center",
+      marginBottom: 8
+    }
+  }, ORE.map(o => /*#__PURE__*/React.createElement("button", {
+    key: o,
+    onClick: () => setOra(o),
+    style: chip(ora === o)
+  }, o, occupate[o] ? ` (${occupate[o]})` : "")), /*#__PURE__*/React.createElement("input", {
+    type: "time",
+    value: ora,
+    onChange: e => setOra(e.target.value),
+    "aria-label": "Altro orario",
+    style: {
+      background: surface2,
+      border: `1px solid ${border}`,
+      borderRadius: 8,
+      padding: "5px 6px",
+      color: textPrimary,
+      fontSize: 14
+    }
+  })), ora && (occupate[ora] || 0) >= 2 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 8px",
+      fontSize: 12.5,
+      color: "#c9522f"
+    }
+  }, "\u26A0\uFE0F Alle ", ora, " ci sono gi\xE0 ", occupate[ora], " portieri."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10,
+      alignItems: "center",
+      flexWrap: "wrap",
+      marginBottom: 10,
+      fontSize: 14
+    }
+  }, /*#__PURE__*/React.createElement("label", null, "\u20AC ", /*#__PURE__*/React.createElement("input", {
+    value: prezzo,
+    onChange: e => setPrezzo(e.target.value.replace(/[^\d.,]/g, "").replace(",", ".")),
+    inputMode: "decimal",
+    "aria-label": "Prezzo",
+    style: {
+      width: 56,
+      background: surface2,
+      border: `1px solid ${border}`,
+      borderRadius: 8,
+      padding: "5px 6px",
+      color: textPrimary,
+      fontSize: 14
+    }
+  })), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      gap: 6,
+      alignItems: "center",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: pagata,
+    onChange: e => setPagata(e.target.checked)
+  }), " Gi\xE0 pagata")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    disabled: !ok,
+    onClick: salva,
+    style: {
+      ...primaryBtn,
+      flex: 1,
+      padding: "9px 12px",
+      fontSize: 14,
+      opacity: ok ? 1 : .5
+    }
+  }, "\u2705 Aggiungi seduta singola"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => chiudi(""),
+    style: {
+      ...ghostBtn,
+      padding: "9px 12px",
+      fontSize: 14
+    }
+  }, "Annulla")));
+}
 function EsportaCalendario({
   voci,
-  oggi
+  oggi,
+  portieri,
+  aggiungiEntrata,
+  settings
 }) {
+  const [aggiungiIn, setAggiungiIn] = useState(null);
+  const [aggiunta, setAggiunta] = useState("");
   const [aperto, setAperto] = useState(false);
-  const [periodo, setPeriodo] = useState(() => [0, 6].includes(calData(oggi).getDay()) ? "prossima" : "settimana");
+  const [sett, setSett] = useState(() => {
+    const lun = calLun(calData(oggi));
+    return calIso([0, 6].includes(calData(oggi).getDay()) ? calPiu(lun, 7) : lun);
+  });
   const [avviso, setAvviso] = useState(30);
-  const [conEventi, setConEventi] = useState(false);
   const [fatto, setFatto] = useState("");
-  const lun = calLun(calData(oggi));
-  const PERIODI = {
-    settimana: {
-      nome: "Questa settimana",
-      da: oggi,
-      a: calIso(calPiu(lun, 6))
-    },
-    prossima: {
-      nome: "La prossima settimana",
-      da: calIso(calPiu(lun, 7)),
-      a: calIso(calPiu(lun, 13))
-    },
-    due: {
-      nome: "Questa e la prossima",
-      da: oggi,
-      a: calIso(calPiu(lun, 13))
-    },
-    mese: {
-      nome: "Prossime 4 settimane",
-      da: oggi,
-      a: calIso(calPiu(lun, 27))
-    }
-  };
-  const per = PERIODI[periodo];
-  const scelte = (voci || []).filter(v => v.data >= per.da && v.data <= per.a && (v.tipo === "programmata" && String(v.id).startsWith("pk-") || conEventi && v.tipo === "evento")).sort((a, b) => (a.data + (a.ora || "99")).localeCompare(b.data + (b.ora || "99")));
-  const senzaOra = scelte.filter(v => calMin(v.ora) == null).length;
-  const giorni = [];
-  scelte.forEach(v => {
-    const g = giorni.find(x => x.data === v.data);
-    if (g) g.voci.push(v);else giorni.push({
-      data: v.data,
-      voci: [v]
+  const [stampa, setStampa] = useState(false);
+  const lun = calData(sett);
+  const dom = calPiu(lun, 6);
+  const titoloSett = lun.getMonth() === dom.getMonth() ? `${lun.getDate()} – ${dom.getDate()} ${MESI_IT[dom.getMonth()]} ${dom.getFullYear()}` : `${lun.getDate()} ${MESI_IT[lun.getMonth()]} – ${dom.getDate()} ${MESI_IT[dom.getMonth()]} ${dom.getFullYear()}`;
+  const da = sett,
+    a = calIso(dom);
+  const tutte = (voci || []).filter(v => v.data >= da && v.data <= a && (v.pk && (v.tipo === "programmata" || v.tipo === "svolta") || v.tipo === "incasso" || v.tipo === "evento")).sort((x, y) => (x.data + (x.ora || "99:99")).localeCompare(y.data + (y.ora || "99:99")));
+  const giorni = [0, 1, 2, 3, 4, 5, 6].map(i => {
+    const d = calPiu(lun, i),
+      iso = calIso(d);
+    return {
+      iso,
+      d,
+      voci: tutte.filter(v => v.data === iso)
+    };
+  });
+  const conta = k => tutte.filter(v => SETT_TIPO(v) === k).length;
+  const senzaOra = tutte.filter(v => calMin(v.ora) == null && SETT_TIPO(v) !== "evento").length;
+  // fasce con più di 2 portieri
+  const affollate = [];
+  giorni.forEach(g => {
+    const perOra = {};
+    g.voci.filter(v => SETT_TIPO(v) !== "evento" && calMin(v.ora) != null).forEach(v => {
+      perOra[v.ora] = (perOra[v.ora] || 0) + 1;
+    });
+    Object.entries(perOra).forEach(([o, n]) => {
+      if (n > 2) affollate.push(`${CAL_GG_LUNGHI[(g.d.getDay() + 6) % 7]} ${o}: ${n} portieri`);
     });
   });
   const scarica = () => {
-    const blob = new Blob([creaIcs(scelte, avviso)], {
+    const blob = new Blob([creaIcs(tutte, avviso)], {
       type: "text/calendar;charset=utf-8"
     });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `pacchetti-${per.da}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    const el = document.createElement("a");
+    el.href = url;
+    el.download = `settimana-${da}.ics`;
+    document.body.appendChild(el);
+    el.click();
+    el.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    setFatto(`Scaricato il file con ${scelte.length} ${scelte.length === 1 ? "seduta" : "sedute"}.`);
+    setFatto(`File scaricato con ${tutte.length} impegni.`);
+  };
+  useEffect(() => {
+    if (!stampa) return;
+    const fine = () => setStampa(false);
+    window.addEventListener("afterprint", fine);
+    const t = setTimeout(() => window.print(), 150);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("afterprint", fine);
+    };
+  }, [stampa]);
+  const cambia = n => {
+    setSett(calIso(calPiu(lun, 7 * n)));
+    setFatto("");
   };
   const chip = on => ({
     border: `1px solid ${on ? goldSoft : border}`,
     background: on ? "rgba(233,209,159,.14)" : "transparent",
     color: on ? goldSoft : textPrimary,
     borderRadius: 999,
-    padding: "7px 12px",
+    padding: "6px 11px",
     fontSize: 13,
     fontWeight: 700,
     cursor: "pointer"
   });
+  const etichetta = {
+    margin: "0 0 6px",
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: ".06em",
+    textTransform: "uppercase",
+    color: textMuted
+  };
+  const foglio = stampa && ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    id: "print-area",
+    className: "sett-stampa"
+  }, /*#__PURE__*/React.createElement("style", null, `.sett-stampa{display:none} @media print{ .sett-stampa{display:block !important; color:#111; font-family: -apple-system, Helvetica, Arial, sans-serif;} @page{ margin: 1.4cm 1.2cm; } }`), /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderBottom: "3px solid #b8913a",
+      paddingBottom: 8,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      letterSpacing: ".18em",
+      textTransform: "uppercase",
+      color: "#8a6d2f",
+      fontWeight: 800
+    }
+  }, "MB Goalkeeper Academy"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 22,
+      fontWeight: 800
+    }
+  }, "Impegni della settimana"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      color: "#444"
+    }
+  }, titoloSett, " \xB7 ", conta("pacchetto"), " sedute pacchetto \xB7 ", conta("singola"), " singole \xB7 ", conta("evento"), " eventi")), giorni.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.iso,
+    style: {
+      breakInside: "avoid",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 14,
+      fontWeight: 800,
+      background: "#f3eee3",
+      padding: "4px 8px",
+      borderRadius: 4
+    }
+  }, CAL_GG_LUNGHI[(g.d.getDay() + 6) % 7], " ", g.d.getDate(), " ", MESI_IT[g.d.getMonth()]), g.voci.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#888",
+      padding: "4px 8px"
+    }
+  }, "Nessun impegno") : g.voci.map(v => /*#__PURE__*/React.createElement("div", {
+    key: v.id,
+    style: {
+      display: "flex",
+      gap: 10,
+      fontSize: 13.5,
+      padding: "4px 8px",
+      borderBottom: "1px solid #eee"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 46,
+      fontWeight: 800
+    }
+  }, calMin(v.ora) == null ? "—" : v.ora), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 74,
+      fontWeight: 700,
+      color: SETT_COL[SETT_TIPO(v)]
+    }
+  }, SETT_NOME[SETT_TIPO(v)]), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("b", null, v.titolo), " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#666"
+    }
+  }, v.pk ? icsSotto(v).replace("Pacchetto, ", "") : v.tipo === "evento" ? v.sotto : "")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 16,
+      height: 16,
+      border: "1.5px solid #999",
+      borderRadius: 3
+    }
+  })))))), document.body);
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setAperto(true);
@@ -22758,8 +23070,8 @@ function EsportaCalendario({
       padding: "7px 14px",
       fontSize: 14
     },
-    title: "Porta le sedute dei pacchetti nel Calendario del Mac"
-  }, "\uD83D\uDCF2 Al Calendario Mac"), aperto && /*#__PURE__*/React.createElement("div", {
+    title: "Tutti gli impegni della settimana: stampa o manda al Calendario"
+  }, "\uD83D\uDDD3\uFE0F La mia settimana"), foglio, aperto && /*#__PURE__*/React.createElement("div", {
     onClick: () => setAperto(false),
     style: {
       position: "fixed",
@@ -22774,14 +23086,14 @@ function EsportaCalendario({
   }, /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
     role: "dialog",
-    "aria-label": "Porta i pacchetti nel Calendario",
+    "aria-label": "La mia settimana",
     style: {
       background: "#1c1c1e",
       border: `1px solid ${border}`,
       borderRadius: 16,
       width: "100%",
-      maxWidth: 520,
-      maxHeight: "90vh",
+      maxWidth: 560,
+      maxHeight: "92vh",
       overflow: "auto",
       padding: 20,
       color: textPrimary
@@ -22798,7 +23110,7 @@ function EsportaCalendario({
       margin: 0,
       fontSize: 19
     }
-  }, "\uD83D\uDCF2 Pacchetti nel Calendario Mac"), /*#__PURE__*/React.createElement("button", {
+  }, "\uD83D\uDDD3\uFE0F La mia settimana"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setAperto(false),
     "aria-label": "Chiudi",
     style: {
@@ -22808,133 +23120,211 @@ function EsportaCalendario({
       fontSize: 22,
       cursor: "pointer"
     }
-  }, "\xD7")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "6px 0 14px",
-      fontSize: 13.5,
-      color: textMuted,
-      lineHeight: 1.45
-    }
-  }, "Crea un file con le sedute dei pacchetti ancora da fare. Aprilo e finiscono nel Calendario, accanto alle sedute singole."), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 6px",
-      fontSize: 12,
-      fontWeight: 800,
-      letterSpacing: ".06em",
-      textTransform: "uppercase",
-      color: textMuted
-    }
-  }, "Periodo"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: 6,
-      marginBottom: 14
-    }
-  }, Object.entries(PERIODI).map(([k, p]) => /*#__PURE__*/React.createElement("button", {
-    key: k,
-    onClick: () => {
-      setPeriodo(k);
-      setFatto("");
-    },
-    style: chip(periodo === k)
-  }, p.nome))), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: "0 0 6px",
-      fontSize: 12,
-      fontWeight: 800,
-      letterSpacing: ".06em",
-      textTransform: "uppercase",
-      color: textMuted
-    }
-  }, "Avviso prima della seduta"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: 6,
-      marginBottom: 14
-    }
-  }, [[0, "Nessuno"], [15, "15 min"], [30, "30 min"], [60, "1 ora"], [120, "2 ore"]].map(([m, l]) => /*#__PURE__*/React.createElement("button", {
-    key: m,
-    onClick: () => setAvviso(m),
-    style: chip(avviso === m)
-  }, l))), /*#__PURE__*/React.createElement("label", {
+  }, "\xD7")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
       gap: 8,
-      fontSize: 14,
-      marginBottom: 14,
-      cursor: "pointer"
+      margin: "10px 0 4px"
     }
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: conEventi,
-    onChange: e => setConEventi(e.target.checked)
-  }), "Aggiungi anche gli eventi del gestionale"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => cambia(-1),
+    "aria-label": "Settimana precedente",
+    style: {
+      ...ghostBtn,
+      padding: "5px 12px",
+      fontSize: 16
+    }
+  }, "\u2039"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      flex: 1,
+      textAlign: "center",
+      fontWeight: 800,
+      fontSize: 16
+    }
+  }, titoloSett), /*#__PURE__*/React.createElement("button", {
+    onClick: () => cambia(1),
+    "aria-label": "Settimana successiva",
+    style: {
+      ...ghostBtn,
+      padding: "5px 12px",
+      fontSize: 16
+    }
+  }, "\u203A")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 12px",
+      textAlign: "center",
+      fontSize: 13,
+      color: textMuted
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: SETT_COL.pacchetto,
+      fontWeight: 800
+    }
+  }, conta("pacchetto"), " sedute pacchetto"), " \xB7 ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: SETT_COL.singola,
+      fontWeight: 800
+    }
+  }, conta("singola"), " singole"), " \xB7 ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: SETT_COL.evento,
+      fontWeight: 800
+    }
+  }, conta("evento"), " eventi")), aggiunta && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    style: {
+      margin: "0 0 8px",
+      fontSize: 13.5,
+      color: "#1f9d55",
+      fontWeight: 700
+    }
+  }, "\u2705 Aggiunta la seduta singola di ", aggiunta, "."), /*#__PURE__*/React.createElement("div", {
     style: {
       background: surface2,
       border: `1px solid ${border}`,
       borderRadius: 12,
       padding: "10px 12px",
-      marginBottom: 14
+      marginBottom: 12
     }
-  }, giorni.length === 0 ? /*#__PURE__*/React.createElement("p", {
+  }, giorni.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.iso,
+    style: {
+      marginBottom: 8,
+      opacity: g.iso < oggi ? .55 : 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 3px",
+      fontSize: 13,
+      fontWeight: 800,
+      color: g.iso === oggi ? "#1f9d55" : goldSoft
+    }
+  }, CAL_GG_LUNGHI[(g.d.getDay() + 6) % 7], " ", g.d.getDate(), "/", g.d.getMonth() + 1, g.iso === oggi ? " · oggi" : ""), aggiungiEntrata && g.iso >= oggi && aggiungiIn !== g.iso && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setAggiungiIn(g.iso);
+      setAggiunta("");
+    },
+    "aria-label": `Aggiungi seduta singola ${g.d.getDate()}/${g.d.getMonth() + 1}`,
+    style: {
+      background: "none",
+      border: "1px solid #0e9f96",
+      color: "#0e9f96",
+      borderRadius: 999,
+      padding: "2px 10px",
+      fontSize: 12.5,
+      fontWeight: 800,
+      cursor: "pointer"
+    }
+  }, "+ singola")), aggiungiIn === g.iso && /*#__PURE__*/React.createElement(SettAggiungi, {
+    data: g.iso,
+    portieri: portieri,
+    aggiungiEntrata: aggiungiEntrata,
+    settings: settings,
+    occupate: g.voci.filter(v => SETT_TIPO(v) !== "evento" && v.ora).reduce((m, v) => ({
+      ...m,
+      [v.ora]: (m[v.ora] || 0) + 1
+    }), {}),
+    chiudi: msg => {
+      setAggiungiIn(null);
+      setAggiunta(msg);
+    }
+  }), g.voci.length === 0 ? aggiungiIn === g.iso ? null : /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
-      fontSize: 14,
+      fontSize: 13,
       color: textMuted
     }
-  }, "Nessuna seduta di pacchetto in questo periodo.") : giorni.map(g => {
-    const d = calData(g.data);
-    return /*#__PURE__*/React.createElement("div", {
-      key: g.data,
-      style: {
-        marginBottom: 8
-      }
-    }, /*#__PURE__*/React.createElement("p", {
-      style: {
-        margin: "0 0 3px",
-        fontSize: 13,
-        fontWeight: 800,
-        color: goldSoft
-      }
-    }, CAL_GG_LUNGHI[(d.getDay() + 6) % 7], " ", d.getDate(), "/", d.getMonth() + 1), g.voci.map(v => /*#__PURE__*/React.createElement("p", {
-      key: v.id,
-      style: {
-        margin: "0 0 2px",
-        fontSize: 14
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        display: "inline-block",
-        minWidth: 50,
-        fontWeight: 700,
-        color: calMin(v.ora) == null ? "#d9822b" : textPrimary
-      }
-    }, calMin(v.ora) == null ? "--:--" : v.ora), v.titolo, " ", /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: textMuted,
-        fontSize: 12.5
-      }
-    }, icsSotto(v)))));
-  })), senzaOra > 0 && /*#__PURE__*/React.createElement("p", {
+  }, "\u2014") : g.voci.map(v => /*#__PURE__*/React.createElement("p", {
+    key: v.id,
     style: {
-      margin: "-6px 0 12px",
+      margin: "0 0 3px",
+      fontSize: 14,
+      display: "flex",
+      gap: 8,
+      alignItems: "baseline"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 44,
+      fontWeight: 700,
+      color: calMin(v.ora) == null && SETT_TIPO(v) !== "evento" ? "#d9822b" : textPrimary
+    }
+  }, calMin(v.ora) == null ? "--:--" : v.ora), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 11,
+      fontWeight: 800,
+      color: "#fff",
+      background: SETT_COL[SETT_TIPO(v)],
+      borderRadius: 5,
+      padding: "1px 6px"
+    }
+  }, SETT_NOME[SETT_TIPO(v)]), /*#__PURE__*/React.createElement("span", null, v.titolo, v.pk && String(v.id).startsWith("pk-") && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: textMuted,
+      fontSize: 12.5
+    }
+  }, " ", icsSotto(v).replace("Pacchetto, ", "")))))))), affollate.length > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 8px",
+      fontSize: 12.5,
+      color: "#c9522f"
+    }
+  }, "\u26A0\uFE0F Pi\xF9 di 2 portieri: ", affollate.join(" · ")), senzaOra > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 10px",
       fontSize: 12.5,
       color: "#d9822b"
     }
-  }, "\u26A0\uFE0F ", senzaOra, " ", senzaOra === 1 ? "seduta non ha" : "sedute non hanno", " l'orario: nel Calendario ", senzaOra === 1 ? "comparirà" : "compariranno", " come \"tutto il giorno\"."), /*#__PURE__*/React.createElement("button", {
-    disabled: scelte.length === 0,
-    onClick: scarica,
+  }, "\u26A0\uFE0F ", senzaOra, " ", senzaOra === 1 ? "seduta non ha" : "sedute non hanno", " l'orario: aggiungilo nel gestionale."), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setStampa(true),
     style: {
       ...primaryBtn,
       width: "100%",
       padding: "12px 14px",
       fontSize: 15,
-      opacity: scelte.length ? 1 : .5
+      marginBottom: 14
     }
-  }, "\u2B07\uFE0F Scarica per il Calendario (", scelte.length, ")"), fatto && /*#__PURE__*/React.createElement("p", {
+  }, "\uD83D\uDDA8\uFE0F Stampa o salva in PDF"), /*#__PURE__*/React.createElement("p", {
+    style: etichetta
+  }, "Oppure manda tutto al Calendario Mac / iPhone"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      marginBottom: 10,
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: textMuted,
+      marginRight: 2
+    }
+  }, "Avviso:"), [[0, "Nessuno"], [15, "15 min"], [30, "30 min"], [60, "1 ora"]].map(([m, l]) => /*#__PURE__*/React.createElement("button", {
+    key: m,
+    onClick: () => setAvviso(m),
+    style: chip(avviso === m)
+  }, l))), /*#__PURE__*/React.createElement("button", {
+    disabled: tutte.length === 0,
+    onClick: scarica,
+    style: {
+      ...ghostBtn,
+      width: "100%",
+      padding: "11px 14px",
+      fontSize: 14.5,
+      opacity: tutte.length ? 1 : .5
+    }
+  }, "\uD83D\uDCF2 Scarica per il Calendario (", tutte.length, ")"), fatto && /*#__PURE__*/React.createElement("p", {
     role: "status",
     style: {
       margin: "10px 0 0",
@@ -22942,22 +23332,14 @@ function EsportaCalendario({
       color: "#1f9d55",
       fontWeight: 700
     }
-  }, "\u2705 ", fatto), /*#__PURE__*/React.createElement("div", {
+  }, "\u2705 ", fatto), /*#__PURE__*/React.createElement("p", {
     style: {
-      marginTop: 14,
-      fontSize: 13,
+      margin: "12px 0 0",
+      fontSize: 12.5,
       color: textMuted,
       lineHeight: 1.5
     }
-  }, /*#__PURE__*/React.createElement("b", {
-    style: {
-      color: textPrimary
-    }
-  }, "Come si usa"), /*#__PURE__*/React.createElement("br", null), "Sul Mac: apri il file scaricato e scegli il calendario ", /*#__PURE__*/React.createElement("b", {
-    style: {
-      color: textPrimary
-    }
-  }, "\"MB Pacchetti\""), " (crealo la prima volta). Su iPhone: tocca il file e poi \"Aggiungi tutti\".", /*#__PURE__*/React.createElement("br", null), "Conviene farlo una volta a settimana (per esempio il luned\xEC) scegliendo solo \"La prossima settimana\" o \"Questa settimana\", cos\xEC non si creano doppioni. Se poi sposti una seduta nel gestionale, spostala anche nel Calendario."))));
+  }, "Consiglio: segna qui anche le sedute singole con \"+ singola\" accanto al giorno. Cos\xEC questa pagina \xE8 sempre completa e al Calendario del Mac mandi solo la copia della settimana, una volta, il luned\xEC."))));
 }
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
 const CAL_TIPI = {
@@ -24326,7 +24708,7 @@ function CalendarioCompleto({
       padding: "7px 14px",
       fontSize: 14
     }
-  }, "+ Nuovo"), /*#__PURE__*/React.createElement(EsportaCalendario, { voci, oggi })), /*#__PURE__*/React.createElement("div", {
+  }, "+ Nuovo"), /*#__PURE__*/React.createElement(EsportaCalendario, { voci, oggi, portieri, aggiungiEntrata, settings })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 6,
