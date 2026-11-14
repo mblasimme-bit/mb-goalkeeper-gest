@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-W9Nnw0NhRqhnAWh2IPyqMWX6FAAXyLW6fqnGny/5cGs=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-r8BAvAAP9NOVSC++7GEasFImsEFNM8eSZxGme78eSao=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -22630,6 +22630,335 @@ function PaginaDatiFattura({
     }
   }, "Quando salvi o scarti, l'invio viene cancellato dal database: i dati restano solo nella scheda del portiere, cifrati."));
 }
+// --- Esporta le sedute dei pacchetti nel Calendario del Mac/iPhone (file .ics) ---
+function icsTesto(s) {
+  return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+}
+function icsPiega(riga) {
+  // righe lunghe spezzate come vuole lo standard (75 caratteri)
+  const out = [];
+  let r = riga;
+  while (r.length > 74) {
+    out.push(r.slice(0, 74));
+    r = " " + r.slice(74);
+  }
+  out.push(r);
+  return out.join("\r\n");
+}
+function icsDataOra(iso, min) {
+  const d = calData(iso);
+  d.setMinutes(min);
+  const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}T${p(d.getHours())}${p(d.getMinutes())}00`;
+}
+function icsSotto(v) {
+  if (!v.pk) return v.sotto || "";
+  const n = Number(String(v.id).split("-").pop()) + 1;
+  const tot = v.pk.numeroSedute || (v.pk.datePrestabilite || []).length;
+  return `Pacchetto, seduta ${n}${tot ? "/" + tot : ""}`;
+}
+function creaIcs(voci, avvisoMin) {
+  const p = n => String(n).padStart(2, "0");
+  const ora = new Date();
+  const stamp = `${ora.getUTCFullYear()}${p(ora.getUTCMonth() + 1)}${p(ora.getUTCDate())}T${p(ora.getUTCHours())}${p(ora.getUTCMinutes())}${p(ora.getUTCSeconds())}Z`;
+  const r = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MB Goalkeeper Academy//Gestionale//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:MB Pacchetti"];
+  voci.forEach(v => {
+    const ini = calMin(v.ora);
+    const chiave = v.pk ? `pk${v.pk.id}-${v.data}` : `${v.id}`;
+    r.push("BEGIN:VEVENT", `UID:mbgk-${chiave}@mbgkacademy.it`, `DTSTAMP:${stamp}`);
+    if (ini != null) {
+      r.push(`DTSTART:${icsDataOra(v.data, ini)}`, `DTEND:${icsDataOra(v.data, ini + (v.dur || 60))}`);
+    } else {
+      const fine = calIso(calPiu(calData(v.data), 1)).replace(/-/g, "");
+      r.push(`DTSTART;VALUE=DATE:${v.data.replace(/-/g, "")}`, `DTEND;VALUE=DATE:${fine}`);
+    }
+    const titolo = v.titolo + " · " + icsSotto(v);
+    r.push(icsPiega(`SUMMARY:${icsTesto(titolo)}`));
+    r.push(icsPiega(`DESCRIPTION:${icsTesto((ini == null ? "Orario non indicato nel gestionale. " : "") + "Dal gestionale MB Goalkeeper Academy.")}`));
+    if (avvisoMin > 0 && ini != null) r.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${icsTesto(v.titolo)}`, `TRIGGER:-PT${avvisoMin}M`, "END:VALARM");
+    r.push("END:VEVENT");
+  });
+  r.push("END:VCALENDAR");
+  return r.join("\r\n") + "\r\n";
+}
+function EsportaCalendario({
+  voci,
+  oggi
+}) {
+  const [aperto, setAperto] = useState(false);
+  const [periodo, setPeriodo] = useState(() => [0, 6].includes(calData(oggi).getDay()) ? "prossima" : "settimana");
+  const [avviso, setAvviso] = useState(30);
+  const [conEventi, setConEventi] = useState(false);
+  const [fatto, setFatto] = useState("");
+  const lun = calLun(calData(oggi));
+  const PERIODI = {
+    settimana: {
+      nome: "Questa settimana",
+      da: oggi,
+      a: calIso(calPiu(lun, 6))
+    },
+    prossima: {
+      nome: "La prossima settimana",
+      da: calIso(calPiu(lun, 7)),
+      a: calIso(calPiu(lun, 13))
+    },
+    due: {
+      nome: "Questa e la prossima",
+      da: oggi,
+      a: calIso(calPiu(lun, 13))
+    },
+    mese: {
+      nome: "Prossime 4 settimane",
+      da: oggi,
+      a: calIso(calPiu(lun, 27))
+    }
+  };
+  const per = PERIODI[periodo];
+  const scelte = (voci || []).filter(v => v.data >= per.da && v.data <= per.a && (v.tipo === "programmata" && String(v.id).startsWith("pk-") || conEventi && v.tipo === "evento")).sort((a, b) => (a.data + (a.ora || "99")).localeCompare(b.data + (b.ora || "99")));
+  const senzaOra = scelte.filter(v => calMin(v.ora) == null).length;
+  const giorni = [];
+  scelte.forEach(v => {
+    const g = giorni.find(x => x.data === v.data);
+    if (g) g.voci.push(v);else giorni.push({
+      data: v.data,
+      voci: [v]
+    });
+  });
+  const scarica = () => {
+    const blob = new Blob([creaIcs(scelte, avviso)], {
+      type: "text/calendar;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pacchetti-${per.da}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    setFatto(`Scaricato il file con ${scelte.length} ${scelte.length === 1 ? "seduta" : "sedute"}.`);
+  };
+  const chip = on => ({
+    border: `1px solid ${on ? goldSoft : border}`,
+    background: on ? "rgba(233,209,159,.14)" : "transparent",
+    color: on ? goldSoft : textPrimary,
+    borderRadius: 999,
+    padding: "7px 12px",
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: "pointer"
+  });
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setAperto(true);
+      setFatto("");
+    },
+    style: {
+      ...ghostBtn,
+      padding: "7px 14px",
+      fontSize: 14
+    },
+    title: "Porta le sedute dei pacchetti nel Calendario del Mac"
+  }, "\uD83D\uDCF2 Al Calendario Mac"), aperto && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setAperto(false),
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,.55)",
+      zIndex: 9000,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    role: "dialog",
+    "aria-label": "Porta i pacchetti nel Calendario",
+    style: {
+      background: "#1c1c1e",
+      border: `1px solid ${border}`,
+      borderRadius: 16,
+      width: "100%",
+      maxWidth: 520,
+      maxHeight: "90vh",
+      overflow: "auto",
+      padding: 20,
+      color: textPrimary
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: 0,
+      fontSize: 19
+    }
+  }, "\uD83D\uDCF2 Pacchetti nel Calendario Mac"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setAperto(false),
+    "aria-label": "Chiudi",
+    style: {
+      background: "none",
+      border: "none",
+      color: textMuted,
+      fontSize: 22,
+      cursor: "pointer"
+    }
+  }, "\xD7")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 14px",
+      fontSize: 13.5,
+      color: textMuted,
+      lineHeight: 1.45
+    }
+  }, "Crea un file con le sedute dei pacchetti ancora da fare. Aprilo e finiscono nel Calendario, accanto alle sedute singole."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontSize: 12,
+      fontWeight: 800,
+      letterSpacing: ".06em",
+      textTransform: "uppercase",
+      color: textMuted
+    }
+  }, "Periodo"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      marginBottom: 14
+    }
+  }, Object.entries(PERIODI).map(([k, p]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => {
+      setPeriodo(k);
+      setFatto("");
+    },
+    style: chip(periodo === k)
+  }, p.nome))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontSize: 12,
+      fontWeight: 800,
+      letterSpacing: ".06em",
+      textTransform: "uppercase",
+      color: textMuted
+    }
+  }, "Avviso prima della seduta"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      marginBottom: 14
+    }
+  }, [[0, "Nessuno"], [15, "15 min"], [30, "30 min"], [60, "1 ora"], [120, "2 ore"]].map(([m, l]) => /*#__PURE__*/React.createElement("button", {
+    key: m,
+    onClick: () => setAvviso(m),
+    style: chip(avviso === m)
+  }, l))), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      fontSize: 14,
+      marginBottom: 14,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: conEventi,
+    onChange: e => setConEventi(e.target.checked)
+  }), "Aggiungi anche gli eventi del gestionale"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: surface2,
+      border: `1px solid ${border}`,
+      borderRadius: 12,
+      padding: "10px 12px",
+      marginBottom: 14
+    }
+  }, giorni.length === 0 ? /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 14,
+      color: textMuted
+    }
+  }, "Nessuna seduta di pacchetto in questo periodo.") : giorni.map(g => {
+    const d = calData(g.data);
+    return /*#__PURE__*/React.createElement("div", {
+      key: g.data,
+      style: {
+        marginBottom: 8
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 3px",
+        fontSize: 13,
+        fontWeight: 800,
+        color: goldSoft
+      }
+    }, CAL_GG_LUNGHI[(d.getDay() + 6) % 7], " ", d.getDate(), "/", d.getMonth() + 1), g.voci.map(v => /*#__PURE__*/React.createElement("p", {
+      key: v.id,
+      style: {
+        margin: "0 0 2px",
+        fontSize: 14
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "inline-block",
+        minWidth: 50,
+        fontWeight: 700,
+        color: calMin(v.ora) == null ? "#d9822b" : textPrimary
+      }
+    }, calMin(v.ora) == null ? "--:--" : v.ora), v.titolo, " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: textMuted,
+        fontSize: 12.5
+      }
+    }, icsSotto(v)))));
+  })), senzaOra > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "-6px 0 12px",
+      fontSize: 12.5,
+      color: "#d9822b"
+    }
+  }, "\u26A0\uFE0F ", senzaOra, " ", senzaOra === 1 ? "seduta non ha" : "sedute non hanno", " l'orario: nel Calendario ", senzaOra === 1 ? "comparirà" : "compariranno", " come \"tutto il giorno\"."), /*#__PURE__*/React.createElement("button", {
+    disabled: scelte.length === 0,
+    onClick: scarica,
+    style: {
+      ...primaryBtn,
+      width: "100%",
+      padding: "12px 14px",
+      fontSize: 15,
+      opacity: scelte.length ? 1 : .5
+    }
+  }, "\u2B07\uFE0F Scarica per il Calendario (", scelte.length, ")"), fatto && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    style: {
+      margin: "10px 0 0",
+      fontSize: 13.5,
+      color: "#1f9d55",
+      fontWeight: 700
+    }
+  }, "\u2705 ", fatto), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14,
+      fontSize: 13,
+      color: textMuted,
+      lineHeight: 1.5
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, "Come si usa"), /*#__PURE__*/React.createElement("br", null), "Sul Mac: apri il file scaricato e scegli il calendario ", /*#__PURE__*/React.createElement("b", {
+    style: {
+      color: textPrimary
+    }
+  }, "\"MB Pacchetti\""), " (crealo la prima volta). Su iPhone: tocca il file e poi \"Aggiungi tutti\".", /*#__PURE__*/React.createElement("br", null), "Conviene farlo una volta a settimana (per esempio il luned\xEC) scegliendo solo \"La prossima settimana\" o \"Questa settimana\", cos\xEC non si creano doppioni. Se poi sposti una seduta nel gestionale, spostala anche nel Calendario."))));
+}
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
 const CAL_TIPI = {
   programmata: {
@@ -23997,7 +24326,7 @@ function CalendarioCompleto({
       padding: "7px 14px",
       fontSize: 14
     }
-  }, "+ Nuovo")), /*#__PURE__*/React.createElement("div", {
+  }, "+ Nuovo"), /*#__PURE__*/React.createElement(EsportaCalendario, { voci, oggi })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       gap: 6,
