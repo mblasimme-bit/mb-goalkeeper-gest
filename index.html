@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-is0xdwPbkd8hZw1Cd29AOv6MUP/Cu/xOhJcad5Wdyp8=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-pgunUM2H8IRy62uRfKcx8mDfFMwc74xpBZHrUvI6RJo=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -15161,7 +15161,7 @@ Matteo`;
     setView: setView,
     salvaDiario: salvaDiario,
     apriDiario: apriDiario
-  })), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement(SettimanaHome, { portieri, pacchetti, entrate, eventi, aggiungiEntrata, settings }), /*#__PURE__*/React.createElement("div", {
     className: "no-print",
     style: {
       display: "flex",
@@ -22886,7 +22886,7 @@ function SettAggiungi({
     }
   }, "Annulla")));
 }
-function EsportaCalendario({
+function SettimanaPannello({
   voci,
   oggi,
   portieri,
@@ -22895,7 +22895,6 @@ function EsportaCalendario({
 }) {
   const [aggiungiIn, setAggiungiIn] = useState(null);
   const [aggiunta, setAggiunta] = useState("");
-  const [aperto, setAperto] = useState(false);
   const [sett, setSett] = useState(() => {
     const lun = calLun(calData(oggi));
     return calIso([0, 6].includes(calData(oggi).getDay()) ? calPiu(lun, 7) : lun);
@@ -23060,67 +23059,7 @@ function EsportaCalendario({
       borderRadius: 3
     }
   })))))), document.body);
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setAperto(true);
-      setFatto("");
-    },
-    style: {
-      ...ghostBtn,
-      padding: "7px 14px",
-      fontSize: 14
-    },
-    title: "Tutti gli impegni della settimana: stampa o manda al Calendario"
-  }, "\uD83D\uDDD3\uFE0F La mia settimana"), foglio, aperto && /*#__PURE__*/React.createElement("div", {
-    onClick: () => setAperto(false),
-    style: {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,.55)",
-      zIndex: 9000,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 16
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    onClick: e => e.stopPropagation(),
-    role: "dialog",
-    "aria-label": "La mia settimana",
-    style: {
-      background: "#1c1c1e",
-      border: `1px solid ${border}`,
-      borderRadius: 16,
-      width: "100%",
-      maxWidth: 560,
-      maxHeight: "92vh",
-      overflow: "auto",
-      padding: 20,
-      color: textPrimary
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      margin: 0,
-      fontSize: 19
-    }
-  }, "\uD83D\uDDD3\uFE0F La mia settimana"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setAperto(false),
-    "aria-label": "Chiudi",
-    style: {
-      background: "none",
-      border: "none",
-      color: textMuted,
-      fontSize: 22,
-      cursor: "pointer"
-    }
-  }, "\xD7")), /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, foglio, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -23339,7 +23278,169 @@ function EsportaCalendario({
       color: textMuted,
       lineHeight: 1.5
     }
-  }, "Consiglio: segna qui anche le sedute singole con \"+ singola\" accanto al giorno. Cos\xEC questa pagina \xE8 sempre completa e al Calendario del Mac mandi solo la copia della settimana, una volta, il luned\xEC."))));
+  }, "Consiglio: segna qui anche le sedute singole con \"+ singola\" accanto al giorno. Cos\xEC questa pagina \xE8 sempre completa e al Calendario del Mac mandi solo la copia della settimana, una volta, il luned\xEC."));
+}
+function EsportaCalendario(props) {
+  const [aperto, setAperto] = useState(false);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setAperto(true),
+    style: {
+      ...ghostBtn,
+      padding: "7px 14px",
+      fontSize: 14
+    },
+    title: "Tutti gli impegni della settimana: stampa o manda al Calendario"
+  }, "\uD83D\uDDD3\uFE0F La mia settimana"), aperto && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setAperto(false),
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,.55)",
+      zIndex: 9000,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: e => e.stopPropagation(),
+    role: "dialog",
+    "aria-label": "La mia settimana",
+    style: {
+      background: "#1c1c1e",
+      border: `1px solid ${border}`,
+      borderRadius: 16,
+      width: "100%",
+      maxWidth: 560,
+      maxHeight: "92vh",
+      overflow: "auto",
+      padding: 20,
+      color: textPrimary
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: 0,
+      fontSize: 19
+    }
+  }, "\uD83D\uDDD3\uFE0F La mia settimana"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setAperto(false),
+    "aria-label": "Chiudi",
+    style: {
+      background: "none",
+      border: "none",
+      color: textMuted,
+      fontSize: 22,
+      cursor: "pointer"
+    }
+  }, "\xD7")), /*#__PURE__*/React.createElement(SettimanaPannello, props))));
+}
+// Le stesse voci del calendario, calcolate per la home
+function settVoci({
+  portieri,
+  pacchetti,
+  entrate,
+  eventi
+}) {
+  const nome = id => {
+    const p = (portieri || []).find(x => String(x.id) === String(id));
+    return p ? p.nome : null;
+  };
+  const out = [];
+  (pacchetti || []).forEach(pk => {
+    const chi = nome(pk.portiereId) || pk.nome || "Pacchetto";
+    const svolte = new Set(pk.sedute || []);
+    const assenze = new Set((pk.assenze || []).map(a => a.data));
+    const slot = pk.tipo === "speciale" ? (pk.pianificazione || []).filter(x => x.data).map(x => ({
+      data: x.data,
+      ora: x.orario || null,
+      dur: x.durata ? Number(x.durata) * 60 : 60
+    })) : (pk.datePrestabilite || []).filter(Boolean).map(d => ({
+      data: d,
+      ora: pk.orario || null,
+      dur: 60
+    }));
+    slot.forEach((x, i) => out.push({
+      id: `pk-${pk.id}-${i}`,
+      tipo: svolte.has(x.data) ? "svolta" : assenze.has(x.data) ? "assenza" : "programmata",
+      data: x.data,
+      ora: x.ora,
+      dur: x.dur,
+      titolo: chi,
+      pk
+    }));
+  });
+  (entrate || []).forEach(e => {
+    if (e.data) out.push({
+      id: `ent-${e.id}`,
+      tipo: "incasso",
+      data: e.data,
+      ora: e.orario || null,
+      dur: 60,
+      titolo: nome(e.portiereId) || e.note || "Seduta",
+      ent: e
+    });
+  });
+  (eventi || []).forEach(ev => {
+    if (!ev.dataInizio) return;
+    const ini = calMin(ev.oraInizio),
+      fin = calMin(ev.oraFine);
+    out.push({
+      id: `ev-${ev.id}-0`,
+      tipo: "evento",
+      data: ev.dataInizio,
+      ora: ev.oraInizio || null,
+      dur: ini != null && fin != null && fin > ini ? fin - ini : 90,
+      titolo: ev.titolo || "Evento",
+      sotto: ev.luogo || "",
+      ev
+    });
+  });
+  return out;
+}
+function SettimanaHome({
+  portieri,
+  pacchetti,
+  entrate,
+  eventi,
+  aggiungiEntrata,
+  settings
+}) {
+  const voci = useMemo(() => settVoci({
+    portieri,
+    pacchetti,
+    entrate,
+    eventi
+  }), [portieri, pacchetti, entrate, eventi]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      background: surface,
+      border: `1px solid ${border}`,
+      borderRadius: 16,
+      padding: "16px 18px",
+      margin: "16px 0 0",
+      color: textPrimary
+    }
+  }, /*#__PURE__*/React.createElement("h3", {
+    style: {
+      margin: "0 0 4px",
+      fontSize: 18,
+      color: textPrimary
+    }
+  }, "\uD83D\uDDD3\uFE0F La mia settimana"), /*#__PURE__*/React.createElement(SettimanaPannello, {
+    voci: voci,
+    oggi: oggiISO(),
+    portieri: portieri,
+    aggiungiEntrata: aggiungiEntrata,
+    settings: settings
+  }));
 }
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
 const CAL_TIPI = {
