@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-RZfrAbr+VYe4AzbgrXWWb/YtCL3QqlOhn0D5VQyK/eQ=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-O/hEsR+PnIgouOqo+KKqPrQmMchPD7KEq0FzFrp7AoM=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -22934,18 +22934,19 @@ function SettimanaPannello({
     });
   });
   const scarica = () => {
-    const blob = new Blob([creaIcs(tutte, avviso)], {
+    const soloPk = tutte.filter(v => v.pk);
+    const blob = new Blob([creaIcs(soloPk, avviso)], {
       type: "text/calendar;charset=utf-8"
     });
     const url = URL.createObjectURL(blob);
     const el = document.createElement("a");
     el.href = url;
-    el.download = `settimana-${da}.ics`;
+    el.download = `pacchetti-${da}.ics`;
     document.body.appendChild(el);
     el.click();
     el.remove();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
-    setFatto(`File scaricato con ${tutte.length} impegni.`);
+    setFatto(`File scaricato con ${soloPk.length} ${soloPk.length === 1 ? "seduta" : "sedute"} dei pacchetti.`);
   };
   useEffect(() => {
     if (!stampa) return;
@@ -23239,7 +23240,7 @@ function SettimanaPannello({
     }
   }, "\uD83D\uDDA8\uFE0F Stampa o salva in PDF"), /*#__PURE__*/React.createElement("p", {
     style: etichetta
-  }, "Oppure manda tutto al Calendario Mac / iPhone"), /*#__PURE__*/React.createElement("div", {
+  }, "Manda i pacchetti al Calendario Mac / iPhone"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexWrap: "wrap",
@@ -23258,16 +23259,16 @@ function SettimanaPannello({
     onClick: () => setAvviso(m),
     style: chip(avviso === m)
   }, l))), /*#__PURE__*/React.createElement("button", {
-    disabled: tutte.length === 0,
+    disabled: !tutte.some(v => v.pk),
     onClick: scarica,
     style: {
       ...ghostBtn,
       width: "100%",
       padding: "11px 14px",
       fontSize: 14.5,
-      opacity: tutte.length ? 1 : .5
+      opacity: tutte.some(v => v.pk) ? 1 : .5
     }
-  }, "\uD83D\uDCF2 Scarica per il Calendario (", tutte.length, ")"), fatto && /*#__PURE__*/React.createElement("p", {
+  }, "\uD83D\uDCF2 Scarica i pacchetti per il Calendario (", tutte.filter(v => v.pk).length, ")"), fatto && /*#__PURE__*/React.createElement("p", {
     role: "status",
     style: {
       margin: "10px 0 0",
@@ -23282,7 +23283,7 @@ function SettimanaPannello({
       color: textMuted,
       lineHeight: 1.5
     }
-  }, "Consiglio: segna qui anche le sedute singole con \"+ singola\" accanto al giorno. Cos\xEC questa pagina \xE8 sempre completa e al Calendario del Mac mandi solo la copia della settimana, una volta, il luned\xEC."));
+  }, "Nel file ci sono solo le sedute dei pacchetti: le singole restano quelle che scrivi tu sul Calendario del Mac, cos\xEC non si creano doppioni."));
 }
 function EsportaCalendario(props) {
   const [aperto, setAperto] = useState(false);
