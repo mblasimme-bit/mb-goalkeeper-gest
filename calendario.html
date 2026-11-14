@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rVteG/IJ32cwOEzZvr+ld8TDDeQ3eABCH1s33NnyqXY='; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-S6xGmtMozLNZTrqx6tRgYDPYqk+E5ng66TAdwETv+EE='; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="robots" content="noindex, nofollow, noarchive" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="MB Calendario" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#000000" />
-<script>(function(){var sa=window.navigator.standalone===true||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);if(sa){location.replace('./?calendario=1');}})();</script>
+<script>(function(){if(/[?&]apri=1/.test(location.search)){location.replace('./?calendario=1');return;}try{history.replaceState(null,'','calendario.html?apri=1');}catch(e){}})();</script>
 <style>
 body{margin:0;background:#0e0e10;color:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px;box-sizing:border-box}
 .box{max-width:420px;text-align:center}
