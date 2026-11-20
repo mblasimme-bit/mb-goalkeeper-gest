@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-O/hEsR+PnIgouOqo+KKqPrQmMchPD7KEq0FzFrp7AoM=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-0udBxaCFcYBDS9usCwbGQnMjsnUGTjM6AaavZNQVMbY=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -1323,6 +1323,7 @@ const sectionLabelStyle = {
   margin: "0 0 10px"
 };
 const ICONE_MENU = {
+  "partite-live": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7l4 3-1.5 5h-5L8 10z\"/>",
   "dati-fattura": "<path d=\"M6 2h9l3 3v17H6z\"/><path d=\"M9 8h6M9 12h6M9 16h4\"/>",
   "messaggio-inattivi": "<path d=\"M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.6A8.4 8.4 0 1 1 21 11.5z\"/><path d=\"M9 11h.01M12 11h.01M15 11h.01\"/>",
   "analisi": "<path d=\"M3 3v18h18\"/><path d=\"M7 15l4-4 3 3 5-6\"/>",
@@ -6716,7 +6717,7 @@ function GestionalePortieri() {
       flexDirection: "column",
       overflowY: "auto"
     }
-  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["messaggio-inattivi", "👋 Scrivi agli inattivi", whatsapp, whatsappDim], ["dati-fattura", "🧾 Dati per le fatture", goldSoft, goldDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
+  }, [["Gestione", [["lista", "🧤 Portieri", pitch, pitchDim], ["guanti", "🧰 Materiale", goldSoft, goldDim], ["pacchetti", "📦 Pacchetti", sky, skyDim], ["allenamento-mirato", "🎯 Allenamento mirato", coral, coralDim], ["calendario", "📅 Calendario", "#1f9d55", "rgba(31,157,85,0.12)"], ["appuntamenti-pacchetti", "📋 A che punto sono i pacchetti", sky, skyDim], ["storico-assenze", "🚫 Storico assenze", coral, coralDim]]], ["Amministrazione", [["contabilita", "📊 Contabilità", "#1f9d55", "rgba(31,157,85,0.12)"], ["analisi", "📈 Analisi", "#3987e5", "rgba(57,135,229,0.12)"], ["classifica-presenze", "🏆 Classifica presenze", "#3b82f6", "rgba(59,130,246,0.12)"], ["collega-entrate", "🔗 Ricollega entrate", "#f59e0b", "rgba(245,158,11,0.12)"], ["profili-incompleti", "📋 Profili da completare", "#f59e0b", "rgba(245,158,11,0.12)"], ["estratto-conto", "📑 Estratto conto", "#3b82f6", "rgba(59,130,246,0.12)"], ["spese", "💼 Spese Academy", coral, coralDim], ["insoluti", "⚠️ Insoluti", "#c9522f", coralDim], ["certificati", "🩺 Certificati", "#c9522f", coralDim], ["sponsor", "🤝 Sponsor", "#7a4fa0", "rgba(122,79,160,0.12)"], ["eventi", "🗓️ Eventi", "#7a4fa0", "rgba(122,79,160,0.12)"]]], ["Comunicazioni", [["iscrizioni", "📋 Iscrizioni", sky, skyDim], ["messaggio-inattivi", "👋 Scrivi agli inattivi", whatsapp, whatsappDim], ["dati-fattura", "🧾 Dati per le fatture", goldSoft, goldDim], ["partite-live", "⚽ Partite live", goldSoft, goldDim], ["verifiche", "📈 Verifiche periodiche", whatsapp, whatsappDim], ["richieste", "💬 Richieste e informazioni", gold, goldDim], ["gare", "⚽ Valutazioni gara", pitch, pitchDim], ["note", "📝 Note veloci", lilla, lillaDim], ["documenti", "📄 Documenti", "#c9522f", "rgba(201,82,47,0.12)"]]], ["Sistema", [["database", "☁️ Database", "#3b82f6", "rgba(59,130,246,0.12)"], ["impostazioni", "⚙️ Impostazioni", "#8b5cf6", "rgba(139,92,246,0.12)"]]]].map(([gruppo, voci]) => /*#__PURE__*/React.createElement("div", {
     key: gruppo,
     style: {
       marginBottom: 14
@@ -7573,7 +7574,7 @@ function GestionalePortieri() {
         height: 16,
         accentColor: gold
       }
-    })))), tab === "tecnici" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", { className: "no-print", onClick: () => setView({ page: "progressi", id: p.id }), style: { width: "100%", margin: "0 0 14px", background: lillaDim, color: lilla, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 14px", fontSize: 15, fontWeight: 800, cursor: "pointer" } }, "📈 Progressi di " + sgNomeBreve(p.nome) + " →"), /*#__PURE__*/React.createElement("p", {
+    })))), tab === "tecnici" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", { className: "no-print", onClick: () => setView({ page: "progressi", id: p.id }), style: { width: "100%", margin: "0 0 14px", background: lillaDim, color: lilla, border: `1px solid ${lilla}`, borderRadius: 12, padding: "12px 14px", fontSize: 15, fontWeight: 800, cursor: "pointer" } }, "📈 Progressi di " + sgNomeBreve(p.nome) + " →"), /*#__PURE__*/React.createElement("div", { className: "no-print", style: { display: "flex", gap: 8, flexWrap: "wrap", margin: "0 0 14px" } }, /*#__PURE__*/React.createElement("button", { onClick: () => mandaLinkPartitaLive(p), disabled: !p.telefono, title: p.telefono ? "Manda al genitore il link per segnare la partita" : "Manca il numero di telefono nella scheda", style: { ...ghostBtn, flex: "1 1 200px", fontSize: 14, padding: "10px 12px", borderColor: whatsapp, color: whatsapp, opacity: p.telefono ? 1 : 0.5 } }, "⚽ Manda il link Partita live"), /*#__PURE__*/React.createElement("button", { onClick: () => setView({ page: "partite-live", id: p.id }), style: { ...ghostBtn, flex: "1 1 200px", fontSize: 14, padding: "10px 12px" } }, "Partite live di " + sgNomeBreve(p.nome) + ((p.partiteLive || []).length ? ` (${(p.partiteLive || []).length})` : ""))), /*#__PURE__*/React.createElement("p", {
       style: sectionLabelStyle
     }, "🧑‍🏫 Squadra"), /*#__PURE__*/React.createElement("div", {
       style: cardStyle
@@ -10076,6 +10077,9 @@ function GestionalePortieri() {
       TopBar: TopBar,
       printStyle: printStyle
     });
+  }
+  if (view.page === "partite-live") {
+    return /*#__PURE__*/React.createElement(PaginaPartiteLive, { id: view.id, portieri, dbConfig, session, updatePortiere, setView, Menu, TopBar, printStyle, fetchConTimeout, authHeaders });
   }
   if (view.page === "dati-fattura") {
     return /*#__PURE__*/React.createElement(PaginaDatiFattura, { portieri, dbConfig, session, updatePortiere, setView, Menu, TopBar, printStyle, fetchConTimeout, authHeaders });
@@ -20789,7 +20793,13 @@ function ProgressiVista({
         textAlign: "center"
       }
     }, "L'andamento comparir\xE0 dopo qualche seduta valutata.")));
-  })), d.gare.length > 0 && /*#__PURE__*/React.createElement("div", {
+  })), (p.partiteLive || []).length > 0 && /*#__PURE__*/React.createElement(PgLive, {
+    p: p,
+    t: t,
+    card: card,
+    titolo: titolo,
+    kpi: kpi
+  }), d.gare.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: card
   }, titolo("Le partite", `${d.gare.length} ${d.gare.length === 1 ? "partita valutata" : "partite valutate"}, voti da 1 a ${VOTO_MAX}.`), d.puntiGare.length >= 2 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PgLinea, {
     valori: d.puntiGare.map(x => x.y),
@@ -23521,6 +23531,1538 @@ function PaginaSoloCalendario({
     aggiungiEntrata: aggiungiEntrata,
     settings: settings
   }));
+}
+// --- Partita live: il genitore segna gli interventi durante la gara (?partita=1) e Matteo li approva ---
+const PL_TIPI = [{
+  k: "parata",
+  n: "Parata",
+  s: "tiro in porta"
+}, {
+  k: "alta",
+  n: "Uscita alta",
+  s: "cross, angolo"
+}, {
+  k: "bassa",
+  n: "Uscita bassa",
+  s: "palla filtrante"
+}, {
+  k: "uno",
+  n: "1 contro 1",
+  s: "attaccante solo"
+}, {
+  k: "piedi_off",
+  n: "Piedi in fase offensiva",
+  s: "impostazione, rilancio"
+}, {
+  k: "piedi_dif",
+  n: "Piedi in fase difensiva",
+  s: "retropassaggio, pressione"
+}, {
+  k: "lettura",
+  n: "Lettura di gioco",
+  s: "pericolo letto in anticipo"
+}, {
+  k: "rinvio",
+  n: "Rinvio",
+  s: "dal fondo o con le mani"
+}];
+const PL_MOTIVI_PER = {
+  parata: ["Non era fermo al momento del tiro", "Non ha attaccato la palla", "Reazione tardiva", "Posizione errata"],
+  alta: ["Non ha cercato il punto più alto", "Si è fatto attrarre dalla palla e l'ha superata", "Direzione verso la palla sbagliata"],
+  bassa: ["Uscita in ritardo", "Uscita sbagliata (non doveva uscire)", "Presa mancata", "Si è buttato troppo presto", "Posizione del corpo passiva", "Ha affrontato l'uscita con le gambe", "Ha affrontato passivamente l'attacco palla"],
+  uno: ["Troppo lontano dall'attaccante", "Si è buttato troppo presto", "Posizione del corpo sbagliata", "Non ha chiuso lo specchio", "L'ha fatto avvicinare troppo"],
+  piedi_off: ["Controllo sbagliato", "Passaggio sbagliato", "Scelta sbagliata (lungo/corto)", "Troppo lento a decidere", "Trasmissione della palla timida", "Passaggio a un compagno mal posizionato"],
+  piedi_dif: ["Controllo sbagliato", "Ha rischiato troppo", "Rinvio sbagliato", "Pressato e in difficoltà", "Lento nella scelta"],
+  lettura: ["Non ha letto la situazione", "Ha letto bene ma ha reagito tardi", "Posizione troppo bassa / troppo alta", "Non ha guidato la difesa"],
+  rinvio: ["Troppo corto", "Troppo alto", "Troppo basso", "Fuori misura", "Scelta sbagliata (mano/piede)"],
+  gol: []
+};
+const plMotivi = tipo => PL_MOTIVI_PER[tipo] || [];
+const PL_ESITI = {
+  ok: "Bene",
+  ko: "Male",
+  nores: "Non ha responsabilità evidenti",
+  imparabile: "Imparabile",
+  colpa: "Poteva fare di più",
+  posizione: "Posizione sbagliata",
+  errore: "Errore",
+  nonso: "Da rivedere"
+};
+// esiti del gol subito: verdi = senza colpa del portiere, rossi = con responsabilità
+const PL_GOL_OK = ["nores", "imparabile"],
+  PL_GOL_KO = ["colpa", "posizione", "errore"];
+const plEsitoOk = x => x === "ok" || PL_GOL_OK.includes(x);
+const plEsitoKo = x => x === "ko" || PL_GOL_KO.includes(x);
+const plNomeTipo = k => k === "gol" ? "Gol subito" : (PL_TIPI.find(t => t.k === k) || {}).n || k;
+function plConti(eventi) {
+  const c = {
+    tot: 0,
+    ok: 0,
+    ko: 0,
+    gol: 0,
+    golColpa: 0,
+    per: {},
+    motivi: {}
+  };
+  (eventi || []).forEach(e => {
+    if (e.motivo) c.motivi[e.motivo] = (c.motivi[e.motivo] || 0) + 1;
+    if (e.tipo === "gol") {
+      c.gol++;
+      if (PL_GOL_KO.includes(e.esito)) c.golColpa++;
+      return;
+    }
+    c.tot++;
+    if (e.esito === "ok") c.ok++;
+    if (e.esito === "ko") c.ko++;
+    c.per[e.tipo] = c.per[e.tipo] || {
+      n: 0,
+      ok: 0
+    };
+    c.per[e.tipo].n++;
+    if (e.esito === "ok") c.per[e.tipo].ok++;
+  });
+  c.perc = c.tot ? Math.round(c.ok / c.tot * 100) : null;
+  return c;
+}
+// Pulizia dei dati in arrivo dal modulo pubblico: solo campi e valori attesi
+function plPulisciEventi(ev) {
+  if (!Array.isArray(ev)) return [];
+  const tipi = new Set(PL_TIPI.map(t => t.k).concat("gol"));
+  return ev.slice(0, 200).filter(e => e && tipi.has(e.tipo)).map(e => ({
+    tipo: e.tipo,
+    min: Math.max(0, Math.min(130, parseInt(e.min, 10) || 0)),
+    esito: Object.prototype.hasOwnProperty.call(PL_ESITI, e.esito) ? e.esito : "nonso",
+    motivo: plMotivi(e.tipo).includes(e.motivo) ? e.motivo : null,
+    nota: String(e.nota || "").slice(0, 120)
+  }));
+}
+function ModuloPartitaLive() {
+  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const pId = (params.get("p") || "").replace(/[^\w-]/g, "").slice(0, 40);
+  const pNome = (params.get("n") || "").slice(0, 80);
+  const CHIAVE = "mb-partita-live-" + (pId || "x");
+  const nuovo = () => ({
+    fase: "start",
+    portiere: pNome,
+    avversario: "",
+    data: new Date().toISOString().slice(0, 10),
+    durata: 35,
+    tempo: 1,
+    inizio: null,
+    accumulato: 0,
+    eventi: [],
+    risultato: "",
+    commento: ""
+  });
+  const [S, setS] = useState(() => {
+    try {
+      const x = localStorage.getItem(CHIAVE);
+      if (x) return JSON.parse(x);
+    } catch (e) {}
+    return nuovo();
+  });
+  const [aperto, setAperto] = useState(null);
+  const [, setTic] = useState(0);
+  const [invio, setInvio] = useState({
+    stato: "idle",
+    errore: ""
+  });
+  const [confermaFine, setConfermaFine] = useState(false);
+  const lockRef = useRef(null);
+  const agg = p => setS(s => ({
+    ...s,
+    ...p
+  }));
+  useEffect(() => {
+    try {
+      if (S.fase === "inviata") localStorage.removeItem(CHIAVE);else localStorage.setItem(CHIAVE, JSON.stringify(S));
+    } catch (e) {}
+  }, [S]);
+  useEffect(() => {
+    if (S.fase !== "live" || !S.inizio) return;
+    const t = setInterval(() => setTic(x => x + 1), 1000);
+    return () => clearInterval(t);
+  }, [S.fase, S.inizio]);
+  const sveglia = () => {
+    try {
+      if (navigator.wakeLock && !lockRef.current) navigator.wakeLock.request("screen").then(l => {
+        lockRef.current = l;
+        l.addEventListener && l.addEventListener("release", () => {
+          lockRef.current = null;
+        });
+      }).catch(() => {});
+    } catch (e) {}
+  };
+  useEffect(() => {
+    const v = () => {
+      if (document.visibilityState === "visible" && S.fase === "live") sveglia();
+    };
+    document.addEventListener("visibilitychange", v);
+    if (S.fase === "live") sveglia();
+    return () => document.removeEventListener("visibilitychange", v);
+  }, [S.fase]);
+  const sec = Math.floor((S.accumulato + (S.inizio ? Date.now() - S.inizio : 0)) / 1000);
+  const minuto = (S.tempo === 2 ? S.durata : 0) + Math.min(Math.floor(sec / 60) + 1, S.durata + 15);
+  const orologio = `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+  const C = {
+    bg: "#0f0e0c",
+    card: "#1b1a17",
+    card2: "#25231f",
+    line: "#34312b",
+    fg: "#f3efe6",
+    muted: "#a39d90",
+    gold: "#d4af5f",
+    goldSoft: "#e9d19f",
+    good: "#3fae6a",
+    bad: "#d9603a"
+  };
+  const font = "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", system-ui, sans-serif";
+  const num = "\"SF Pro Rounded\", -apple-system, system-ui, sans-serif";
+  const lab = {
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: ".06em",
+    textTransform: "uppercase",
+    color: C.muted,
+    display: "block",
+    margin: "0 0 6px"
+  };
+  const inp = {
+    width: "100%",
+    boxSizing: "border-box",
+    background: C.card2,
+    border: `1px solid ${C.line}`,
+    color: C.fg,
+    borderRadius: 12,
+    padding: "13px 12px",
+    fontSize: 16,
+    fontWeight: 600,
+    fontFamily: font
+  };
+  const chip = (on, col) => ({
+    border: `1px solid ${on ? col || C.gold : C.line}`,
+    background: on ? "rgba(212,175,95,.16)" : "transparent",
+    color: on ? C.goldSoft : C.fg,
+    borderRadius: 999,
+    padding: "9px 14px",
+    fontSize: 14,
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: font
+  });
+  const btn = tipo => ({
+    border: tipo === "gold" ? 0 : `1px solid ${C.line}`,
+    background: tipo === "gold" ? C.gold : "transparent",
+    color: tipo === "gold" ? "#17140e" : C.fg,
+    borderRadius: 14,
+    padding: 16,
+    fontSize: 17,
+    fontWeight: 800,
+    cursor: "pointer",
+    width: "100%",
+    fontFamily: font
+  });
+  const pagina = children => /*#__PURE__*/React.createElement("div", {
+    style: {
+      minHeight: "100vh",
+      background: C.bg,
+      color: C.fg,
+      fontFamily: font,
+      padding: "calc(env(safe-area-inset-top, 0px) + 16px) 16px 40px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 480,
+      margin: "0 auto",
+      display: "flex",
+      flexDirection: "column",
+      gap: 14
+    }
+  }, children));
+  const testa = (sopra, titolo, sotto) => /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 11,
+      fontWeight: 800,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: C.gold
+    }
+  }, sopra), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 30,
+      lineHeight: 1.05
+    }
+  }, titolo), sotto && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 14,
+      color: C.muted
+    }
+  }, sotto));
+  const pill = e => {
+    const ok = plEsitoOk(e.esito),
+      ko = plEsitoKo(e.esito);
+    return /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        fontWeight: 800,
+        borderRadius: 999,
+        padding: "4px 10px",
+        whiteSpace: "nowrap",
+        background: ok ? "rgba(63,174,106,.18)" : ko ? "rgba(217,96,58,.18)" : C.card2,
+        color: ok ? "#7fd6a0" : ko ? "#f19a7b" : C.muted
+      }
+    }, PL_ESITI[e.esito] || "—");
+  };
+  const riga = (e, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "grid",
+      gridTemplateColumns: "42px 1fr auto",
+      gap: 10,
+      alignItems: "center",
+      background: C.card,
+      border: `1px solid ${C.line}`,
+      borderRadius: 12,
+      padding: "10px 12px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: num,
+      fontSize: 21,
+      fontWeight: 700,
+      color: C.goldSoft,
+      fontVariantNumeric: "tabular-nums"
+    }
+  }, e.min, "'"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      display: "block",
+      fontSize: 15
+    }
+  }, plNomeTipo(e.tipo)), (e.motivo || e.nota) && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12.5,
+      color: C.muted
+    }
+  }, [e.motivo, e.nota].filter(Boolean).join(" · "))), pill(e));
+
+  // ---------- schermate ----------
+  if (S.fase === "inviata") return pagina(/*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center",
+      paddingTop: 40
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 52,
+      margin: 0
+    }
+  }, "\u2705"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 24,
+      margin: "10px 0 6px"
+    }
+  }, "Partita inviata!"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 15,
+      color: C.muted,
+      lineHeight: 1.5,
+      margin: "0 0 24px"
+    }
+  }, "Matteo la riceve nel gestionale. Grazie per il vostro aiuto!"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setS(nuovo()),
+    style: btn("ghost")
+  }, "Segna un'altra partita")));
+  if (S.fase === "start") return pagina(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      background: "#f4f2ec",
+      borderRadius: 18,
+      padding: "8px 14px"
+    }
+  }, /*#__PURE__*/React.createElement(LogoDocumento, {
+    w: 70
+  }))), testa("MB Goalkeeper Academy", "Partita live", "Durante la gara segna ogni intervento del portiere con un tocco. Il minuto si scrive da solo."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      border: `1px solid ${C.line}`,
+      borderRadius: 18,
+      padding: 16,
+      display: "flex",
+      flexDirection: "column",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab,
+    htmlFor: "pl-portiere"
+  }, "Portiere"), /*#__PURE__*/React.createElement("input", {
+    id: "pl-portiere",
+    style: inp,
+    value: S.portiere,
+    maxLength: 120,
+    onChange: e => agg({
+      portiere: e.target.value
+    }),
+    placeholder: "Nome e cognome"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab,
+    htmlFor: "pl-avv"
+  }, "Avversario"), /*#__PURE__*/React.createElement("input", {
+    id: "pl-avv",
+    style: inp,
+    value: S.avversario,
+    maxLength: 80,
+    onChange: e => agg({
+      avversario: e.target.value
+    }),
+    placeholder: "Nome della squadra"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab,
+    htmlFor: "pl-data"
+  }, "Data"), /*#__PURE__*/React.createElement("input", {
+    id: "pl-data",
+    type: "date",
+    style: inp,
+    value: S.data,
+    onChange: e => agg({
+      data: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab
+  }, "Durata di un tempo"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 8
+    }
+  }, [20, 25, 30, 35, 40, 45].map(m => /*#__PURE__*/React.createElement("button", {
+    key: m,
+    type: "button",
+    onClick: () => agg({
+      durata: m
+    }),
+    "aria-pressed": S.durata === m,
+    style: chip(S.durata === m)
+  }, m, "'"))))), /*#__PURE__*/React.createElement("button", {
+    disabled: !S.portiere.trim(),
+    onClick: () => agg({
+      fase: "live",
+      tempo: 1,
+      inizio: Date.now(),
+      accumulato: 0
+    }),
+    style: {
+      ...btn("gold"),
+      opacity: S.portiere.trim() ? 1 : .5
+    }
+  }, "\u25B6 Inizia il 1\xB0 tempo"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 12.5,
+      color: C.muted,
+      lineHeight: 1.5
+    }
+  }, "Funziona anche senza rete: tutto resta salvato su questo telefono, anche se chiudi la pagina. Si invia solo alla fine. Tieni lo schermo acceso durante la gara.")));
+  if (S.fase === "fine") {
+    const c = plConti(S.eventi);
+    const kpi = (n, l) => /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: C.card2,
+        borderRadius: 14,
+        padding: "12px 10px"
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        display: "block",
+        fontFamily: num,
+        fontSize: 30,
+        lineHeight: 1
+      }
+    }, n), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: C.muted
+      }
+    }, l));
+    const invia = async () => {
+      setInvio({
+        stato: "inviando",
+        errore: ""
+      });
+      try {
+        const res = await fetch(`${DEFAULT_SUPABASE_CONFIG.project_url}/rest/v1/partite_live_pending`, {
+          method: "POST",
+          headers: {
+            apikey: DEFAULT_SUPABASE_CONFIG.anon_key,
+            Authorization: `Bearer ${DEFAULT_SUPABASE_CONFIG.anon_key}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify([{
+            portiere_id: pId || null,
+            nome_portiere: S.portiere.trim().slice(0, 120),
+            avversario: (S.avversario || "").trim().slice(0, 80) || null,
+            data_gara: S.data || null,
+            durata: S.durata,
+            risultato: (S.risultato || "").trim().slice(0, 15) || null,
+            commento: (S.commento || "").trim().slice(0, 600) || null,
+            eventi: plPulisciEventi(S.eventi)
+          }])
+        });
+        if (!res.ok) throw new Error(res.status === 404 ? "Il modulo non è ancora attivo. Avvisa Matteo." : "Invio non riuscito (" + res.status + "). Riprova tra poco.");
+        setInvio({
+          stato: "idle",
+          errore: ""
+        });
+        setS(s => ({
+          ...s,
+          fase: "inviata"
+        }));
+      } catch (err) {
+        setInvio({
+          stato: "errore",
+          errore: /fetch|network|load/i.test(err.message) ? "Sembra che non ci sia rete. La partita resta salvata su questo telefono: riprova quando c'è campo." : err.message
+        });
+      }
+    };
+    return pagina(/*#__PURE__*/React.createElement(React.Fragment, null, testa("Fine partita", S.portiere, `contro ${S.avversario || "—"}`), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 8
+      }
+    }, kpi(c.tot, "interventi"), kpi(c.perc == null ? "–" : c.perc + "%", "riusciti"), kpi(c.gol, "gol subiti")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: lab,
+      htmlFor: "pl-ris"
+    }, "Risultato finale (facoltativo)"), /*#__PURE__*/React.createElement("input", {
+      id: "pl-ris",
+      style: inp,
+      value: S.risultato,
+      maxLength: 15,
+      onChange: e => agg({
+        risultato: e.target.value
+      }),
+      placeholder: "Es. 2-1",
+      inputMode: "text"
+    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+      style: lab,
+      htmlFor: "pl-comm"
+    }, "Un commento per Matteo (facoltativo)"), /*#__PURE__*/React.createElement("textarea", {
+      id: "pl-comm",
+      style: {
+        ...inp,
+        minHeight: 90,
+        resize: "vertical",
+        fontWeight: 500
+      },
+      value: S.commento,
+      maxLength: 600,
+      onChange: e => agg({
+        commento: e.target.value
+      }),
+      placeholder: "Com'\xE8 andata, cosa ti ha colpito\u2026"
+    })), invio.errore && /*#__PURE__*/React.createElement("p", {
+      role: "alert",
+      style: {
+        margin: 0,
+        color: "#f19a7b",
+        fontSize: 14,
+        lineHeight: 1.45
+      }
+    }, invio.errore), /*#__PURE__*/React.createElement("button", {
+      onClick: invia,
+      disabled: invio.stato === "inviando",
+      style: btn("gold")
+    }, invio.stato === "inviando" ? "Invio…" : invio.errore ? "Riprova a inviare" : "📤 Invia a Matteo"), /*#__PURE__*/React.createElement("label", {
+      style: {
+        ...lab,
+        marginTop: 6
+      }
+    }, "Cronologia (", S.eventi.length, ")"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 6
+      }
+    }, S.eventi.length ? S.eventi.map(riga) : /*#__PURE__*/React.createElement("p", {
+      style: {
+        color: C.muted,
+        margin: 0
+      }
+    }, "Nessun intervento segnato.")), /*#__PURE__*/React.createElement("button", {
+      onClick: () => agg({
+        fase: "live",
+        tempo: 2,
+        inizio: null
+      }),
+      style: btn("ghost")
+    }, "\u21A9 Torna alla partita")));
+  }
+
+  // live o intervallo
+  const interv = S.fase === "intervallo";
+  const corre = !!S.inizio;
+  const apri = tipo => {
+    if (interv) return;
+    setAperto({
+      tipo,
+      min: minuto,
+      esito: null,
+      motivo: null,
+      nota: ""
+    });
+  };
+  const salvaEvento = () => {
+    if (!aperto || !aperto.esito) return;
+    setS(s => ({
+      ...s,
+      eventi: s.eventi.concat([{
+        ...aperto,
+        nota: (aperto.nota || "").slice(0, 120)
+      }])
+    }));
+    setAperto(null);
+  };
+  const gol = aperto && aperto.tipo === "gol";
+  const esitoBtn = (k, testo, col) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    type: "button",
+    onClick: () => setAperto(a => ({
+      ...a,
+      esito: k,
+      motivo: k === "ko" ? a.motivo : null
+    })),
+    "aria-pressed": aperto.esito === k,
+    style: {
+      border: `2px solid ${aperto.esito === k ? col : C.line}`,
+      background: aperto.esito === k ? col === C.good ? "rgba(63,174,106,.18)" : col === C.bad ? "rgba(217,96,58,.18)" : C.card2 : C.card2,
+      color: C.fg,
+      borderRadius: 16,
+      padding: gol ? "16px 6px" : "18px 10px",
+      fontSize: gol ? 15 : 18,
+      fontWeight: 800,
+      cursor: "pointer",
+      fontFamily: font
+    }
+  }, testo);
+  return pagina(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "linear-gradient(180deg,#1f1d19,#151411)",
+      border: `1px solid ${C.line}`,
+      borderRadius: 20,
+      padding: "14px 16px",
+      display: "grid",
+      gridTemplateColumns: "1fr auto",
+      alignItems: "center",
+      gap: 4
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontWeight: 800,
+      fontSize: 15,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, S.portiere), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "2px 0 0",
+      color: C.muted,
+      fontSize: 13,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, "contro ", S.avversario || "—")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "right"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 11,
+      fontWeight: 800,
+      letterSpacing: ".12em",
+      textTransform: "uppercase",
+      color: C.muted
+    }
+  }, interv ? "Intervallo" : `${S.tempo}° tempo · ${minuto}'`), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontFamily: num,
+      fontSize: 50,
+      lineHeight: .95,
+      fontWeight: 800,
+      fontVariantNumeric: "tabular-nums",
+      color: corre ? C.goldSoft : C.muted
+    }
+  }, orologio))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, interv ? /*#__PURE__*/React.createElement("button", {
+    onClick: () => agg({
+      fase: "live",
+      tempo: 2,
+      accumulato: 0,
+      inizio: Date.now()
+    }),
+    style: btn("gold")
+  }, "\u25B6 Inizia il 2\xB0 tempo") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => corre ? agg({
+      accumulato: S.accumulato + (Date.now() - S.inizio),
+      inizio: null
+    }) : agg({
+      inizio: Date.now()
+    }),
+    style: btn("ghost")
+  }, corre ? "⏸ Pausa" : "▶ Riprendi"), S.tempo === 1 ? /*#__PURE__*/React.createElement("button", {
+    onClick: () => agg({
+      fase: "intervallo",
+      inizio: null
+    }),
+    style: btn("ghost")
+  }, "Fine 1\xB0 tempo") : /*#__PURE__*/React.createElement("button", {
+    onClick: () => setConfermaFine(true),
+    style: btn("gold")
+  }, "\uD83C\uDFC1 Fine partita"))), confermaFine && /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: C.card,
+      border: `1px solid ${C.gold}`,
+      borderRadius: 14,
+      padding: 14,
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontWeight: 700
+    }
+  }, "La partita \xE8 finita?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setConfermaFine(false),
+    style: btn("ghost")
+  }, "No, continua"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setConfermaFine(false);
+      agg({
+        fase: "fine",
+        inizio: null
+      });
+    },
+    style: btn("gold")
+  }, "S\xEC, \xE8 finita"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 10
+    }
+  }, PL_TIPI.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.k,
+    disabled: interv,
+    onClick: () => apri(t.k),
+    style: {
+      background: C.card,
+      border: `1px solid ${C.line}`,
+      color: C.fg,
+      borderRadius: 16,
+      padding: "16px 12px",
+      minHeight: 82,
+      textAlign: "left",
+      cursor: "pointer",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      gap: 6,
+      fontSize: 17,
+      fontWeight: 800,
+      fontFamily: font,
+      opacity: interv ? .4 : 1
+    }
+  }, t.n, /*#__PURE__*/React.createElement("small", {
+    style: {
+      fontSize: 12,
+      fontWeight: 600,
+      color: C.muted
+    }
+  }, t.s))), /*#__PURE__*/React.createElement("button", {
+    disabled: interv,
+    onClick: () => apri("gol"),
+    style: {
+      gridColumn: "1 / -1",
+      background: "rgba(217,96,58,.12)",
+      border: "1px solid rgba(217,96,58,.6)",
+      color: C.fg,
+      borderRadius: 16,
+      padding: "18px 14px",
+      textAlign: "left",
+      cursor: "pointer",
+      fontSize: 17,
+      fontWeight: 800,
+      fontFamily: font,
+      opacity: interv ? .4 : 1
+    }
+  }, "\u26BD Gol subito")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "baseline"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...lab,
+      margin: 0
+    }
+  }, "Cronologia (", S.eventi.length, ")"), S.eventi.length > 0 && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setS(s => ({
+      ...s,
+      eventi: s.eventi.slice(0, -1)
+    })),
+    style: {
+      background: "none",
+      border: 0,
+      color: C.muted,
+      fontSize: 13,
+      fontWeight: 600,
+      textDecoration: "underline",
+      cursor: "pointer",
+      padding: 0,
+      fontFamily: font
+    }
+  }, "Annulla l'ultimo")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6
+    }
+  }, S.eventi.length ? S.eventi.slice().reverse().map(riga) : /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      color: C.muted,
+      fontSize: 14,
+      textAlign: "center",
+      padding: 14,
+      border: `1px dashed ${C.line}`,
+      borderRadius: 12
+    }
+  }, "Ancora nessun intervento. Tocca un pulsante quando il portiere interviene.")), aperto && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    onClick: () => setAperto(null),
+    style: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,.6)",
+      zIndex: 20
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    role: "dialog",
+    "aria-label": "Com'\xE8 andata",
+    style: {
+      position: "fixed",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 21,
+      background: C.card,
+      borderTop: `1px solid ${C.line}`,
+      borderRadius: "22px 22px 0 0",
+      padding: "18px 16px calc(18px + env(safe-area-inset-bottom, 0px))"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 480,
+      margin: "0 auto",
+      display: "flex",
+      flexDirection: "column",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 11,
+      fontWeight: 800,
+      letterSpacing: ".14em",
+      textTransform: "uppercase",
+      color: C.gold
+    }
+  }, aperto.min, "' minuto"), /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: "2px 0 0",
+      fontSize: 28
+    }
+  }, plNomeTipo(aperto.tipo))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 10
+    }
+  }, gol ? [esitoBtn("nores", "Non ha responsabilità evidenti", C.good), esitoBtn("imparabile", "Imparabile", C.good), esitoBtn("colpa", "Poteva fare di più", C.bad), esitoBtn("posizione", "Posizione sbagliata", C.bad), esitoBtn("errore", "Errore", C.bad)] : [esitoBtn("ok", "✅ Bene", C.good), esitoBtn("ko", "❌ Male", C.bad)]), aperto.esito === "ko" && plMotivi(aperto.tipo).length > 0 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    style: lab
+  }, "Perch\xE9? (facoltativo)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 8
+    }
+  }, plMotivi(aperto.tipo).map(m => /*#__PURE__*/React.createElement("button", {
+    key: m,
+    type: "button",
+    "aria-pressed": aperto.motivo === m,
+    onClick: () => setAperto(a => ({
+      ...a,
+      motivo: a.motivo === m ? null : m
+    })),
+    style: chip(aperto.motivo === m)
+  }, m)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    style: lab,
+    htmlFor: "pl-nota"
+  }, "Nota (facoltativa)"), /*#__PURE__*/React.createElement("input", {
+    id: "pl-nota",
+    style: inp,
+    value: aperto.nota,
+    maxLength: 120,
+    onChange: e => {
+      const v = e.target.value;
+      setAperto(a => ({
+        ...a,
+        nota: v
+      }));
+    },
+    placeholder: "Es. tiro sul primo palo"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setAperto(null),
+    style: btn("ghost")
+  }, "Annulla"), /*#__PURE__*/React.createElement("button", {
+    onClick: salvaEvento,
+    disabled: !aperto.esito,
+    style: {
+      ...btn("gold"),
+      opacity: aperto.esito ? 1 : .5
+    }
+  }, "Salva")))))));
+}
+
+// Link personale con il nome del ragazzo già scritto
+function linkPartitaLive(p) {
+  const base = window.location.origin + window.location.pathname + "?partita=1";
+  return p ? `${base}&p=${encodeURIComponent(p.id)}&n=${encodeURIComponent(sgNomeBreve(p.nome))}` : base;
+}
+function mandaLinkPartitaLive(p) {
+  const testo = `Ciao! Per la partita di ${sgNomeBreve(p.nome)}: da questo link puoi segnare durante la gara gli interventi del portiere (un tocco per ogni intervento, il minuto si segna da solo). A fine partita tocca "Invia a Matteo". Grazie!\n\n${linkPartitaLive(p)}`;
+  apriWhatsappA(p.telefono, testo);
+}
+
+// Riepilogo e cronologia di una partita (usato in approvazione e archivio)
+function PlDettaglio({
+  eventi,
+  risultato,
+  commento
+}) {
+  const c = plConti(eventi);
+  const k = (n, l) => /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: surface2,
+      borderRadius: 10,
+      padding: "8px 10px",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 20,
+      fontWeight: 800,
+      color: textPrimary
+    }
+  }, n), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 11.5,
+      color: textMuted
+    }
+  }, l));
+  const motivi = Object.entries(c.motivi).sort((a, b) => b[1] - a[1]);
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
+      gap: 6,
+      margin: "8px 0"
+    }
+  }, k(c.tot, "interventi"), k(c.perc == null ? "–" : c.perc + "%", "riusciti"), k(c.gol, "gol subiti"), risultato ? k(risultato, "risultato") : null), Object.keys(c.per).length > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0",
+      fontSize: 13,
+      color: textSecondary
+    }
+  }, PL_TIPI.filter(t => c.per[t.k]).map(t => `${t.n} ${c.per[t.k].ok}/${c.per[t.k].n}`).join(" · ")), motivi.length > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0",
+      fontSize: 13,
+      color: textSecondary
+    }
+  }, "Cosa non \xE8 andato: ", motivi.map(([m, n]) => `${m} (${n})`).join(", ")), c.gol > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "4px 0",
+      fontSize: 13,
+      color: textSecondary
+    }
+  }, "Gol subiti: ", c.gol, c.golColpa ? `, di cui ${c.golColpa} con responsabilità del portiere` : ""), commento && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "8px 0",
+      fontSize: 13.5,
+      color: textPrimary,
+      fontStyle: "italic",
+      lineHeight: 1.45
+    }
+  }, "\"", commento, "\""), /*#__PURE__*/React.createElement("details", {
+    style: {
+      marginTop: 6
+    }
+  }, /*#__PURE__*/React.createElement("summary", {
+    style: {
+      cursor: "pointer",
+      fontSize: 13,
+      color: goldSoft,
+      fontWeight: 700
+    }
+  }, "Cronologia minuto per minuto (", (eventi || []).length, ")"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 6
+    }
+  }, (eventi || []).map((e, i) => {
+    const ok = plEsitoOk(e.esito),
+      ko = plEsitoKo(e.esito);
+    return /*#__PURE__*/React.createElement("p", {
+      key: i,
+      style: {
+        margin: "3px 0",
+        fontSize: 13.5,
+        color: textPrimary
+      }
+    }, /*#__PURE__*/React.createElement("b", {
+      style: {
+        display: "inline-block",
+        minWidth: 36,
+        color: goldSoft
+      }
+    }, e.min, "'"), plNomeTipo(e.tipo), " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: ok ? "#1f9d55" : ko ? coral : textMuted,
+        fontWeight: 700
+      }
+    }, PL_ESITI[e.esito]), e.motivo ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: textMuted
+      }
+    }, " \xB7 ", e.motivo) : null, e.nota ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: textMuted
+      }
+    }, " \xB7 ", e.nota) : null);
+  }))));
+}
+function PaginaPartiteLive({
+  id,
+  portieri,
+  dbConfig,
+  session,
+  updatePortiere,
+  setView,
+  Menu,
+  TopBar,
+  printStyle,
+  fetchConTimeout,
+  authHeaders
+}) {
+  const [righe, setRighe] = useState(null);
+  const [errore, setErrore] = useState("");
+  const [scelte, setScelte] = useState({});
+  const [fatti, setFatti] = useState({});
+  const [copiato, setCopiato] = useState(false);
+  const [filtro, setFiltro] = useState(id ? String(id) : "");
+  const [daEliminare, setDaEliminare] = useState(null);
+  const headers = () => authHeaders(dbConfig, session && session.access_token);
+  const carica = async () => {
+    setErrore("");
+    try {
+      const res = await fetchConTimeout(`${dbConfig.project_url}/rest/v1/partite_live_pending?order=creato_il.desc`, {
+        headers: headers()
+      });
+      if (res.status === 404) {
+        setErrore("tabella");
+        setRighe([]);
+        return;
+      }
+      if (!res.ok) throw new Error("Lettura " + res.status);
+      setRighe(await res.json());
+    } catch (e) {
+      setErrore(e.message);
+      setRighe([]);
+    }
+  };
+  useEffect(() => {
+    if (dbConfig) carica();
+  }, []);
+  const elimina = async rid => {
+    const res = await fetchConTimeout(`${dbConfig.project_url}/rest/v1/partite_live_pending?id=eq.${encodeURIComponent(rid)}`, {
+      method: "DELETE",
+      headers: {
+        ...headers(),
+        Prefer: "return=minimal"
+      }
+    });
+    if (!res.ok) throw new Error("Eliminazione " + res.status);
+  };
+  const portiereDi = r => {
+    if (scelte[r.id]) return portieri.find(p => String(p.id) === String(scelte[r.id]));
+    if (r.portiere_id) {
+      const p = portieri.find(x => String(x.id) === String(r.portiere_id));
+      if (p) return p;
+    }
+    const n = normNome(r.nome_portiere || "");
+    return portieri.find(p => normNome(p.nome) === n) || null;
+  };
+  const salva = async r => {
+    const p = portiereDi(r);
+    if (!p) return;
+    const partita = {
+      id: `pl-${r.id}-${Date.now()}`,
+      data: r.data_gara || String(r.creato_il).slice(0, 10),
+      avversario: r.avversario || "",
+      durata: r.durata || null,
+      risultato: r.risultato || "",
+      commento: r.commento || "",
+      eventi: plPulisciEventi(r.eventi),
+      ricevutaIl: String(r.creato_il).slice(0, 10)
+    };
+    updatePortiere(p.id, {
+      partiteLive: [...(p.partiteLive || []), partita]
+    });
+    try {
+      await elimina(r.id);
+    } catch (e) {}
+    setFatti(m => ({
+      ...m,
+      [r.id]: `Salvata nella scheda di ${p.nome}`
+    }));
+  };
+  const scarta = async r => {
+    try {
+      await elimina(r.id);
+      setFatti(m => ({
+        ...m,
+        [r.id]: "Scartata"
+      }));
+    } catch (e) {
+      setErrore(e.message);
+    }
+  };
+  const link = typeof window !== "undefined" ? linkPartitaLive(null) : "";
+  const vive = (righe || []).filter(r => !fatti[r.id]);
+  const archivio = [];
+  portieri.forEach(p => (p.partiteLive || []).forEach(g => {
+    if (!filtro || String(p.id) === filtro) archivio.push({
+      p,
+      g
+    });
+  }));
+  archivio.sort((a, b) => String(b.g.data).localeCompare(String(a.g.data)));
+  const togli = (p, gid) => {
+    updatePortiere(p.id, {
+      partiteLive: (p.partiteLive || []).filter(x => x.id !== gid)
+    });
+    setDaEliminare(null);
+  };
+  const sezione = t => /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "22px 0 10px",
+      fontSize: 12.5,
+      fontWeight: 800,
+      letterSpacing: "0.07em",
+      textTransform: "uppercase",
+      color: goldSoft
+    }
+  }, t);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: 20,
+      maxWidth: 720,
+      margin: "0 auto"
+    }
+  }, printStyle, /*#__PURE__*/React.createElement(Menu, null), /*#__PURE__*/React.createElement(TopBar, {
+    title: "Partite live"
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 18
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "no-print",
+    style: {
+      ...cardStyle,
+      marginBottom: 6
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 13,
+      color: textSecondary,
+      lineHeight: 1.5
+    }
+  }, "I genitori segnano dal telefono gli interventi del portiere durante la partita. Il link personale (con il nome gi\xE0 scritto) lo mandi dalla scheda del portiere, nella sezione Valutazione. Questo \xE8 il link generico:"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 13,
+      fontWeight: 700,
+      color: goldSoft,
+      wordBreak: "break-all"
+    }
+  }, link), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      try {
+        navigator.clipboard.writeText(link);
+        setCopiato(true);
+        setTimeout(() => setCopiato(false), 1500);
+      } catch (e) {}
+    },
+    style: {
+      ...ghostBtn,
+      marginTop: 10,
+      fontSize: 12,
+      padding: "6px 12px"
+    }
+  }, copiato ? "✓ Copiato" : "📋 Copia link")), sezione("Da approvare"), errore === "tabella" ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...cardStyle,
+      borderColor: coral
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 14,
+      color: coral,
+      fontWeight: 700
+    }
+  }, "Il modulo non \xE8 ancora attivo sul database."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "6px 0 0",
+      fontSize: 13,
+      color: textSecondary
+    }
+  }, "Va eseguito una volta il codice SQL \"partite live\" su Supabase.")) : errore ? /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: coral,
+      fontSize: 13
+    }
+  }, errore) : null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 14,
+      color: textSecondary,
+      margin: 0
+    }
+  }, righe == null ? "Carico…" : `${vive.length} ${vive.length === 1 ? "partita" : "partite"} da approvare`), /*#__PURE__*/React.createElement("button", {
+    onClick: carica,
+    style: {
+      ...ghostBtn,
+      fontSize: 12,
+      padding: "6px 12px"
+    }
+  }, "\uD83D\uDD04 Aggiorna")), (righe || []).map(r => {
+    if (fatti[r.id]) return /*#__PURE__*/React.createElement("div", {
+      key: r.id,
+      style: {
+        ...cardStyle,
+        marginBottom: 10,
+        opacity: 0.6
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 14,
+        color: "#1f9d55",
+        fontWeight: 700
+      }
+    }, "\u2713 ", fatti[r.id]));
+    const p = portiereDi(r);
+    return /*#__PURE__*/React.createElement("div", {
+      key: r.id,
+      style: {
+        ...cardStyle,
+        marginBottom: 10
+      }
+    }, /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: 12,
+        color: textMuted
+      }
+    }, "Inviata il ", formatData(String(r.creato_il).slice(0, 10)), r.data_gara ? ` · partita del ${formatData(r.data_gara)}` : ""), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "6px 0 0",
+        fontSize: 16,
+        fontWeight: 800,
+        color: textPrimary
+      }
+    }, r.nome_portiere, " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 500,
+        color: textSecondary
+      }
+    }, "contro ", r.avversario || "—")), /*#__PURE__*/React.createElement(PlDettaglio, {
+      eventi: plPulisciEventi(r.eventi),
+      risultato: r.risultato,
+      commento: r.commento
+    }), /*#__PURE__*/React.createElement("label", {
+      style: {
+        ...labelStyle,
+        marginTop: 10
+      }
+    }, "Portiere ", p ? "(trovato in automatico)" : "— scegli a chi associarla"), /*#__PURE__*/React.createElement(SelettorePortiere, {
+      portieri: portieri,
+      value: p ? String(p.id) : "",
+      onChange: v => setScelte(m => ({
+        ...m,
+        [r.id]: v
+      })),
+      placeholder: "Scegli il portiere\u2026"
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        marginTop: 10,
+        flexWrap: "wrap"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => salva(r),
+      disabled: !p,
+      style: {
+        ...primaryBtn,
+        opacity: p ? 1 : 0.5
+      }
+    }, "\u2705 Salva nella scheda"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => scarta(r),
+      style: {
+        ...ghostBtn,
+        color: coral,
+        borderColor: coral
+      }
+    }, "Scarta")));
+  }), sezione("Archivio partite live"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement(SelettorePortiere, {
+    portieri: portieri,
+    value: filtro,
+    onChange: v => setFiltro(v || ""),
+    placeholder: "Tutti i portieri"
+  }), filtro && /*#__PURE__*/React.createElement("button", {
+    onClick: () => setFiltro(""),
+    style: {
+      ...ghostBtn,
+      fontSize: 12,
+      padding: "5px 10px",
+      marginTop: 6
+    }
+  }, "Mostra tutti")), archivio.length === 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 14,
+      color: textMuted
+    }
+  }, "Nessuna partita salvata", filtro ? " per questo portiere" : "", "."), archivio.map(({
+    p,
+    g
+  }) => /*#__PURE__*/React.createElement("div", {
+    key: g.id,
+    style: {
+      ...cardStyle,
+      marginBottom: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 10,
+      alignItems: "baseline",
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: 15.5,
+      fontWeight: 800,
+      color: textPrimary
+    }
+  }, p.nome, " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: 500,
+      color: textSecondary
+    }
+  }, "contro ", g.avversario || "—")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12.5,
+      color: textMuted
+    }
+  }, formatData(g.data))), /*#__PURE__*/React.createElement(PlDettaglio, {
+    eventi: g.eventi,
+    risultato: g.risultato,
+    commento: g.commento
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      marginTop: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setView({
+      page: "progressi",
+      id: p.id
+    }),
+    style: {
+      ...ghostBtn,
+      fontSize: 12.5,
+      padding: "6px 12px"
+    }
+  }, "\uD83D\uDCC8 Progressi"), daEliminare === g.id ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    onClick: () => togli(p, g.id),
+    style: {
+      ...ghostBtn,
+      fontSize: 12.5,
+      padding: "6px 12px",
+      color: coral,
+      borderColor: coral
+    }
+  }, "S\xEC, elimina"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setDaEliminare(null),
+    style: {
+      ...ghostBtn,
+      fontSize: 12.5,
+      padding: "6px 12px"
+    }
+  }, "No")) : /*#__PURE__*/React.createElement("button", {
+    onClick: () => setDaEliminare(g.id),
+    style: {
+      ...ghostBtn,
+      fontSize: 12.5,
+      padding: "6px 12px",
+      color: textMuted
+    }
+  }, "Elimina")))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "14px 0 0",
+      fontSize: 12.5,
+      color: textMuted,
+      lineHeight: 1.5
+    }
+  }, "Quando salvi o scarti, l'invio viene cancellato dal database: la partita resta solo nella scheda del portiere, cifrata."));
+}
+
+// Riquadro per la pagina Progressi
+function PgLive({
+  p,
+  t,
+  card,
+  titolo,
+  kpi
+}) {
+  const partite = (p.partiteLive || []).slice().sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  if (!partite.length) return null;
+  const tutti = [].concat(...partite.map(g => g.eventi || []));
+  const c = plConti(tutti);
+  const perPartita = partite.map(g => plConti(g.eventi));
+  const ult = perPartita.slice(-3),
+    prec = perPartita.slice(-6, -3);
+  const media = arr => {
+    const v = arr.filter(x => x.perc != null);
+    return v.length ? Math.round(v.reduce((s, x) => s + x.perc, 0) / v.length) : null;
+  };
+  const mU = media(ult),
+    mP = media(prec);
+  const motivi = Object.entries(c.motivi).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  return /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, titolo("Partite live", `${partite.length} ${partite.length === 1 ? "partita segnata" : "partite segnate"} dai genitori durante la gara.`), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+      gap: 8,
+      marginBottom: 10
+    }
+  }, kpi(Math.round(c.tot / partite.length * 10) / 10, "interventi a partita"), kpi(c.perc == null ? "–" : c.perc + "%", "interventi riusciti", mU != null && mP != null ? `${mU - mP >= 0 ? "▲" : "▼"} ${Math.abs(mU - mP)} punti nelle ultime 3` : null, mU != null && mP != null ? mU >= mP ? "#1f9d55" : "#c0392b" : null), kpi(Math.round(c.gol / partite.length * 10) / 10, "gol subiti a partita")), PL_TIPI.filter(x => c.per[x.k]).map(x => {
+    const v = c.per[x.k],
+      pc = Math.round(v.ok / v.n * 100);
+    return /*#__PURE__*/React.createElement("div", {
+      key: x.k,
+      style: {
+        margin: "6px 0"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: 13.5,
+        color: t.testo
+      }
+    }, /*#__PURE__*/React.createElement("span", null, x.n), /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: t.muto
+      }
+    }, v.ok, "/", v.n, " \xB7 ", pc, "%")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 6,
+        background: t.fondo,
+        borderRadius: 3,
+        marginTop: 3
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: `${pc}%`,
+        height: 6,
+        borderRadius: 3,
+        background: pc >= 70 ? "#3fae6a" : pc >= 50 ? "#d4af6a" : "#d98a3a"
+      }
+    })));
+  }), motivi.length > 0 && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "10px 0 0",
+      fontSize: 13,
+      color: t.sec
+    }
+  }, "Errori pi\xF9 frequenti: ", motivi.map(([m, n]) => `${m} (${n})`).join(", ")));
 }
 // --- Calendario completo in stile Apple: mese, settimana, giorno, elenco ---
 const CAL_TIPI = {
@@ -31151,7 +32693,7 @@ function PaginaPacchettoDettaglio({
 }
 const App = () => {
   const search = typeof window !== "undefined" ? window.location.search : "";
-  if (/iscrizione=1|verifica=1|gara=1|fattura=1|(^|[?&])info=1/.test(search)) {
+  if (/iscrizione=1|verifica=1|gara=1|fattura=1|(^|[?&])partita=1|(^|[?&])info=1/.test(search)) {
     const radice = document.getElementById("root");
     if (radice) radice.style.paddingLeft = "0";
   }
@@ -31160,6 +32702,7 @@ const App = () => {
   if (search.includes("verifica=1")) return /*#__PURE__*/React.createElement(ModuloVerificaPeriodica, null);
   if (search.includes("gara=1")) return /*#__PURE__*/React.createElement(ModuloValutazioneGara, null);
   if (/(^|[?&])fattura=1/.test(search)) return /*#__PURE__*/React.createElement(ModuloDatiFattura, null);
+  if (/(^|[?&])partita=1/.test(search)) return /*#__PURE__*/React.createElement(ModuloPartitaLive, null);
   if (/(^|[?&])info=1/.test(search)) return /*#__PURE__*/React.createElement(ModuloRichiesta, null);
   return /*#__PURE__*/React.createElement(GestionalePortieri, null);
 };
