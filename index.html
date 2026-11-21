@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-0udBxaCFcYBDS9usCwbGQnMjsnUGTjM6AaavZNQVMbY=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-YR8EFHMOCxKh+vInEClK/gF7FMdDpAV4qMNs1sGX7Gg=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -27102,6 +27102,51 @@ function PaginaContabilita({
   const totSpese = speseFiltrate.reduce((s, sp) => s + (Number(sp.importo) || 0), 0);
   const totSaldo = totIncassi - totSpese;
 
+  // Esporta per MBlife: crea nel browser un file CSV con incassi e uscite (stessi dati del riepilogo, eventi inclusi).
+  // Il file resta sul dispositivo: non viene inviato da nessuna parte.
+  const esportaPerMBlife = () => {
+    const dentro = d => d && (!periodoDa || d >= periodoDa) && (!periodoA || d <= periodoA);
+    const pulisciMetodo = m => String(m || "").replace(/^[^A-Za-zÀ-ÿ]+/, "").trim();
+    const nomePortiere = id => {
+      if (id == null) return "";
+      const p = portieri.find(pp => String(pp.id) === String(id));
+      return p ? p.nome || "" : "";
+    };
+    const dataIt = d => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
+    const euro = v => (Math.round((Number(v) || 0) * 100) / 100).toFixed(2).replace(".", ",");
+    const cella = v => {
+      const t = String(v == null ? "" : v).replace(/\r?\n/g, " ").trim();
+      return /[;"]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    };
+    const righe = [];
+    incassiVociAll.filter(v => dentro(v.data) && (Number(v.importo) || 0) > 0).forEach(v => {
+      const cliente = nomePortiere(v.portiereId);
+      const descr = [v.dettaglio && String(v.dettaglio).toLowerCase() !== cliente.toLowerCase() ? v.dettaglio : "", v.note && v.note !== v.dettaglio ? v.note : ""].filter(Boolean).join(" · ");
+      righe.push([v.data, "Entrata", v.fonte || "Incasso", cliente || v.dettaglio || "", cliente ? descr : v.note && v.note !== v.dettaglio ? v.note : "", pulisciMetodo(v.metodoPagamento), euro(v.importo), `${v.sourceType || "incasso"}-${v.sourceId}${v.parte ? "-" + v.parte : ""}`]);
+    });
+    speseAll.filter(sp => dentro(sp.data) && (Number(sp.importo) || 0) > 0).forEach(sp => {
+      righe.push([sp.data, "Uscita", cap(sp.categoria || "spesa"), "", sp.note || "", pulisciMetodo(sp.metodoPagamento), euro(sp.importo), `${sp.sourceType || "spesa"}-${sp.id}`]);
+    });
+    if (!righe.length) {
+      setImportMsg("Nessun incasso o uscita da esportare nel periodo scelto.");
+      return;
+    }
+    righe.sort((x, y) => x[0].localeCompare(y[0]));
+    const testo = "﻿" + [["Data", "Tipo", "Categoria", "Cliente", "Descrizione", "Metodo", "Importo", "ID"].join(";"), ...righe.map(r => [dataIt(r[0]), ...r.slice(1)].map(cella).join(";"))].join("\r\n") + "\r\n";
+    const blob = new Blob([testo], {
+      type: "text/csv;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `MBlife-Lavoro-${periodoDa || "inizio"}_${periodoA || oggiISO()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    setImportMsg(`File per MBlife scaricato: ${righe.length} movimenti${periodoDa || periodoA ? " del periodo scelto" : ""}. Trascinalo in MBlife → Sincronizza gestionale.`);
+  };
+
   // Riepilogo per area: mensile (navigabile) + totale complessivo, eventi inclusi nel bilancio.
   const sommaPerPeriodo = items => {
     const mese = items.reduce((s, v) => s + (v.data && v.data.slice(0, 7) === meseSelezionato ? Number(v.importo) || 0 : 0), 0);
@@ -27490,7 +27535,17 @@ function PaginaContabilita({
       gap: 6,
       flexShrink: 0
     }
-  }, "📥 Importa da Excel"), /*#__PURE__*/React.createElement("input", {
+  }, "📥 Importa da Excel"), /*#__PURE__*/React.createElement("button", {
+    onClick: esportaPerMBlife,
+    title: "Scarica incassi e uscite nel formato di MBlife (se scegli un periodo qui sotto, solo quel periodo)",
+    style: {
+      ...ghostBtn,
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      flexShrink: 0
+    }
+  }, "⬇️ Esporta per MBlife"), /*#__PURE__*/React.createElement("input", {
     ref: fileInputRef,
     type: "file",
     accept: ".xlsx,.xls,.csv",
