@@ -135,7 +135,8 @@ function sheetHTML() {
   if (ui.sheet === 'settings') return `<div class="sheet" data-a="close"><div data-stop="1"><h2>Impostazioni</h2>
     <p>Le spese restano <b>solo su questo iPhone</b>: nessun dato va su internet. Le mandi al Mac con AirDrop e MBlife le aggiunge da sola.</p>
     <label class="btn2" style="display:block">${ic('download')} Carica categorie e conti da MBlife<input type="file" id="cfgfile" accept=".json,application/json" hidden></label>
-    <p style="font-size:12.5px">Sul Mac: MBlife → Backup e impostazioni → <b>File per l'iPhone</b> → mandalo con AirDrop → qui scegli il file.</p>
+    <p style="font-size:12.5px">Sul Mac: MBlife → Backup e impostazioni → <b>File per l'iPhone</b> → mandalo con AirDrop → qui scegli il file. Poi cancella quel file da File: contiene la chiave della firma.</p>
+    <p style="font-size:12.5px;color:${S.key ? 'var(--inc)' : 'var(--exp)'}">${S.key ? '🔒 Firma attiva: il Mac accetta solo i file di questo iPhone' : '⚠ Firma non attiva: carica il file da MBlife'}</p>
     <button class="btn2" data-a="resend">${ic('repeat')} Rimanda al Mac gli ultimi 7 giorni</button>
     <button class="btn2" data-a="clearsent">${ic('trash')} Cancella dal telefono quelli già inviati</button>
     <p style="font-size:12px;margin-top:14px">${S.items.length} movimenti sul telefono · ${S.items.filter(i => !i.sent).length} da inviare</p>
@@ -143,9 +144,16 @@ function sheetHTML() {
   return '';
 }
 function fileText(list) { return list.slice().sort((a, b) => a.ts - b.ts).map(i => [i.when, i.kind === 'income' ? 'Entrata' : 'Spesa', (i.cents / 100).toFixed(2).replace('.', ','), i.cat, i.acc, (i.note || '').replace(/[;\r\n]/g, ' ')].join(';')).join('\n') + '\n'; }
+/** firma il file con la chiave ricevuta da MBlife: così il Mac sa che arriva davvero da questo iPhone */
+async function sign(text) {
+  if (!S.key || !(window.crypto && crypto.subtle)) return text;
+  try { const k = await crypto.subtle.importKey('raw', Uint8Array.from(atob(S.key), c => c.charCodeAt(0)), {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
+    const sig = new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(text)));
+    return text + '#mblife-firma;' + btoa(String.fromCharCode(...sig)) + '\n'; } catch { return text; }
+}
 async function sendList(list) {
   if (!list.length) return;
-  const text = fileText(list); const name = 'MBlife-movimenti.txt';
+  const text = await sign(fileText(list)); const name = 'MBlife-movimenti.txt';
   const file = new File([text], name, {type:'text/plain'});
   try {
     if (navigator.canShare && navigator.canShare({files:[file]})) { await navigator.share({files:[file], title:'MBlife'}); }
@@ -159,6 +167,7 @@ function importCfg(text) {
     const map = k => (o.categories[k] || []).map(c => ({name:c.name, icon:ICONS[c.icon] ? c.icon : 'tags', color:c.color || '#94A3B8', subs:Array.isArray(c.subs) ? c.subs : []}));
     S.cats = {expense:map('expense'), income:map('income')}; if (Array.isArray(o.accounts) && o.accounts.length) S.accounts = o.accounts;
     if (o.cash && S.accounts.includes(o.cash)) S.lastAcc = S.lastAcc || o.cash;
+    if (typeof o.key === 'string' && o.key.length >= 40) S.key = o.key;
     save(); ui.sheet = null; ui.cat = null; render(); toast(`Caricate ${S.cats.expense.length + S.cats.income.length} categorie ✓`);
   } catch { toast('Questo non è il file di MBlife per l\'iPhone'); }
 }
