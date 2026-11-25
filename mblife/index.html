@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -164,8 +164,8 @@ async function sendList(list) {
 function importCfg(text) {
   try {
     const o = JSON.parse(text); if (!o || o.kind !== 'mblife-phone-config') throw 0;
-    const map = k => (o.categories[k] || []).map(c => ({name:c.name, icon:ICONS[c.icon] ? c.icon : 'tags', color:c.color || '#94A3B8', subs:Array.isArray(c.subs) ? c.subs : []}));
-    S.cats = {expense:map('expense'), income:map('income')}; if (Array.isArray(o.accounts) && o.accounts.length) S.accounts = o.accounts;
+    const map = k => (Array.isArray(o.categories[k]) ? o.categories[k] : []).filter(c => c && typeof c.name === 'string').map(c => ({name:c.name.slice(0, 60), icon:ICONS[c.icon] ? c.icon : 'tags', color:/^#[0-9a-fA-F]{3,8}$/.test(c.color) ? c.color : '#94A3B8', subs:Array.isArray(c.subs) ? c.subs.filter(x => typeof x === 'string').map(x => x.slice(0, 60)) : []}));
+    S.cats = {expense:map('expense'), income:map('income')}; if (Array.isArray(o.accounts) && o.accounts.length) S.accounts = o.accounts.filter(a => typeof a === 'string').map(a => a.slice(0, 40));
     if (o.cash && S.accounts.includes(o.cash)) S.lastAcc = S.lastAcc || o.cash;
     if (typeof o.key === 'string' && o.key.length >= 40) S.key = o.key;
     save(); ui.sheet = null; ui.cat = null; render(); toast(`Caricate ${S.cats.expense.length + S.cats.income.length} categorie ✓`);
