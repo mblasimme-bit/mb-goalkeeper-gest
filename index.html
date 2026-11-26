@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-eQBqT0NEbYyeRwvpybmYKASKNChL2mc8cRUA18ZdzfA=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-dYObB1mfqksi3J/JVXOqJPiMXl6QyZhev+5BtYQXH9g=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -96,6 +96,7 @@
   #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"]:hover { background: var(--raise) !important; }
   #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] > p[style*="font-size: 20px"] { font-size: 30px !important; font-weight: 800 !important; letter-spacing: -1px; line-height: 1.15; font-variant-numeric: tabular-nums; }
   #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] > p[style*="font-size: 12px"]:last-child { font-size: 11.5px !important; text-transform: uppercase; letter-spacing: .8px; font-weight: 700 !important; color: #ab9f88 !important; margin-top: 4px !important; }
+  @media (min-width: 1100px) { .mb-kpis > * { flex: 1 1 22% !important; min-width: 180px !important; } }
   /* titolo di pagina */
   .mb-pagetitle { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; }
   /* tabelle come MBlife */
@@ -7139,7 +7140,7 @@ function GestionalePortieri() {
       padding: 0,
       cursor: "pointer"
     }
-  }, /*#__PURE__*/React.createElement("img", { src: "icon-1024.png?v=2", alt: "", style: { width: 34, height: 34, borderRadius: 10, boxShadow: "0 4px 14px rgba(0,0,0,0.45), 0 0 0 1px rgba(233,209,159,0.18)" } }), /*#__PURE__*/React.createElement("span", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.6px", color: textPrimary } }, "MB", /*#__PURE__*/React.createElement("span", { style: { background: "linear-gradient(135deg,#F3DDA4 0%,#D4AF6A 48%,#A47C3B 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "gest"))), (title || view.page === "lista") && /*#__PURE__*/React.createElement("h1", { className: "mb-pagetitle", style: { alignSelf: "stretch", textAlign: "left", fontSize: 30, fontWeight: 800, letterSpacing: "-0.8px", lineHeight: 1.15, margin: "18px 0 4px", color: textPrimary } }, title || "Panoramica"));
+  }, /*#__PURE__*/React.createElement("img", { src: "icon-1024.png?v=2", alt: "", style: { width: 34, height: 34, borderRadius: 10, boxShadow: "0 4px 14px rgba(0,0,0,0.45), 0 0 0 1px rgba(233,209,159,0.18)" } }), /*#__PURE__*/React.createElement("span", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.6px", color: textPrimary } }, "MB", /*#__PURE__*/React.createElement("span", { style: { background: "linear-gradient(135deg,#F3DDA4 0%,#D4AF6A 48%,#A47C3B 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "gest"))), title && /*#__PURE__*/React.createElement("h1", { className: "mb-pagetitle", style: { alignSelf: "stretch", textAlign: "left", fontSize: 30, fontWeight: 800, letterSpacing: "-0.8px", lineHeight: 1.15, margin: "18px 0 4px", color: textPrimary } }, title || "Panoramica"));
   if (view.page === "dettaglio") {
     const p = portieri.find(x => x.id === view.id);
     if (!p) {
@@ -14643,7 +14644,7 @@ Matteo`;
       padding: "20px 40px 48px"
     }
   }, /*#__PURE__*/React.createElement(TopBar, {
-    title: "Portieri"
+    title: ""
   }), /*#__PURE__*/React.createElement("div", {
     className: "no-print",
     style: {
@@ -15479,7 +15480,7 @@ Matteo`;
     className: "no-print",
     style: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(118px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(98px, 1fr))",
       gap: 10,
       marginBottom: 16
     }
@@ -15561,7 +15562,7 @@ Matteo`;
   })), query.trim() === "" && !filtroRapido && !annoAperto && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 45%), 1fr))",
       gap: 14
     }
   }, grouped.map(group => /*#__PURE__*/React.createElement("button", {
