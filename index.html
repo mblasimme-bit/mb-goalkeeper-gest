@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-dYObB1mfqksi3J/JVXOqJPiMXl6QyZhev+5BtYQXH9g=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-Ete85x965KuS/kymWm/eULfAhP12HOj7+UWDCjrgSC4=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="MB Gest" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#000000" />
+<meta name="theme-color" content="#0b0a08" />
 <link rel="manifest" href="manifest.json" />
 <meta name="robots" content="noindex, nofollow, noarchive" />
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -106,6 +106,37 @@
     .mb-topbrand img { width: 28px !important; height: 28px !important; }
     .mb-topbrand > span { font-size: 18px !important; }
     .mb-topbrand { gap: 7px !important; margin-left: 52px; }
+  }
+
+  /* --- home compatta --- */
+  .mb-kpis { gap: 8px !important; margin-bottom: 10px !important; }
+  .mb-kpis > * { padding: 10px 14px !important; border-radius: 14px !important; box-shadow: 0 1px 0 rgba(233,209,159,.05) inset !important; min-height: 0 !important; }
+  .mb-kpis p[style*="font-size: 20px"] { font-size: 22px !important; letter-spacing: -.6px; }
+  .mb-kpis > * > p[style*="font-size: 12px"] { font-size: 10.5px !important; margin-top: 2px !important; }
+  .mb-kpis > :first-child p[style*="font-size: 12px"]:first-child { margin: 0 0 3px !important; }
+  .mb-kpis p[style*="font-size: 13px"] { font-size: 13px !important; }
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] { padding: 10px 14px !important; border-radius: 14px !important; box-shadow: 0 1px 0 rgba(233,209,159,.05) inset !important; }
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] > p[style*="font-size: 20px"] { font-size: 22px !important; }
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] > p[style*="font-size: 12px"]:last-child { font-size: 10.5px !important; margin-top: 2px !important; }
+  @media (min-width: 1100px) { .mb-kpis > * { flex: 1 1 0 !important; min-width: 108px !important; padding: 10px 12px !important; } }
+  .mb-statini p[style*="font-size: 20px"] { letter-spacing: -.5px !important; font-variant-numeric: tabular-nums; }
+  @media (max-width: 700px) {
+    .mb-kpis > * { flex: 1 1 40% !important; }
+    .mb-statini { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    .mb-statini > button { padding: 7px 8px 6px !important; }
+    .mb-statini p[style*="font-size: 10.5px"] { font-size: 9.5px !important; }
+    .mb-sett-griglia { grid-template-columns: 1fr !important; gap: 4px !important; }
+    .mb-sett-g { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 2px 10px !important; padding: 5px 10px 6px !important; }
+    .mb-sett-h { grid-column: 1 / -1; justify-content: flex-start !important; gap: 10px !important; }
+    .mb-sett-v { font-size: 12.5px !important; }
+    .mb-sett-v > span:last-child { font-size: 12px !important; }
+    .mb-giornata-home > div { max-height: 230px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 14px !important; margin-bottom: 0 !important; }
+    .mb-annate { grid-template-columns: 1fr !important; }
+  }
+  /* --- tastiera del telefono: niente zoom quando tocchi un campo, sfondo che scorre normale --- */
+  @media (hover: none), (pointer: coarse), (max-width: 900px) {
+    html { background-attachment: scroll !important; }
+    input, select, textarea { font-size: 16px !important; }
   }
 </style>
 </head>
@@ -836,7 +867,7 @@ function applyTema(modo, sfondoTema) {
   } else {
     const sf = SFONDI[sfondoTema] || SFONDI.mblife;
     root.style.backgroundImage = sf.css;
-    root.style.backgroundAttachment = sf.fisso ? "fixed" : "scroll";
+    root.style.backgroundAttachment = sf.fisso && window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches ? "fixed" : "scroll";
     root.style.backgroundSize = sf.size;
     root.style.backgroundPosition = "center";
     root.style.backgroundRepeat = sf.repeat || "no-repeat";
@@ -14722,7 +14753,8 @@ Matteo`;
     className: "no-print",
     style: {
       ...cardStyle,
-      border: `1px solid ${goldSoft}`
+      border: `1px solid ${goldSoft}`,
+      display: "none"
     }
   }, !showQuickSeduta ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -15190,7 +15222,7 @@ Matteo`;
     setView: setView,
     salvaDiario: salvaDiario,
     apriDiario: apriDiario
-  })), /*#__PURE__*/React.createElement(SettimanaHome, { portieri, pacchetti, entrate, eventi, aggiungiEntrata, settings }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement(SettimanaCompatta, { portieri, pacchetti, entrate, eventi, aggiungiEntrata, settings }), /*#__PURE__*/React.createElement("div", {
     className: "no-print",
     style: {
       display: "flex",
@@ -15477,12 +15509,12 @@ Matteo`;
       }
     }, anno);
   }))), query.trim() === "" && !annoAperto && /*#__PURE__*/React.createElement("div", {
-    className: "no-print",
+    className: "no-print mb-statini",
     style: {
       display: "grid",
       gridTemplateColumns: "repeat(auto-fit, minmax(98px, 1fr))",
-      gap: 10,
-      marginBottom: 16
+      gap: 6,
+      marginBottom: 10
     }
   }, [{
     chiave: null,
@@ -15534,17 +15566,17 @@ Matteo`;
         backdropFilter: "blur(14px)",
         WebkitBackdropFilter: "blur(14px)",
         border: `1px solid ${attivo && filtroRapido ? gold : border}`,
-        borderRadius: 14,
-        padding: "14px 14px 12px",
+        borderRadius: 12,
+        padding: "8px 10px 7px",
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        minHeight: 86
+        minHeight: 0
       }
     }, /*#__PURE__*/React.createElement("p", {
       style: {
         margin: 0,
-        fontSize: 30,
+        fontSize: 20,
         lineHeight: 1,
         fontWeight: 800,
         letterSpacing: "-0.02em",
@@ -15552,18 +15584,19 @@ Matteo`;
       }
     }, m.valore), /*#__PURE__*/React.createElement("p", {
       style: {
-        margin: "8px 0 0",
-        fontSize: 11,
+        margin: "4px 0 0",
+        fontSize: 10.5,
         lineHeight: 1.25,
         color: textSecondary,
         fontWeight: 600
       }
     }, m.label));
   })), query.trim() === "" && !filtroRapido && !annoAperto && /*#__PURE__*/React.createElement("div", {
+    className: "mb-annate",
     style: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 45%), 1fr))",
-      gap: 14
+      gridTemplateColumns: "repeat(auto-fill, minmax(min(230px, 46%), 1fr))",
+      gap: 6
     }
   }, grouped.map(group => /*#__PURE__*/React.createElement("button", {
     key: group.anno,
@@ -15574,10 +15607,14 @@ Matteo`;
       textAlign: "left",
       background: surface,
       border: `1px solid ${border}`,
-      borderRadius: 16,
-      padding: "18px 18px 16px",
+      borderRadius: 12,
+      padding: "8px 12px 8px 16px",
+      display: "flex",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: "2px 10px",
       cursor: "pointer",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
+      boxShadow: "none",
       backdropFilter: "blur(14px)",
       WebkitBackdropFilter: "blur(14px)"
     }
@@ -15586,22 +15623,22 @@ Matteo`;
       position: "absolute",
       top: 0,
       left: 0,
-      width: "100%",
-      height: 5,
+      width: 4,
+      height: "100%",
       background: pitch
     }
   }), /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "6px 0 0",
-      fontSize: 30,
+      margin: 0,
+      fontSize: 19,
       fontWeight: 800,
       color: textPrimary,
       letterSpacing: "-0.02em"
     }
   }, group.anno === "n.d." ? "n.d." : group.anno), /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "6px 0 0",
-      fontSize: 12,
+      margin: 0,
+      fontSize: 11,
       fontWeight: 700,
       color: pitch,
       textTransform: "uppercase",
@@ -15613,9 +15650,9 @@ Matteo`;
     const cert = group.items.filter(p => (statoPortieri[String(p.id)] || {}).certScad).length;
     const chip = (testo, fg, bgc) => /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 11,
+        fontSize: 10.5,
         fontWeight: 600,
-        padding: "2px 8px",
+        padding: "1px 7px",
         borderRadius: 100,
         color: fg,
         background: bgc
@@ -15625,8 +15662,8 @@ Matteo`;
       style: {
         display: "flex",
         flexWrap: "wrap",
-        gap: 5,
-        marginTop: 10
+        gap: 4,
+        marginTop: 0
       }
     }, inCh > 0 && chip(`${inCh} in chiusura`, "#f59e0b", "rgba(245,158,11,0.14)"), ins > 0 && chip(`${ins} ${ins === 1 ? "insoluto" : "insoluti"}`, coral, coralDim), cert > 0 && chip(`${cert} ${cert === 1 ? "certificato in scadenza" : "certificati in scadenza"}`, "#f59e0b", "rgba(245,158,11,0.14)"), inCh === 0 && ins === 0 && cert === 0 && chip("tutto in regola", "#1f9d55", "rgba(31,157,85,0.12)"));
   })())), grouped.length === 0 && /*#__PURE__*/React.createElement("p", {
@@ -23440,6 +23477,300 @@ function settVoci({
     });
   });
   return out;
+}
+// --- La mia settimana, versione compatta per la home: 7 colonne, una riga per seduta ---
+function SettimanaCompatta({
+  portieri,
+  pacchetti,
+  entrate,
+  eventi,
+  aggiungiEntrata,
+  settings
+}) {
+  const voci = useMemo(() => settVoci({
+    portieri,
+    pacchetti,
+    entrate,
+    eventi
+  }), [portieri, pacchetti, entrate, eventi]);
+  const oggi = oggiISO();
+  const [sett, setSett] = useState(() => {
+    const lun = calLun(calData(oggi));
+    return calIso([0, 6].includes(calData(oggi).getDay()) ? calPiu(lun, 7) : lun);
+  });
+  const [aggiungiIn, setAggiungiIn] = useState(null);
+  const [aggiunta, setAggiunta] = useState("");
+  const [aperti, setAperti] = useState({});
+  const [dettaglio, setDettaglio] = useState(false);
+  const lun = calData(sett);
+  const dom = calPiu(lun, 6);
+  const MESI_BREVI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+  const GG = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+  const titoloSett = lun.getMonth() === dom.getMonth() ? `${lun.getDate()}–${dom.getDate()} ${MESI_BREVI[dom.getMonth()]}` : `${lun.getDate()} ${MESI_BREVI[lun.getMonth()]} – ${dom.getDate()} ${MESI_BREVI[dom.getMonth()]}`;
+  const da = sett,
+    a = calIso(dom);
+  const tutte = voci.filter(v => v.data >= da && v.data <= a && (v.pk && (v.tipo === "programmata" || v.tipo === "svolta") || v.tipo === "incasso" || v.tipo === "evento")).sort((x, y) => (x.data + (x.ora || "99:99")).localeCompare(y.data + (y.ora || "99:99")));
+  const giorni = [0, 1, 2, 3, 4, 5, 6].map(i => {
+    const d = calPiu(lun, i),
+      iso = calIso(d);
+    return {
+      iso,
+      d,
+      i,
+      voci: tutte.filter(v => v.data === iso)
+    };
+  });
+  const conta = k => tutte.filter(v => SETT_TIPO(v) === k).length;
+  const MAX = 4;
+  const cognome = n => {
+    const p = String(n || "").trim().split(/\s+/);
+    return p.length > 1 ? `${p[0]} ${p[1][0]}.` : p[0] || "—";
+  };
+  const btnNav = {
+    background: surface2,
+    border: `1px solid ${border}`,
+    color: textPrimary,
+    borderRadius: 9,
+    width: 28,
+    height: 28,
+    cursor: "pointer",
+    fontSize: 14,
+    lineHeight: 1,
+    padding: 0
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "no-print mb-sett-compatta",
+    style: {
+      background: surface,
+      border: `1px solid ${border}`,
+      borderRadius: 18,
+      padding: "12px 14px",
+      margin: "12px 0 0",
+      color: textPrimary
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      flexWrap: "wrap"
+    }
+  }, /*#__PURE__*/React.createElement("b", {
+    style: {
+      fontSize: 15,
+      letterSpacing: "-0.2px"
+    }
+  }, "\uD83D\uDDD3\uFE0F La mia settimana"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setSett(calIso(calPiu(lun, -7)));
+      setAggiungiIn(null);
+    },
+    "aria-label": "Settimana precedente",
+    style: btnNav
+  }, "\u2039"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      minWidth: 96,
+      textAlign: "center"
+    }
+  }, titoloSett), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setSett(calIso(calPiu(lun, 7)));
+      setAggiungiIn(null);
+    },
+    "aria-label": "Settimana successiva",
+    style: btnNav
+  }, "\u203A")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 12,
+      color: textMuted,
+      fontWeight: 600
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: SETT_COL.pacchetto
+    }
+  }, conta("pacchetto"), " pacch."), " \xB7 ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: SETT_COL.singola
+    }
+  }, conta("singola"), " singole"), conta("evento") ? /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: SETT_COL.evento
+    }
+  }, conta("evento"), " eventi")) : null), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setDettaglio(x => !x),
+    style: {
+      marginLeft: "auto",
+      background: "none",
+      border: `1px solid ${border}`,
+      color: textSecondary,
+      borderRadius: 9,
+      padding: "4px 10px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer"
+    }
+  }, dettaglio ? "Chiudi" : "🖨️ Stampa / Calendario Mac")), aggiunta && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    style: {
+      margin: "8px 0 0",
+      fontSize: 12.5,
+      color: "#1f9d55",
+      fontWeight: 700
+    }
+  }, "\u2705 Aggiunta la seduta singola di ", aggiunta, "."), /*#__PURE__*/React.createElement("div", {
+    className: "mb-sett-griglia",
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+      gap: 6,
+      marginTop: 10
+    }
+  }, giorni.map(g => {
+    const isOggi = g.iso === oggi,
+      passato = g.iso < oggi;
+    const mostra = aperti[g.iso] ? g.voci : g.voci.slice(0, MAX);
+    return /*#__PURE__*/React.createElement("div", {
+      key: g.iso,
+      className: "mb-sett-g",
+      style: {
+        background: isOggi ? "rgba(212,175,106,0.10)" : surface2,
+        border: `1px solid ${isOggi ? "rgba(212,175,106,0.45)" : border}`,
+        borderRadius: 11,
+        padding: "6px 5px 5px",
+        minWidth: 0,
+        opacity: passato ? 0.55 : 1,
+        display: "flex",
+        flexDirection: "column",
+        gap: 3
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "mb-sett-h",
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        justifyContent: "space-between",
+        gap: 4
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11.5,
+        fontWeight: 800,
+        color: isOggi ? goldSoft : textSecondary,
+        whiteSpace: "nowrap"
+      }
+    }, GG[g.i], " ", g.d.getDate()), aggiungiEntrata && !passato && /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        setAggiungiIn(aggiungiIn === g.iso ? null : g.iso);
+        setAggiunta("");
+      },
+      "aria-label": `Aggiungi seduta singola ${g.d.getDate()}/${g.d.getMonth() + 1}`,
+      title: "Aggiungi seduta singola",
+      style: {
+        background: "none",
+        border: 0,
+        color: "#0e9f96",
+        fontSize: 15,
+        fontWeight: 800,
+        cursor: "pointer",
+        padding: 0,
+        lineHeight: 1
+      }
+    }, "+")), g.voci.length === 0 && /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: textMuted
+      }
+    }, "\u2014"), mostra.map(v => /*#__PURE__*/React.createElement("div", {
+      key: v.id,
+      className: "mb-sett-v",
+      title: `${v.ora || ""} ${v.titolo}`,
+      style: {
+        display: "flex",
+        alignItems: "baseline",
+        flexWrap: "wrap",
+        columnGap: 4,
+        fontSize: 11.5,
+        lineHeight: 1.25,
+        minWidth: 0,
+        borderLeft: `2px solid ${SETT_COL[SETT_TIPO(v)]}`,
+        paddingLeft: 4
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: 700,
+        fontVariantNumeric: "tabular-nums",
+        color: calMin(v.ora) == null ? "#d9822b" : textPrimary,
+        flexShrink: 0
+      }
+    }, calMin(v.ora) == null ? "--" : v.ora), /*#__PURE__*/React.createElement("span", {
+      style: {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        color: textSecondary,
+        fontSize: 11,
+        maxWidth: "100%"
+      }
+    }, cognome(v.titolo)))), g.voci.length > MAX && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setAperti(m => ({
+        ...m,
+        [g.iso]: !m[g.iso]
+      })),
+      style: {
+        background: "none",
+        border: 0,
+        color: goldSoft,
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: "pointer",
+        padding: 0,
+        textAlign: "left"
+      }
+    }, aperti[g.iso] ? "meno" : `+${g.voci.length - MAX} altre`));
+  })), aggiungiIn && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 4px",
+      fontSize: 12.5,
+      fontWeight: 700,
+      color: goldSoft
+    }
+  }, "Seduta singola \xB7 ", GG[(calData(aggiungiIn).getDay() + 6) % 7], " ", calData(aggiungiIn).getDate(), "/", calData(aggiungiIn).getMonth() + 1), /*#__PURE__*/React.createElement(SettAggiungi, {
+    data: aggiungiIn,
+    portieri: portieri,
+    aggiungiEntrata: aggiungiEntrata,
+    settings: settings,
+    occupate: tutte.filter(v => v.data === aggiungiIn && SETT_TIPO(v) !== "evento" && v.ora).reduce((m, v) => ({
+      ...m,
+      [v.ora]: (m[v.ora] || 0) + 1
+    }), {}),
+    chiudi: msg => {
+      setAggiungiIn(null);
+      setAggiunta(msg);
+    }
+  })), dettaglio && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 10
+    }
+  }, /*#__PURE__*/React.createElement(SettimanaPannello, {
+    voci: voci,
+    oggi: oggi,
+    portieri: portieri,
+    aggiungiEntrata: aggiungiEntrata,
+    settings: settings
+  })));
 }
 function SettimanaHome({
   portieri,
