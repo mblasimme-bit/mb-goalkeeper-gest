@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-7+tnk5KHHDHGv2iwDMVoen4CRhlpCeBeDvqkViouCME=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-eQBqT0NEbYyeRwvpybmYKASKNChL2mc8cRUA18ZdzfA=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -83,6 +83,24 @@
     #mb-sidebar .mb-voce .mb-tx { white-space: normal; line-height: 1.2; }
     .mb-topbrand { visibility: hidden; }
   }
+  /* widget della home come MBlife */
+  .mb-kpis { gap: 14px !important; }
+  .mb-kpis > * { background: var(--surface) !important; border: 1px solid rgba(233,209,159,.09) !important; border-radius: 20px !important; box-shadow: 0 1px 0 rgba(233,209,159,.06) inset, 0 12px 32px rgba(0,0,0,.4) !important; padding: 18px 22px !important; }
+  .mb-kpis > *:hover { background: var(--raise) !important; }
+  .mb-kpis p[style*="font-size: 20px"] { font-size: 32px !important; font-weight: 800 !important; letter-spacing: -1px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .mb-kpis > * > p[style*="font-size: 12px"] { font-size: 11.5px !important; text-transform: uppercase; letter-spacing: .8px; font-weight: 700 !important; color: #ab9f88 !important; margin-top: 4px !important; }
+  .mb-kpis > :first-child p[style*="font-size: 12px"]:first-child { margin: 0 0 6px !important; }
+  .mb-kpis p[style*="font-size: 13px"] { font-size: 14px !important; font-weight: 700 !important; }
+  /* stessi widget anche nelle altre pagine (contabilità, ecc.) */
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] { background: var(--surface) !important; border: 1px solid rgba(233,209,159,.09) !important; border-radius: 20px !important; box-shadow: 0 1px 0 rgba(233,209,159,.06) inset, 0 12px 32px rgba(0,0,0,.4) !important; padding: 16px 20px !important; }
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"]:hover { background: var(--raise) !important; }
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] > p[style*="font-size: 20px"] { font-size: 30px !important; font-weight: 800 !important; letter-spacing: -1px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  #root button[style*="border-radius: 12px"][style*="padding: 12px 16px"] > p[style*="font-size: 12px"]:last-child { font-size: 11.5px !important; text-transform: uppercase; letter-spacing: .8px; font-weight: 700 !important; color: #ab9f88 !important; margin-top: 4px !important; }
+  /* titolo di pagina */
+  .mb-pagetitle { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif; }
+  /* tabelle come MBlife */
+  #root table th { color: #ab9f88; font-weight: 700; font-size: 11.5px; text-transform: uppercase; letter-spacing: .6px; }
+  #root table td, #root table th { border-color: rgba(233,209,159,.09); }
   @media (max-width: 480px) {
     .mb-topbrand img { width: 28px !important; height: 28px !important; }
     .mb-topbrand > span { font-size: 18px !important; }
@@ -7121,7 +7139,7 @@ function GestionalePortieri() {
       padding: 0,
       cursor: "pointer"
     }
-  }, /*#__PURE__*/React.createElement("img", { src: "icon-1024.png?v=2", alt: "", style: { width: 34, height: 34, borderRadius: 10, boxShadow: "0 4px 14px rgba(0,0,0,0.45), 0 0 0 1px rgba(233,209,159,0.18)" } }), /*#__PURE__*/React.createElement("span", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.6px", color: textPrimary } }, "MB", /*#__PURE__*/React.createElement("span", { style: { background: "linear-gradient(135deg,#F3DDA4 0%,#D4AF6A 48%,#A47C3B 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "gest"))));
+  }, /*#__PURE__*/React.createElement("img", { src: "icon-1024.png?v=2", alt: "", style: { width: 34, height: 34, borderRadius: 10, boxShadow: "0 4px 14px rgba(0,0,0,0.45), 0 0 0 1px rgba(233,209,159,0.18)" } }), /*#__PURE__*/React.createElement("span", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.6px", color: textPrimary } }, "MB", /*#__PURE__*/React.createElement("span", { style: { background: "linear-gradient(135deg,#F3DDA4 0%,#D4AF6A 48%,#A47C3B 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" } }, "gest"))), (title || view.page === "lista") && /*#__PURE__*/React.createElement("h1", { className: "mb-pagetitle", style: { alignSelf: "stretch", textAlign: "left", fontSize: 30, fontWeight: 800, letterSpacing: "-0.8px", lineHeight: 1.15, margin: "18px 0 4px", color: textPrimary } }, title || "Panoramica"));
   if (view.page === "dettaglio") {
     const p = portieri.find(x => x.id === view.id);
     if (!p) {
@@ -14878,7 +14896,7 @@ Matteo`;
       fontWeight: 700
     }
   }, "✅ Registrata!")))), /*#__PURE__*/React.createElement("div", {
-    className: "no-print",
+    className: "no-print mb-kpis",
     style: {
       display: "flex",
       flexWrap: "wrap",
