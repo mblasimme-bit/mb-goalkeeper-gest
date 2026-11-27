@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-Y03lwwOcabNgXk6nwEF5y2qL5RPS0ZYbmwJ2R5z8I/U=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-eyPuGfFFa/sKr1ENgryKE9mgWDr41Amk5sNFM6QJ7Wo=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -14755,7 +14755,7 @@ Matteo`;
     style: {
       ...cardStyle,
       border: `1px solid ${goldSoft}`,
-      display: "none"
+      display: showQuickSeduta ? undefined : "none"
     }
   }, !showQuickSeduta ? /*#__PURE__*/React.createElement("div", {
     style: {
@@ -15223,7 +15223,7 @@ Matteo`;
     setView: setView,
     salvaDiario: salvaDiario,
     apriDiario: apriDiario
-  })), /*#__PURE__*/React.createElement(SettimanaCompatta, { portieri, pacchetti, entrate, eventi, aggiungiEntrata, settings, updateSettings }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement(SettimanaCompatta, { portieri, pacchetti, entrate, eventi, aggiungiEntrata, settings, updateSettings, apriSedutaVeloce: () => { setShowQuickSeduta(true); setQuickForm(f => ({ ...f, importo: f.importo || settings.prezzoDefaultSeduta || "" })); try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {} } }), /*#__PURE__*/React.createElement("div", {
     className: "no-print",
     style: {
       display: "flex",
@@ -23799,7 +23799,8 @@ function SettimanaCompatta({
   eventi,
   aggiungiEntrata,
   settings,
-  updateSettings
+  updateSettings,
+  apriSedutaVeloce
 }) {
   const voci = useMemo(() => settVoci({
     portieri,
@@ -23921,7 +23922,15 @@ function SettimanaCompatta({
     style: {
       color: SETT_COL.evento
     }
-  }, conta("evento"), " eventi")) : null), daMettereMac > 0 && !dettaglio && /*#__PURE__*/React.createElement("button", {
+  }, conta("evento"), " eventi")) : null), apriSedutaVeloce && /*#__PURE__*/React.createElement("button", {
+    onClick: apriSedutaVeloce,
+    style: {
+      ...primaryBtn,
+      padding: "5px 12px",
+      fontSize: 12.5,
+      borderRadius: 9
+    }
+  }, "\u26A1 Seduta veloce"), daMettereMac > 0 && !dettaglio && /*#__PURE__*/React.createElement("button", {
     onClick: () => setDettaglio(true),
     title: "Sedute dei pacchetti non ancora nel Calendario del Mac",
     style: {
