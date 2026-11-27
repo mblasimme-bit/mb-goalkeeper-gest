@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-7rFjWkjwlGvmQviRcGgdJo3ojyB7Yqs9ILJ2bNOMWRQ=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Unxw2h67a3O2shSYYZfKbF80nOZfn9rK/xTsvnUxN0=' 'sha256-NfT5dPSyvNRNpzljNH+JUuNB+DkJ5EmCJ9Tia5j2bw0=' 'sha256-wpFYRGdsjT01ljEl1/79ySlIob0ilGCutiTBf31j7ZE=' 'sha256-6H5VB5QyLldKH9oMFUmjxw2uWpPZETQXpCkBaDjquMs=' 'sha256-Y03lwwOcabNgXk6nwEF5y2qL5RPS0ZYbmwJ2R5z8I/U=' 'sha256-wZweCdE82WDNIIlsCjAOz6kj/pfcnOttZlJA88jvOpQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; connect-src https://xvevxohwcozcwgrewmnt.supabase.co data: blob:; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'" />
 <meta name="referrer" content="no-referrer" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>MB Goalkeeper Academy Gest</title>
@@ -23076,8 +23076,8 @@ function CalendarioMac({
     background: on ? "rgba(233,209,159,.14)" : "transparent",
     color: on ? goldSoft : textPrimary,
     borderRadius: 999,
-    padding: "6px 11px",
-    fontSize: 13,
+    padding: "4px 10px",
+    fontSize: 12,
     fontWeight: 700,
     cursor: "pointer"
   });
@@ -23104,10 +23104,10 @@ function CalendarioMac({
     style: {
       background: "rgba(217,130,43,.10)",
       border: "1px solid rgba(217,130,43,.45)",
-      borderRadius: 12,
-      padding: "9px 12px",
-      marginBottom: 10,
-      fontSize: 13.5,
+      borderRadius: 10,
+      padding: "7px 10px",
+      marginBottom: 8,
+      fontSize: 12.5,
       lineHeight: 1.45
     }
   }, daFareTot > 0 && /*#__PURE__*/React.createElement("div", null, "\u26A0\uFE0F ", /*#__PURE__*/React.createElement("b", null, daFareTot, " ", daFareTot === 1 ? "seduta" : "sedute"), " dei pacchetti non ", daFareTot === 1 ? "è" : "sono", " ancora nel Calendario", stato.cambiate.length ? ` (${stato.cambiate.length} con orario o nome cambiato)` : "", "."), stato.sparite.length > 0 && /*#__PURE__*/React.createElement("div", {
@@ -23255,12 +23255,12 @@ function CalendarioMac({
       display: "flex",
       flexWrap: "wrap",
       gap: 6,
-      marginBottom: 10,
+      marginBottom: 8,
       alignItems: "center"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 13,
+      fontSize: 12,
       color: textMuted,
       marginRight: 2
     }
@@ -23273,9 +23273,8 @@ function CalendarioMac({
     onClick: scarica,
     style: {
       ...primaryBtn,
-      width: "100%",
-      padding: "11px 14px",
-      fontSize: 14.5,
+      padding: "8px 16px",
+      fontSize: 13.5,
       opacity: scelte.length ? 1 : .5
     }
   }, "\uD83D\uDCF2 Scarica per il Calendario (", scelte.length, ")"), fatto && /*#__PURE__*/React.createElement("p", {
@@ -23288,10 +23287,10 @@ function CalendarioMac({
     }
   }, "\u2705 ", fatto), /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "12px 0 0",
-      fontSize: 12.5,
+      margin: "8px 0 0",
+      fontSize: 11.5,
       color: textMuted,
-      lineHeight: 1.5
+      lineHeight: 1.45
     }
   }, "Nel file ci sono solo le sedute dei pacchetti: le singole restano quelle che scrivi tu sul Calendario, cos\xEC non si creano doppioni.", traccia ? " Il gestionale si ricorda quali hai già scaricato, anche dal telefono." : "", " Se cambi l'orario di una seduta gi\xE0 messa, il Mac di solito aggiorna quella vecchia: se vedi un doppione, cancella quella vecchia."));
 }
@@ -23301,11 +23300,14 @@ function SettimanaPannello({
   portieri,
   aggiungiEntrata,
   settings,
-  updateSettings
+  updateSettings,
+  compatto,
+  settIniziale
 }) {
   const [aggiungiIn, setAggiungiIn] = useState(null);
   const [aggiunta, setAggiunta] = useState("");
   const [sett, setSett] = useState(() => {
+    if (settIniziale) return settIniziale;
     const lun = calLun(calData(oggi));
     return calIso([0, 6].includes(calData(oggi).getDay()) ? calPiu(lun, 7) : lun);
   });
@@ -23470,20 +23472,20 @@ function SettimanaPannello({
       borderRadius: 3
     }
   })))))), document.body);
-  return /*#__PURE__*/React.createElement(React.Fragment, null, foglio, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, foglio, !compatto && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
       gap: 8,
-      margin: "10px 0 4px"
+      margin: "4px 0 2px"
     }
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => cambia(-1),
     "aria-label": "Settimana precedente",
     style: {
       ...ghostBtn,
-      padding: "5px 12px",
-      fontSize: 16
+      padding: "3px 10px",
+      fontSize: 14
     }
   }, "\u2039"), /*#__PURE__*/React.createElement("p", {
     style: {
@@ -23491,21 +23493,21 @@ function SettimanaPannello({
       flex: 1,
       textAlign: "center",
       fontWeight: 800,
-      fontSize: 16
+      fontSize: 14
     }
   }, titoloSett), /*#__PURE__*/React.createElement("button", {
     onClick: () => cambia(1),
     "aria-label": "Settimana successiva",
     style: {
       ...ghostBtn,
-      padding: "5px 12px",
-      fontSize: 16
+      padding: "3px 10px",
+      fontSize: 14
     }
   }, "\u203A")), /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "0 0 12px",
+      margin: "0 0 8px",
       textAlign: "center",
-      fontSize: 13,
+      fontSize: 12,
       color: textMuted
     }
   }, /*#__PURE__*/React.createElement("span", {
@@ -23536,14 +23538,14 @@ function SettimanaPannello({
       background: surface2,
       border: `1px solid ${border}`,
       borderRadius: 12,
-      padding: "10px 12px",
-      marginBottom: 12
+      padding: "8px 10px",
+      marginBottom: 10
     }
   }, giorni.map(g => /*#__PURE__*/React.createElement("div", {
     key: g.iso,
     id: g.iso === oggi ? "sett-oggi" : undefined,
     style: {
-      marginBottom: 8,
+      marginBottom: 5,
       opacity: g.iso < oggi ? .55 : 1
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -23555,8 +23557,8 @@ function SettimanaPannello({
     }
   }, /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "0 0 3px",
-      fontSize: 13,
+      margin: "0 0 1px",
+      fontSize: 12,
       fontWeight: 800,
       color: g.iso === oggi ? "#1f9d55" : goldSoft
     }
@@ -23571,8 +23573,8 @@ function SettimanaPannello({
       border: "1px solid #0e9f96",
       color: "#0e9f96",
       borderRadius: 999,
-      padding: "2px 10px",
-      fontSize: 12.5,
+      padding: "0 8px",
+      fontSize: 11.5,
       fontWeight: 800,
       cursor: "pointer"
     }
@@ -23592,60 +23594,73 @@ function SettimanaPannello({
   }), g.voci.length === 0 ? aggiungiIn === g.iso ? null : /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
-      fontSize: 13,
+      fontSize: 12,
       color: textMuted
     }
   }, "\u2014") : g.voci.map(v => /*#__PURE__*/React.createElement("p", {
     key: v.id,
     style: {
-      margin: "0 0 3px",
-      fontSize: 14,
+      margin: "0 0 1px",
+      fontSize: 12.5,
+      lineHeight: 1.35,
       display: "flex",
-      gap: 8,
+      gap: 6,
       alignItems: "baseline"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      minWidth: 44,
+      minWidth: 38,
       fontWeight: 700,
+      fontVariantNumeric: "tabular-nums",
       color: calMin(v.ora) == null && SETT_TIPO(v) !== "evento" ? "#d9822b" : textPrimary
     }
   }, calMin(v.ora) == null ? "--:--" : v.ora), /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: 11,
+      fontSize: 9.5,
       fontWeight: 800,
       color: "#fff",
       background: SETT_COL[SETT_TIPO(v)],
-      borderRadius: 5,
-      padding: "1px 6px"
+      borderRadius: 4,
+      padding: "0 5px",
+      letterSpacing: ".02em"
     }
   }, SETT_NOME[SETT_TIPO(v)]), /*#__PURE__*/React.createElement("span", null, v.titolo, v.pk && String(v.id).startsWith("pk-") && /*#__PURE__*/React.createElement("span", {
     style: {
       color: textMuted,
-      fontSize: 12.5
+      fontSize: 11.5
     }
-  }, " ", icsSotto(v).replace("Pacchetto, ", "")))))))), affollate.length > 0 && /*#__PURE__*/React.createElement("p", {
+  }, " ", icsSotto(v).replace("Pacchetto, ", ""))))))))), affollate.length > 0 && /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "0 0 8px",
-      fontSize: 12.5,
+      margin: "0 0 4px",
+      fontSize: 12,
       color: "#c9522f"
     }
   }, "\u26A0\uFE0F Pi\xF9 di 2 portieri: ", affollate.join(" · ")), senzaOra > 0 && /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "0 0 10px",
-      fontSize: 12.5,
+      margin: "0 0 4px",
+      fontSize: 12,
       color: "#d9822b"
     }
-  }, "\u26A0\uFE0F ", senzaOra, " ", senzaOra === 1 ? "seduta non ha" : "sedute non hanno", " l'orario: aggiungilo nel gestionale."), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setStampa(true),
+  }, "\u26A0\uFE0F ", senzaOra, " ", senzaOra === 1 ? "seduta non ha" : "sedute non hanno", " l'orario: aggiungilo nel gestionale."), /*#__PURE__*/React.createElement("div", {
     style: {
-      ...primaryBtn,
-      width: "100%",
-      padding: "12px 14px",
-      fontSize: 15,
-      marginBottom: 14
+      display: "flex",
+      justifyContent: "flex-end",
+      margin: "4px 0 10px"
     }
-  }, "\uD83D\uDDA8\uFE0F Stampa o salva in PDF"), /*#__PURE__*/React.createElement(CalendarioMac, {
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setStampa(true),
+    title: "Stampa o salva in PDF la settimana",
+    style: {
+      background: "none",
+      border: `1px solid ${border}`,
+      color: textSecondary,
+      borderRadius: 9,
+      padding: "4px 10px",
+      fontSize: 12,
+      fontWeight: 700,
+      cursor: "pointer"
+    }
+  }, "\uD83D\uDDA8\uFE0F Stampa / PDF ", compatto ? `(${titoloSett})` : "")), /*#__PURE__*/React.createElement(CalendarioMac, {
     voci: voci,
     oggi: oggi,
     settings: settings,
@@ -23933,7 +23948,7 @@ function SettimanaCompatta({
       fontWeight: 700,
       cursor: "pointer"
     }
-  }, dettaglio ? "Chiudi" : "🖨️ Stampa / Calendario Mac")), aggiunta && /*#__PURE__*/React.createElement("p", {
+  }, dettaglio ? "Chiudi" : "📲 Calendario Mac")), aggiunta && /*#__PURE__*/React.createElement("p", {
     role: "status",
     style: {
       margin: "8px 0 0",
@@ -24080,6 +24095,9 @@ function SettimanaCompatta({
       marginTop: 10
     }
   }, /*#__PURE__*/React.createElement(SettimanaPannello, {
+    key: sett,
+    compatto: true,
+    settIniziale: sett,
     voci: voci,
     oggi: oggi,
     portieri: portieri,
