@@ -59,7 +59,11 @@ svg.i{width:1em;height:1em;flex-shrink:0}
 .it .b{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:15px;background:var(--c);flex:none}
 .it .m{flex:1;min-width:0}.it .t1{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.it .t2{font-size:12px;color:var(--muted)}
 .it .a{font-weight:800;font-variant-numeric:tabular-nums}.it .x{border:0;background:none;color:var(--faint);font-size:18px;padding:4px 6px}
-.it.sent{opacity:.5}
+.it.sent{opacity:.5}.it.del .m,.it.del .a{text-decoration:line-through;opacity:.6}
+.it{cursor:pointer}.it .ed{color:var(--faint);font-size:14px;padding:4px}
+.editbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:color-mix(in srgb,#D4AF6A 14%,transparent);border:1px solid color-mix(in srgb,#D4AF6A 45%,transparent);border-radius:14px;padding:10px 12px;margin:4px 0 10px;font-size:13.5px}
+.editbar b{flex:1;min-width:150px}.editbar button{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:6px 10px;font-weight:700;font-size:13px}.editbar .del{color:var(--exp)}
+.more{width:100%;margin-top:8px;border:1px dashed var(--line);background:none;color:var(--muted);border-radius:12px;padding:8px;font-weight:700;font-size:13px}
 .send{display:flex;align-items:center;gap:10px}
 .send .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:var(--grad);color:var(--on)}
 .btn2{border:1px solid var(--line);background:var(--s2);border-radius:12px;padding:10px 14px;font-weight:700}
@@ -99,7 +103,7 @@ function load() {
   const lim = Date.now() - 30 * 864e5; S.items = S.items.filter(i => !i.sent || i.ts > lim);
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { toast('Memoria piena: invia al Mac e svuota'); } }
-let ui = {kind:'expense', amt:'', cat:null, sub:null, acc:null, note:'', sheet:null};
+let ui = {kind:'expense', amt:'', cat:null, sub:null, acc:null, note:'', sheet:null, edit:null, more:false};
 function toast(t) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 300); }, 1800); }
 const amtCents = () => { if (!ui.amt) return 0; const [i, d = ''] = ui.amt.split(','); return (parseInt(i || '0', 10) * 100) + parseInt((d + '00').slice(0, 2), 10); };
 const amtLabel = () => { if (!ui.amt) return '0'; const [i, d] = ui.amt.split(','); const ii = (i || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return d !== undefined ? ii + ',' + d : ii; };
@@ -109,9 +113,14 @@ function render() {
   if (!ui.acc || !S.accounts.includes(ui.acc)) ui.acc = S.lastAcc && S.accounts.includes(S.lastAcc) ? S.lastAcc : S.accounts[0];
   const pending = S.items.filter(i => !i.sent);
   const todayKey = nowStr().slice(0, 10); const todays = S.items.filter(i => i.when.slice(0, 10) === todayKey).sort((a, b) => b.ts - a.ts);
+  const lim7 = Date.now() - 7 * 864e5; const older = S.items.filter(i => i.when.slice(0, 10) !== todayKey && i.ts > lim7).sort((a, b) => b.ts - a.ts);
+  const editing = ui.edit ? S.items.find(i => i.id === ui.edit) : null;
   const colorOf = (k, n) => (S.cats[k] || []).find(c => c.name === n.split(' › ')[0]) || {icon:'tags', color:'#94A3B8'};
+  const row = i => { const c = colorOf(i.kind, i.cat); const st = i.deleted ? (i.sent ? 'annullato sul Mac' : 'da annullare sul Mac') : i.sent ? 'inviato' : i.rev > 1 ? 'corretto, da rimandare' : '';
+    return `<div class="it ${i.sent ? 'sent' : ''} ${i.deleted ? 'del' : ''}" data-a="${i.deleted && i.sent ? '' : 'edit'}" data-id="${i.id}"><span class="b" style="--c:${c.color}">${ic(c.icon)}</span><div class="m"><div class="t1">${esc(i.note || i.cat)}</div><div class="t2">${i.when.slice(0, 10) !== todayKey ? i.when.slice(8, 10) + '/' + i.when.slice(5, 7) + ' ' : ''}${i.when.slice(11, 16)} · ${esc(i.cat)} · ${esc(i.acc)}${st ? ' · ' + st : ''}</div></div><span class="a ${i.kind === 'income' ? 'inc' : 'exp'}">${i.kind === 'income' ? '+' : '−'}${fmt(i.cents)}</span>${i.deleted && i.sent ? '' : `<span class="ed">${ic('pencil')}</span>`}</div>`; };
   $('#app').innerHTML = `
     <div class="top"><span class="logo"><img src="icon-180.png" alt=""></span><h1>MB<b>life</b></h1><span class="sp"></span><button class="ib" data-a="settings" aria-label="Impostazioni">${ic('settings')}</button></div>
+    ${editing ? `<div class="editbar">✏️ <b>Stai correggendo il movimento del ${editing.when.slice(8, 10)}/${editing.when.slice(5, 7)} alle ${editing.when.slice(11, 16)}${editing.sent ? ' (già mandato: il Mac lo correggerà)' : ''}</b><button data-a="editcancel">Annulla</button><button class="del" data-a="editdel">Elimina</button></div>` : ''}
     <div class="seg"><button class="${ui.kind === 'expense' ? 'on exp' : ''}" data-a="kind" data-k="expense">Spesa</button><button class="${ui.kind === 'income' ? 'on inc' : ''}" data-a="kind" data-k="income">Entrata</button></div>
     <div class="amount"><span class="cur">€</span><span class="v ${ui.amt ? '' : 'zero'}">${amtLabel()}</span></div>
     <div class="sec">Categoria</div>
@@ -121,11 +130,12 @@ function render() {
     <div class="row">${S.accounts.map(a => `<button class="chip ${ui.acc === a ? 'on' : ''}" data-a="acc" data-n="${esc(a)}">${esc(a)}</button>`).join('')}</div>
     <input class="note" id="note" placeholder="Nota (facoltativa)" value="${esc(ui.note)}" autocomplete="off" enterkeyhint="done">
     <div class="pad">${['1','2','3','4','5','6','7','8','9',',','0','⌫'].map(k => `<button data-a="key" data-k="${k}">${k}</button>`).join('')}</div>
-    <button class="save" data-a="save" ${amtCents() && ui.cat ? '' : 'disabled'}>${ui.kind === 'expense' ? 'Segna la spesa' : 'Segna l\'entrata'}</button>
+    <button class="save" data-a="save" ${amtCents() && ui.cat ? '' : 'disabled'}>${editing ? 'Salva la correzione' : ui.kind === 'expense' ? 'Segna la spesa' : 'Segna l\'entrata'}</button>
     <div class="card">
       <div class="send"><div style="flex:1"><b>${pending.length ? `${pending.length} da mandare al Mac` : 'Tutto mandato al Mac ✓'}</b><div class="muted" style="font-size:12.5px">${pending.length ? 'La sera: Invia → AirDrop → il tuo Mac' : 'Quando segni qualcosa, lo trovi qui'}</div></div>
         ${pending.length ? `<button class="btn" data-a="send">${ic('upload')} Invia</button>` : ''}</div>
-      ${todays.length ? `<div class="sec" style="margin-top:12px">Oggi</div>${todays.map(i => { const c = colorOf(i.kind, i.cat); return `<div class="it ${i.sent ? 'sent' : ''}"><span class="b" style="--c:${c.color}">${ic(c.icon)}</span><div class="m"><div class="t1">${esc(i.note || i.cat)}</div><div class="t2">${i.when.slice(11, 16)} · ${esc(i.cat)} · ${esc(i.acc)}${i.sent ? ' · inviato' : ''}</div></div><span class="a ${i.kind === 'income' ? 'inc' : 'exp'}">${i.kind === 'income' ? '+' : '−'}${fmt(i.cents)}</span>${i.sent ? '' : `<button class="x" data-a="del" data-id="${i.id}" aria-label="Elimina">×</button>`}</div>`; }).join('')}` : ''}
+      ${todays.length ? `<div class="sec" style="margin-top:12px">Oggi · tocca per correggere</div>${todays.map(row).join('')}` : ''}
+      ${older.length ? (ui.more ? `<div class="sec" style="margin-top:12px">Giorni prima</div>${older.map(row).join('')}<button class="more" data-a="more">Nascondi i giorni prima</button>` : `<button class="more" data-a="more">Mostra anche gli ultimi 7 giorni (${older.length})</button>`) : ''}
     </div>
     ${ui.sheet ? sheetHTML() : ''}`;
   const n = $('#note'); if (n) n.oninput = () => { ui.note = n.value; };
@@ -143,7 +153,10 @@ function sheetHTML() {
     <button class="btn2" data-a="close" style="text-align:center">Chiudi</button></div></div>`;
   return '';
 }
-function fileText(list) { return list.slice().sort((a, b) => a.ts - b.ts).map(i => [i.when, i.kind === 'income' ? 'Entrata' : 'Spesa', (i.cents / 100).toFixed(2).replace('.', ','), i.cat, i.acc, (i.note || '').replace(/[;\r\n]/g, ' ')].join(';')).join('\n') + '\n'; }
+const oldLine = i => [i.when, i.kind === 'income' ? 'Entrata' : 'Spesa', (i.cents / 100).toFixed(2).replace('.', ','), i.cat, i.acc, (i.note || '').replace(/[;\r\n]/g, ' ')].join(';');
+const b64u = t => btoa(unescape(encodeURIComponent(t)));
+/** ogni riga porta id e versione del movimento: se lo correggi dopo averlo mandato, il Mac aggiorna quello giusto invece di aggiungerne un altro */
+function fileText(list) { return list.slice().sort((a, b) => a.ts - b.ts).map(i => [i.when, i.deleted ? 'Annulla' : i.kind === 'income' ? 'Entrata' : 'Spesa', (i.cents / 100).toFixed(2).replace('.', ','), i.cat, i.acc, (i.note || '').replace(/[;\r\n]/g, ' '), 'id:' + i.id, 'v:' + (i.rev || 1), ...(i.prev ? ['p:' + b64u(i.prev)] : [])].join(';')).join('\n') + '\n'; }
 /** firma il file con la chiave ricevuta da MBlife: così il Mac sa che arriva davvero da questo iPhone */
 async function sign(text) {
   if (!S.key || !(window.crypto && crypto.subtle)) return text;
@@ -158,7 +171,7 @@ async function sendList(list) {
   try {
     if (navigator.canShare && navigator.canShare({files:[file]})) { await navigator.share({files:[file], title:'MBlife'}); }
     else { const url = URL.createObjectURL(file); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000); }
-    list.forEach(i => { i.sent = true; }); save(); ui.sheet = null; render(); toast('Mandato ✓ Apri MBlife sul Mac');
+    list.forEach(i => { i.sent = true; i.fmt = 2; }); save(); ui.sheet = null; render(); toast('Mandato ✓ Apri MBlife sul Mac');
   } catch (e) { if (e && e.name === 'AbortError') return; toast('Invio non riuscito: riprova'); }
 }
 function importCfg(text) {
@@ -184,10 +197,28 @@ document.addEventListener('click', e => {
     else if (k === ',') { if (!v.includes(',')) v = (v || '0') + ','; }
     else { if (v.includes(',') && v.split(',')[1].length >= 2) return; if (v === '0') v = ''; if (v.replace(',', '').length >= 8) return; v += k; }
     ui.amt = v; }
+  else if (a === 'save' && ui.edit) { const cents = amtCents(); const it = S.items.find(i => i.id === ui.edit); if (!cents || !ui.cat || !it) return;
+    if (it.sent && !it.fmt && !it.prev) it.prev = oldLine(it);   // mandato con la versione vecchia: il Mac lo ritrova da questa riga
+    const wasSent = it.sent;
+    Object.assign(it, {kind:ui.kind, cents, cat:ui.sub ? `${ui.cat} › ${ui.sub}` : ui.cat, acc:ui.acc, note:(ui.note || '').trim()});
+    if (wasSent) { it.sent = false; it.rev = (it.rev || 1) + 1; }
+    S.lastAcc = ui.acc; save(); ui.edit = null; ui.amt = ''; ui.note = ''; ui.cat = null; ui.sub = null;
+    toast(wasSent ? 'Corretto ✓ Rimandalo al Mac: aggiornerà quello giusto' : 'Corretto ✓'); }
   else if (a === 'save') { const cents = amtCents(); if (!cents || !ui.cat) return;
-    const it = {id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts:Date.now(), when:nowStr(), kind:ui.kind, cents, cat:ui.sub ? `${ui.cat} › ${ui.sub}` : ui.cat, acc:ui.acc, note:(ui.note || '').trim(), sent:false};
+    const it = {id:Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ts:Date.now(), when:nowStr(), kind:ui.kind, cents, cat:ui.sub ? `${ui.cat} › ${ui.sub}` : ui.cat, acc:ui.acc, note:(ui.note || '').trim(), sent:false, rev:1};
     S.items.push(it); S.use[ui.kind + '|' + ui.cat] = (S.use[ui.kind + '|' + ui.cat] || 0) + 1; S.lastAcc = ui.acc; save();
     ui.amt = ''; ui.note = ''; ui.cat = null; ui.sub = null; toast(`Segnato ${fmt(cents)} ✓`); if (navigator.vibrate) navigator.vibrate(15); }
+  else if (a === 'edit') { const it = S.items.find(i => i.id === el.dataset.id); if (!it || (it.deleted && it.sent)) return;
+    if (it.deleted) { it.deleted = false; }   // tocco su uno “da annullare”: lo riprendo
+    ui.edit = it.id; ui.kind = it.kind; ui.amt = (it.cents / 100).toFixed(2).replace('.', ',').replace(/,00$/, ''); const [c, sub] = it.cat.split(' › '); ui.cat = c; ui.sub = sub || null; ui.acc = it.acc; ui.note = it.note || '';
+    window.scrollTo({top:0, behavior:'smooth'}); }
+  else if (a === 'editcancel') { ui.edit = null; ui.amt = ''; ui.note = ''; ui.cat = null; ui.sub = null; }
+  else if (a === 'editdel') { const it = S.items.find(i => i.id === ui.edit); if (!it) return;
+    if (it.sent || it.fmt || it.rev > 1) { if (!confirm('Eliminare questo movimento? Quando lo rimandi, il Mac lo toglie.')) return;
+      if (it.sent && !it.fmt && !it.prev) it.prev = oldLine(it); it.deleted = true; it.sent = false; it.rev = (it.rev || 1) + 1; toast('Eliminato ✓ Rimanda al Mac per toglierlo anche lì'); }
+    else { if (!confirm('Eliminare questo movimento?')) return; S.items = S.items.filter(i => i.id !== it.id); }
+    save(); ui.edit = null; ui.amt = ''; ui.note = ''; ui.cat = null; ui.sub = null; }
+  else if (a === 'more') ui.more = !ui.more;
   else if (a === 'del') { if (!confirm('Eliminare questo movimento?')) return; S.items = S.items.filter(i => i.id !== el.dataset.id); save(); }
   else if (a === 'send') { sendList(S.items.filter(i => !i.sent)); return; }
   else if (a === 'resend') { const lim = Date.now() - 7 * 864e5; sendList(S.items.filter(i => i.ts > lim)); return; }
